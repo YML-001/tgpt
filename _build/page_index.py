@@ -7,13 +7,12 @@ from styles import BASE_CSS
 # ---------- 页面目录：（文件, 页面名, 图标, 说明） ----------
 PC_PAGES = {
     'correspondent': [
-        ('dashboard', '工作台', 'dashboard', '本院统计、我的待办、快捷投稿、侧栏“新建投稿”弹窗'),
         ('submit-news', '新闻投稿', 'file', '富文本、多图上传、身份切换、指导老师搜索、敏感词检测'),
         ('submit-video', '视频投稿', 'video', '永久云盘链接提示、时长格式校验、视频用途'),
         ('submit-photo', '照片投稿', 'image', '批量上传原图、单张备注、涉及重要领导'),
         ('submit-clue', '新闻线索', 'bulb', '是否接受采访联动显示可采访时间段'),
         ('submit-success', '提交成功', 'check-circle', '按投稿身份显示下一个审核节点'),
-        ('my-submissions', '我的投稿', 'inbox', '状态筛选；“新建投稿”选类型弹窗、“导出”弹窗'),
+        ('my-submissions', '我的投稿', 'inbox', 'PC 端首页；状态筛选，“新建投稿”进入投稿表单，“导出”弹窗'),
         ('submission-detail', '稿件档案', 'archive', '稿件内容、流转时间轴、历次审核意见'),
         ('version-history', '版本对比', 'compare', '新旧版本并排差异，附当时退回意见'),
         ('resubmit', '退回修改', 'undo', '顶部固定退回意见，修改后重新提交'),
@@ -33,8 +32,7 @@ PC_PAGES = {
         ('messages', '消息通知', 'bell', '新待审稿件、超时提醒'),
     ],
     'reviewer': [
-        ('dashboard', '工作台', 'dashboard', '待办数量、即将超时、本月已审'),
-        ('todo', '我的待办 · 待办', 'inbox', '统一待办列表，超时标红优先'),
+        ('todo', '我的待办 · 待办', 'inbox', 'PC 端首页；统一待办列表，超时标红优先'),
         ('review', '办理', 'file-check', '表单信息 / 流程图 / 审批记录 / 操作日志、敏感词检测'),
         ('review-reject', '退回弹窗', 'undo', '退回意见必填，可插入常用模板'),
         ('submissions', '稿件查询', 'search', '按学院、类型、时间、状态组合筛选'),
@@ -235,15 +233,15 @@ def box(title, body, extra=''):
 
 def entries():
     items = [
-        ('PC 端 · 投稿人（全校师生）', '计算机学院 陈雨桐：四类投稿、跟踪进度、退回修改、本院统计', 'edit', '#2A8DC7', 'pc/correspondent/dashboard.html', 1440,
-         [('新闻投稿', 'pc/correspondent/submit-news.html'), ('我的投稿', 'pc/correspondent/my-submissions.html'), ('退回修改', 'pc/correspondent/resubmit.html'),
+        ('PC 端 · 投稿人（全校师生）', '计算机学院 陈雨桐：四类投稿、跟踪进度、退回修改、本院统计', 'edit', '#2A8DC7', 'pc/correspondent/my-submissions.html', 1440,
+         [('新闻投稿', 'pc/correspondent/submit-news.html'), ('稿件档案', 'pc/correspondent/submission-detail.html'), ('退回修改', 'pc/correspondent/resubmit.html'),
           ('本院统计', 'pc/correspondent/college-stats.html'), ('全校排行榜', 'pc/correspondent/ranking.html')]),
         ('PC 端 · 指导老师', '计算机学院 王海峰：审核指定本人为指导老师的学生稿件', 'user', '#F29100', 'pc/teacher/dashboard.html', 1440,
          [('办理', 'pc/teacher/review.html'), ('已办', 'pc/teacher/history.html'), ('催办/抄送', 'pc/teacher/cc.html'), ('批量审批', 'pc/teacher/batch.html')]),
-        ('PC 端 · 一审员', '校团委宣传部 刘子涵：我的待办（待办 / 已办 / 催办抄送 / 批量审批）、稿件查询', 'file-check', '#1BB975', 'pc/reviewer1/dashboard.html', 1440,
-         [('待办', 'pc/reviewer1/todo.html'), ('办理', 'pc/reviewer1/review.html'), ('已办', 'pc/reviewer1/my-ledger.html'), ('批量审批', 'pc/reviewer1/batch.html'), ('稿件查询', 'pc/reviewer1/submissions.html')]),
-        ('PC 端 · 二审员', '校团委宣传部 周明轩：待二审稿件、升华网正文复制与素材导出', 'shield', '#6B5BD2', 'pc/reviewer2/dashboard.html', 1440,
-         [('待办', 'pc/reviewer2/todo.html'), ('办理', 'pc/reviewer2/review.html'), ('已办', 'pc/reviewer2/my-ledger.html'), ('稿件档案 · 升华网素材', 'pc/reviewer2/submission-detail.html')]),
+        ('PC 端 · 一审员', '校团委宣传部 刘子涵：我的待办（待办 / 已办 / 催办抄送 / 批量审批）、稿件查询', 'file-check', '#1BB975', 'pc/reviewer1/todo.html', 1440,
+         [('办理', 'pc/reviewer1/review.html'), ('已办', 'pc/reviewer1/my-ledger.html'), ('批量审批', 'pc/reviewer1/batch.html'), ('稿件查询', 'pc/reviewer1/submissions.html')]),
+        ('PC 端 · 二审员', '校团委宣传部 周明轩：待二审稿件、升华网正文复制与素材导出', 'shield', '#6B5BD2', 'pc/reviewer2/todo.html', 1440,
+         [('办理', 'pc/reviewer2/review.html'), ('已办', 'pc/reviewer2/my-ledger.html'), ('稿件档案 · 升华网素材', 'pc/reviewer2/submission-detail.html')]),
         ('PC 端 · 校团委管理员', '校团委宣传部 张静：三审终审、统计驾驶舱、发布、名单与系统配置', 'settings', '#1F77AD', 'pc/admin/dashboard.html', 1440,
          [('我的待办', 'pc/admin/final-list.html'), ('已办', 'pc/admin/final-done.html'), ('稿件档案库', 'pc/admin/archive.html'), ('升华网发布素材', 'pc/admin/publish-export.html'),
           ('线索跟进', 'pc/admin/clue-tracking.html'), ('超时台账', 'pc/admin/timeout-ledger.html'), ('角色权限配置', 'pc/admin/role-permission.html')]),
@@ -271,7 +269,7 @@ def entries():
 
 SCENARIOS = [
     ('file', '学生投新闻稿', '学生身份必须指定指导老师（默认本院，可搜索他院）；不填直接提交会标红定位，高危敏感词拦截、低危词提醒。', [
-        ('投稿人', '工作台 · 新建投稿', 'pc/correspondent/dashboard.html'), ('投稿人', '填写新闻投稿', 'pc/correspondent/submit-news.html'),
+        ('投稿人', '我的投稿 · 新建投稿', 'pc/correspondent/my-submissions.html'), ('投稿人', '填写新闻投稿', 'pc/correspondent/submit-news.html'),
         ('投稿人', '提交成功 · 待指导老师审核', 'pc/correspondent/submit-success.html?type=新闻&identity=学生'),
         ('投稿人', '我的投稿 · 新稿件高亮', 'pc/correspondent/my-submissions.html?new=TG2026093005')]),
     ('user', '教师投稿', '身份切换为“教师”后指导老师字段隐藏，提交后跳过指导老师直接进入一审，流程少一级。', [
@@ -416,7 +414,7 @@ def flows():
             ('06', '采用归档', '计入学院采用统计'), ('07', '升华网发布', '仅新闻类，人工发布后标记'), ('08', '统计排行', '驾驶舱、排行榜、超时台账')]
     life_html = ''.join(f'<div class="life-item"><div class="life-no">{n}</div><b>{t}</b><p>{d}</p></div>' for n, t, d in life)
     submit = lanes([
-        ('投稿人', [nd('新建投稿', 'start', 'pc/correspondent/dashboard.html'), nd('选择学生身份'), nd('指定指导老师', href='pc/correspondent/submit-news.html'), nd('提交')]),
+        ('投稿人', [nd('新建投稿', 'start', 'pc/correspondent/my-submissions.html'), nd('选择学生身份'), nd('指定指导老师', href='pc/correspondent/submit-news.html'), nd('提交')]),
         ('指导老师', [nd('审核学生稿件', href='pc/teacher/review.html'), nd('通过 · 报送一审')]),
         ('一审员', [nd('一审', href='pc/reviewer1/review.html'), nd('通过 · 流转二审')]),
         ('二审员', [nd('二审', href='pc/reviewer2/review.html'), nd('通过 · 流转三审')]),
@@ -638,7 +636,7 @@ a.fn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(48,135,204,.14)
 def build():
     total = len(lib.WRITTEN) + 1
     body = (hero(total) +
-            sec('entry', 'grid', '演示入口', '一键进入各角色工作台，卡片内为实时页面预览', entries()) +
+            sec('entry', 'grid', '演示入口', '一键进入各角色首页，卡片内为实时页面预览', entries()) +
             sec('scenario', 'flow', '演示剧本', '14 条业务路线贯穿投稿人、指导老师、一审员、二审员、管理员，按编号依次点击即可完整演示闭环', scenarios()) +
             sec('role', 'users', '角色权限', '系统用户角色、数据范围与功能权限矩阵', roles()) +
             sec('feature', 'layers', '功能清单', '核心功能模块，点击卡片查看对应页面', features()) +

@@ -30,6 +30,35 @@ def crud_modal(mid, fields, table_id, tpl_id, size='modal-sm'):
     return modal(mid, '新增', body, foot, size)
 
 
+TERM_TEXT = {'2026 秋季学期': '2026-09-01 至 2027-01-31', '2026 春季学期': '2026-02-01 至 2026-07-31',
+             '2026—2027 学年': '2026-09-01 至 2027-08-31', '2025—2026 学年': '2025-09-01 至 2026-08-31'}
+
+
+def term_range(start, end, name='term'):
+    return (f'<div class="f-box f-date f-range" data-range="{name}">'
+            f'<input type="date" class="input" name="{name}From" required data-label="任期开始日期" data-default="{start}" value="{start}" aria-label="任期开始日期">'
+            f'<span class="f-to">至</span>'
+            f'<input type="date" class="input" name="{name}To" required data-label="任期结束日期" data-default="{end}" value="{end}" aria-label="任期结束日期">'
+            f'<input type="hidden" name="{name}"></div>')
+
+
+STAFF_CSV_HEAD = '姓名,工号,所在学院,职务,任期开始,任期结束'
+
+
+def staff_fields(college_lbl, duty_key, duty_ph, no_ph, term):
+    tip = '输入工号自动回显姓名、学院、职务，也可输入姓名检索'
+    lookup = (f'<div class="staff-picker"><input class="input" name="no" required data-staff-lookup data-label="工号" placeholder="请输入工号，如 {no_ph}" autocomplete="off">'
+              f'<div class="picker-list"></div></div>'
+              f'<div class="staff-tip"><span data-staff-msg data-default-msg="{tip}">{tip}</span>'
+              f'<button type="button" class="link" data-action="staff-manual">手动填写</button></div>')
+    more = 'js-staff-more'
+    return (field('工号', lookup, req=True, full=True) +
+            field('姓名', '<input class="input" name="name" required placeholder="请输入姓名">', req=True, cls=more) +
+            field(college_lbl, f'<select class="select" name="college" required>{options(COLLEGES, "请选择")}</select>', req=True, cls=more) +
+            field('职务', f'<input class="input" name="{duty_key}" required placeholder="{duty_ph}">', req=True, cls=more) +
+            field('任期', term_range(*term), req=True, full=True, cls=more))
+
+
 def switch(on=True, name=''):
     return f'<button class="switch{" on" if on else ""}" aria-label="启用开关" data-on-msg="{name}已启用" data-off-msg="{name}已停用" data-confirm-off="停用后该账号将无法登录并失去相应权限，确认停用吗？"></button>'
 
@@ -324,53 +353,61 @@ def reviewer_manage(level):
     for name, no, col, duty, term, cnt, on in members:
         st = '在任' if on else '已离任'
         trs += (f'<tr data-status="{st}"><td><input type="checkbox" class="row-check" aria-label="选择"></td><td data-key="name" class="fw" style="color:var(--text)">{name}</td><td data-key="no">{no}</td><td data-key="college">{col}</td>'
-                f'<td data-key="duty">{duty}</td><td data-key="term">{term}</td><td class="num">{cnt}</td><td><span class="tag js-tag {"tag-success" if on else "tag-gray"}" data-on="在任" data-off="已离任">{st}</span></td>'
+                f'<td data-key="duty">{duty}</td><td data-key="term" class="nowrap">{TERM_TEXT[term]}</td><td class="num" data-key="count">{cnt}</td><td><span class="tag js-tag {"tag-success" if on else "tag-gray"}" data-on="在任" data-off="已离任">{st}</span></td>'
                 f'<td>{switch(on, name)}</td><td>{ops_edit(mid, "编辑" + ("一审员" if is1 else "二审员"))}</td></tr>')
     tpl_row = (f'<template id="{tpl}"><tr data-status="在任"><td><input type="checkbox" class="row-check"></td><td data-key="name" class="fw" style="color:var(--text)">{{name}}</td><td data-key="no">{{no}}</td><td data-key="college">{{college}}</td>'
-               f'<td data-key="duty">{{duty}}</td><td data-key="term">{{term}}</td><td class="num">0</td><td><span class="tag js-tag tag-success" data-on="在任" data-off="已离任">在任</span></td>'
+               f'<td data-key="duty">{{duty}}</td><td data-key="term" class="nowrap">{{term}}</td><td class="num" data-key="count">0</td><td><span class="tag js-tag tag-success" data-on="在任" data-off="已离任">在任</span></td>'
                f'<td>{switch(True)}</td><td>{ops_edit(mid, "编辑")}</td></tr></template>')
-    fields = (field('姓名', '<input class="input" name="name" required>', req=True) + field('学号', '<input class="input" name="no" required>', req=True) +
-              field('所在学院', f'<select class="select" name="college" required>{options(COLLEGES, "请选择")}</select>', req=True) +
-              field('职务', '<input class="input" name="duty" required placeholder="如：宣传部干事">', req=True) +
-              field('任期', f'<input class="input" name="term" required data-default="{"2026 秋季学期" if is1 else "2026—2027 学年"}">', req=True, full=True))
+    fields = staff_fields('所在学院', 'duty', '如：宣传部干事' if is1 else '如：宣传部副部长', '8209230207' if is1 else '8208220101',
+                          ('2026-09-01', '2027-01-31') if is1 else ('2026-09-01', '2027-08-31'))
     modals = crud_modal(mid, fields, tid, tpl)
-    extra_btn = ''
-    if not is1:
-        extra_btn = btn('学年换届', 'btn-outline', 'repeat', 'data-open="termModal"')
-        modals += modal('termModal', '二审员学年换届', f'''<form novalidate><div class="notice notice-warn mb16">{icon('alert', 15)}<div>换届后，原任期内的二审员将统一标记为“已离任”并收回二审权限；其历史审核记录永久保留。</div></div>
-<div class="form-grid" style="grid-template-columns:1fr 1fr">{field('新任期', '<select class="select" required><option>2027—2028 学年</option><option>2026—2027 学年</option></select>', req=True)}{field('生效日期', '<input type="date" class="input" required value="2027-09-01">', req=True)}
-{field('新任二审员名单', '<textarea class="textarea" required placeholder="每行一人：姓名 学号 学院 职务&#10;例如：李明远 8208220101 商学院 宣传部副部长"></textarea>', req=True, full=True, hint='也可下载模板批量导入')}</div></form>''',
-                        '<button class="btn" data-close>取消</button><button class="btn btn-primary" data-action="save" data-confirm="确认执行换届吗？原二审员将全部标记为已离任。" data-msg="换届完成：新任二审员已生效，原二审员已标记为离任，操作已记入日志">确认换届</button>')
+    role = '一审员' if is1 else '二审员'
+    sample = ('林书瑶,8209230207,数学与统计学院,宣传部干事,2026-09-01,2027-01-31\\n唐可馨,8210240316,交通运输工程学院,宣传部干事,2026-09-01,2027-01-31' if is1 else
+              '李明远,8208220101,商学院,宣传部副部长,2026-09-01,2027-08-31\\n许嘉诚,8207210645,电子信息学院,新媒体中心副主任,2026-09-01,2027-08-31')
+    tmpl_csv = f'{STAFF_CSV_HEAD}\\n{sample}'
+    modals += modal(f'r{level}Import', f'批量导入{role}', f'''<div class="notice notice-info mb16">{icon('info', 15)}<div>请下载模板，按列填写 <b>姓名、工号、所在学院、职务、任期开始、任期结束</b>（日期格式 2026-09-01，UTF-8 编码 CSV）。已在名单中的工号、缺少字段的行会自动跳过，不会重复导入。</div></div>
+<div class="flex gap8 mb16">{btn('下载导入模板', '', 'download', f'data-action="export-csv" data-csv="{tmpl_csv}" data-filename="{role}导入模板" data-keep="1"')}</div>
+<label class="upload import-drop">{icon('upload', 26)}<b data-import-name>选择填写好的 CSV 文件</b><span class="hint">仅支持 .csv，选择后在下方预览校验结果</span><input type="file" accept=".csv,text/csv" data-import-file data-table="#{tid}"></label>
+<div class="import-preview mt16" data-import-preview></div>''',
+                    '<button class="btn" data-close>取消</button>' + btn('确认导入', 'btn-primary', 'check', f'data-action="staff-import" data-table="#{tid}" data-template="#{tpl}"'), 'modal-lg')
+    new_term = ('2027-02-01', '2027-07-31') if is1 else ('2027-09-01', '2028-08-31')
+    modals += modal(f'r{level}Term', f'{role}学年换届', f'''<div class="notice notice-warn mb16">{icon('alert', 15)}<div>勾选的人员<b>续任</b>：任期更新为新任期，保持在任；取消勾选的人员<b>离任</b>：标记“已离任”并停用账号，任期结束日改为新任期开始前一天。历史审核记录永久保留。</div></div>
+<form novalidate><div class="form-grid" style="grid-template-columns:1fr 1fr">{field('新任期', term_range(*new_term, 'newTerm'), req=True, full=True, hint='开始日期即换届生效日期，结束日期须晚于开始日期')}</div></form>
+<div class="term-head mt16"><label class="term-all"><input type="checkbox" data-term-all checked>全部续任</label><span class="hint" data-term-sum></span></div>
+<div class="term-list" data-term-list></div>''',
+                    '<button class="btn" data-close>取消</button>' + btn('确认换届', 'btn-primary', 'repeat', f'data-action="term-apply" data-table="#{tid}"'), 'modal-lg')
+    extra_btn = (btn('导入', '', 'upload', f'data-action="staff-import-open" data-modal="r{level}Import"') +
+                 btn('导出', '', 'download', f'data-action="export-staff" data-table="#{tid}" data-filename="{role}名单"') +
+                 btn('学年换届', 'btn-outline', 'repeat', f'data-action="term-open" data-modal="r{level}Term" data-table="#{tid}"'))
     title = '一审员名单' if is1 else '二审员名单'
     desc = '一审由校团委宣传部学生干部承担，人员经常更换，可随时增减并启用 / 停用' if is1 else '二审由高年级学生干部承担，一年一换，支持按学年批量换届'
     body = f'''{page_head(title, desc, extra_btn + btn('批量停用', 'btn-danger-o', 'x-circle', f'data-action="batch" data-table="#{tid}" data-value="已离任" data-danger="1" data-confirm="确认停用选中的 {{n}} 名审核人员吗？停用后将收回审核权限。" data-msg="已停用 {{n}} 名审核人员"') + btn('新增' + ("一审员" if is1 else "二审员"), 'btn-primary', 'plus', f'data-action="crud-add" data-modal="{mid}" data-title="新增{"一审员" if is1 else "二审员"}"'))}
 <div class="notice notice-info mb16">{icon('shield', 15)}<div>{"一审员仅可处理“待一审”稿件，不能操作二审和三审。" if is1 else "二审员仅可处理“待二审”稿件；三审终审仅限校团委管理员（宣传部老师）。"}审核权限可在“角色权限配置”中调整。</div></div>
-<div class="card"><div class="filters">{filter_select(tid, 'status', '全部状态', ['在任', '已离任'])}{search_box(tid, '搜索姓名 / 学号 / 学院')}</div>
-{table(tid, [('<input type="checkbox" class="check-all" aria-label="全选">', 'class="no-export" style="width:36px"'), '姓名', '学号', '所在学院', '职务', '任期', ('累计审核', 'data-sort'), '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl_row}'''
+<div class="card"><div class="filters">{filter_select(tid, 'status', '全部状态', ['在任', '已离任'])}{search_box(tid, '搜索姓名 / 工号 / 学院')}</div>
+{table(tid, [('<input type="checkbox" class="check-all" aria-label="全选">', 'class="no-export" style="width:36px"'), '姓名', '工号', '所在学院', '职务', '任期', ('累计审核', 'data-sort'), '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl_row}'''
     page(f'reviewer{level}-manage.html', title, body, ['人员与权限', title], modals)
 
 
 def teacher_manage():
-    teachers = [('王海峰', '200108', '计算机学院', '团委副书记', 36), ('李晓琳', '201532', '计算机学院', '辅导员', 21), ('赵明哲', '199921', '商学院', '团委书记', 28),
-                ('孙雅婷', '201877', '湘雅医学院', '辅导员', 33), ('周建国', '200356', '机电工程学院', '团委书记', 19), ('吴芳芳', '201244', '文学院', '辅导员', 15),
-                ('郑一鸣', '201609', '外国语学院', '团委副书记', 17), ('钱慧敏', '200988', '法学院', '辅导员', 12), ('冯启航', '201713', '自动化学院', '团委书记', 22),
-                ('何静怡', '202015', '土木工程学院', '辅导员', 26)]
+    y1, y2 = '2026-09-01 至 2027-08-31', '2025-09-01 至 2027-08-31'
+    teachers = [('王海峰', '200108', '计算机学院', '团委副书记', 36, y2), ('李晓琳', '201532', '计算机学院', '辅导员', 21, y1), ('赵明哲', '199921', '商学院', '团委书记', 28, y2),
+                ('孙雅婷', '201877', '湘雅医学院', '辅导员', 33, y1), ('周建国', '200356', '机电工程学院', '团委书记', 19, y2), ('吴芳芳', '201244', '文学院', '辅导员', 15, y1),
+                ('郑一鸣', '201609', '外国语学院', '团委副书记', 17, y1), ('钱慧敏', '200988', '法学院', '辅导员', 12, y1), ('冯启航', '201713', '自动化学院', '团委书记', 22, y2),
+                ('何静怡', '202015', '土木工程学院', '辅导员', 26, y1)]
     trs = ''.join(f'<tr data-college="{c}"><td data-key="name" class="fw" style="color:var(--text)">{n}</td><td data-key="no">{no}</td><td data-key="college">{c}</td><td data-key="title">{t}</td>'
-                  f'<td class="num">{k}</td><td><span class="tag js-tag tag-success">启用</span></td><td>{switch(True, n)}</td><td>{ops_edit("tModal", "编辑指导老师")}</td></tr>'
-                  for n, no, c, t, k in teachers)
+                  f'<td data-key="term" class="nowrap">{term}</td><td class="num">{k}</td><td><span class="tag js-tag tag-success">启用</span></td><td>{switch(True, n)}</td><td>{ops_edit("tModal", "编辑指导老师")}</td></tr>'
+                  for n, no, c, t, k, term in teachers)
     tpl = (f'<template id="tTpl"><tr><td data-key="name" class="fw" style="color:var(--text)">{{name}}</td><td data-key="no">{{no}}</td><td data-key="college">{{college}}</td><td data-key="title">{{title}}</td>'
-           f'<td class="num">0</td><td><span class="tag js-tag tag-success">启用</span></td><td>{switch(True)}</td><td>{ops_edit("tModal", "编辑指导老师")}</td></tr></template>')
-    fields = (field('姓名', '<input class="input" name="name" required>', req=True) + field('工号', '<input class="input" name="no" required>', req=True) +
-              field('所属学院', f'<select class="select" name="college" required>{options(COLLEGES, "请选择")}</select>', req=True) +
-              field('职务', '<input class="input" name="title" required placeholder="如：辅导员">', req=True))
-    tmpl_csv = '姓名,工号,所属学院,职务\\n示例老师,200000,计算机学院,辅导员'
+           f'<td data-key="term" class="nowrap">{{term}}</td><td class="num">0</td><td><span class="tag js-tag tag-success">启用</span></td><td>{switch(True)}</td><td>{ops_edit("tModal", "编辑指导老师")}</td></tr></template>')
+    fields = staff_fields('所属学院', 'title', '如：辅导员', '202103', ('2026-09-01', '2027-08-31'))
+    tmpl_csv = '工号,姓名,所属学院,职务,任期开始日期,任期结束日期\\n200000,示例老师,计算机学院,辅导员,2026-09-01,2027-08-31'
     modals = crud_modal('tModal', fields, 'tTable', 'tTpl') + modal('importModal', '批量导入指导老师', f'''<div class="notice notice-info mb16">{icon('info', 15)}<div>请先下载导入模板，按模板填写后上传。工号重复的记录将自动更新。</div></div>
 <div class="flex gap8 mb16">{btn('下载导入模板', '', 'download', f'data-action="export-csv" data-csv="{tmpl_csv}" data-filename="指导老师导入模板"')}</div>
 <form novalidate>{'<div class="upload-field"><label class="upload">' + icon('upload', 26) + '<b>上传填写好的模板</b><span class="hint">支持 .xlsx / .csv</span><input type="file" accept=".xlsx,.csv" data-upload="doc" data-required data-min-files="1" data-label="导入文件"></label><div class="files"></div></div>'}</form>''',
                                                                    '<button class="btn" data-close>取消</button><button class="btn btn-primary" data-action="save" data-msg="导入成功：新增 12 名、更新 3 名指导老师">开始导入</button>')
     body = f'''{page_head('指导老师名单', '学生投稿只能从该名单中选择指导老师；投稿时默认预填上次选择的指导老师，也可搜索其他学院老师', btn('批量导入', '', 'upload', 'data-open="importModal"') + btn('新增指导老师', 'btn-primary', 'plus', 'data-action="crud-add" data-modal="tModal" data-title="新增指导老师"'))}
 <div class="card"><div class="filters">{filter_select('tTable', 'college', '全部学院', COLLEGES)}{search_box('tTable', '搜索姓名 / 工号')}</div>
-{table('tTable', ['姓名', '工号', '所属学院', '职务', ('指导稿件数', 'data-sort'), '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl}'''
+{table('tTable', ['姓名', '工号', '所属学院', '职务', '任期', ('指导稿件数', 'data-sort'), '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl}'''
     page('teacher-manage.html', '指导老师名单', body, ['人员与权限', '指导老师名单'], modals)
 
 

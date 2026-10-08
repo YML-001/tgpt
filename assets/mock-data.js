@@ -22,6 +22,26 @@ window.TG_DATA = {
     { name: '何静怡', no: '202015', college: '土木工程学院', title: '辅导员' }
   ],
 
+  // 统一身份认证人员库：管理员新增一审员 / 二审员 / 指导老师时按工号回显
+  staff: [
+    { no: '8208220101', name: '李明远', college: '商学院', title: '宣传部副部长' },
+    { no: '8209230207', name: '林书瑶', college: '数学与统计学院', title: '宣传部干事' },
+    { no: '8210240316', name: '唐可馨', college: '交通运输工程学院', title: '新媒体中心编辑' },
+    { no: '8207210645', name: '许嘉诚', college: '电子信息学院', title: '新媒体中心副主任' },
+    { no: '8209230115', name: '刘子涵', college: '计算机学院', title: '宣传部干事' },
+    { no: '8208220321', name: '陈思琪', college: '商学院', title: '宣传部干事' },
+    { no: '8210230408', name: '王嘉乐', college: '文学院', title: '宣传部干事' },
+    { no: '8211240112', name: '李梓萌', college: '外国语学院', title: '宣传部干事' },
+    { no: '8209230533', name: '赵晨阳', college: '自动化学院', title: '宣传部干事' },
+    { no: '8208220219', name: '孙可欣', college: '法学院', title: '宣传部干事' },
+    { no: '8207210118', name: '周明轩', college: '机电工程学院', title: '宣传部副部长' },
+    { no: '8207210502', name: '吴雨桐', college: '湘雅医学院', title: '宣传部副部长' },
+    { no: '8207210233', name: '郑浩然', college: '土木工程学院', title: '新媒体中心主任' },
+    { no: '8206200107', name: '黄子轩', college: '资源与安全工程学院', title: '宣传部部长' },
+    { no: '202103', name: '邓思远', college: '物理学院', title: '辅导员' },
+    { no: '201988', name: '胡婧', college: '公共管理学院', title: '团委副书记' }
+  ],
+
   // 常用审核意见模板（管理员可在后台维护）
   opinionTemplates: {
     teacher: [

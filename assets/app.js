@@ -7,7 +7,9 @@
  *   data-action          业务动作：submit / pass / reject / save / save-draft / copy /
  *                        export-csv / export-zip / delete-row / crud-edit / crud-save /
  *                        set-status / read-all / sensitive-test / apply-filter / reset-filter /
- *                        add-chip / batch
+ *                        add-chip / batch / staff-manual
+ *   data-staff-lookup    人员名单弹窗：输入工号回显姓名、学院、职务
+ *   data-range           日期区间（xxFrom / xxTo 合成为「开始 至 结束」）
  *   data-show-when       条件显示（例如 identity=学生）
  *   data-when-param      根据网址参数显示（用于跨页面回显处理结果）
  */
@@ -195,6 +197,177 @@
       return false;
     }
     return true;
+  }
+
+  // 日期区间：结束不早于开始，并合成为「开始 至 结束」写入隐藏字段
+  function checkRanges(form) {
+    let ok = true;
+    $$('[data-range]', form).forEach((r) => {
+      const k = r.dataset.range;
+      const from = $(`[name="${k}From"]`, r).value;
+      const to = $(`[name="${k}To"]`, r);
+      if (from && to.value && to.value < from) { setError(to, '结束日期不能早于开始日期'); ok = false; return; }
+      $(`[name="${k}"]`, r).value = `${from} 至 ${to.value}`;
+    });
+    if (!ok) toast('任期结束日期不能早于开始日期', 'danger');
+    return ok;
+  }
+
+  /* ========== 名单表格：新增行、行状态、导入、换届 ========== */
+  function addTemplateRow(tbl, tpl, vals) {
+    const html = tpl.innerHTML.replace(/\{(\w+)\}/g, (_, k) => esc(vals[k] ?? (k === 'now' ? `2026-09-30 ${now()}` : '')));
+    const tb = $('tbody', tbl);
+    tb.insertAdjacentHTML('afterbegin', html);
+    const row = tb.firstElementChild;
+    row.classList.add('is-new');
+    return row;
+  }
+  function setRowStatus(row, v) {
+    const tagEl = $('.js-tag', row);
+    if (tagEl) { tagEl.textContent = v; tagEl.className = `tag js-tag ${TAG_CLASS[v] || ''}`; }
+    const sw = $('.switch', row);
+    if (sw) sw.classList.toggle('on', v === '启用' || v === '在任');
+    if (row.hasAttribute('data-status')) row.dataset.status = v;
+  }
+  const cellText = (row, k) => { const c = $(`[data-key="${k}"]`, row); return c ? c.textContent.trim() : ''; };
+  const liveRows = (tbl) => $$('tbody tr', tbl).filter((r) => !r.classList.contains('empty-row') && !r.classList.contains('removed'));
+  const dayBefore = (d) => { const t = new Date(`${d}T00:00:00Z`); t.setUTCDate(t.getUTCDate() - 1); return t.toISOString().slice(0, 10); };
+
+  function parseCsv(text) {
+    const rows = [];
+    let row = [], cell = '', q = false;
+    const s = text.replace(/^\ufeff/, '');
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (q) {
+        if (c === '"' && s[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && s[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter((r) => r.some((x) => x.trim()));
+  }
+
+  const IMPORT_COLS = { name: ['姓名'], no: ['工号'], college: ['所在学院', '学院', '所属学院'], duty: ['职务'], from: ['任期开始', '任期开始日期'], to: ['任期结束', '任期结束日期'] };
+  const IMPORT_LBL = { name: '姓名', no: '工号', college: '所在学院', duty: '职务', from: '任期开始', to: '任期结束' };
+  async function readImport(input) {
+    const modal = input.closest('.modal');
+    const box = $('[data-import-preview]', modal);
+    const file = input.files[0];
+    input.value = '';
+    modal._import = null;
+    if (!file) return;
+    $('[data-import-name]', modal).textContent = file.name;
+    const bad = (msg) => { box.innerHTML = `<div class="notice notice-danger">${ICON.danger}<div>${msg}</div></div>`; };
+    if (!/\.csv$/i.test(file.name)) { bad('仅支持 .csv 文件，请使用导入模板填写后上传'); return; }
+    const rows = parseCsv(await file.text());
+    const head = (rows.shift() || []).map((h) => h.trim());
+    const idx = {};
+    Object.entries(IMPORT_COLS).forEach(([k, names]) => { idx[k] = head.findIndex((h) => names.includes(h)); });
+    const missCols = Object.keys(idx).filter((k) => idx[k] < 0).map((k) => IMPORT_LBL[k]);
+    if (missCols.length) { bad(`表头缺少：${esc(missCols.join('、'))}。请下载导入模板，按模板列填写`); return; }
+    if (!rows.length) { bad('文件中没有数据行'); return; }
+    const have = new Set(liveRows($(input.dataset.table)).map((r) => cellText(r, 'no')));
+    const seen = new Set();
+    const date = /^\d{4}-\d{2}-\d{2}$/;
+    const items = rows.map((r, i) => {
+      const v = {};
+      Object.keys(idx).forEach((k) => { v[k] = (r[idx[k]] || '').trim(); });
+      const miss = Object.keys(IMPORT_LBL).filter((k) => !v[k]);
+      let st = 'ok', msg = '可导入';
+      if (miss.length) { st = 'skip'; msg = `缺少${miss.map((k) => IMPORT_LBL[k]).join('、')}`; }
+      else if (have.has(v.no)) { st = 'skip'; msg = '工号重复（已在名单中）'; }
+      else if (seen.has(v.no)) { st = 'skip'; msg = '工号重复（文件内重复）'; }
+      else if (!date.test(v.from) || !date.test(v.to) || v.to <= v.from) { st = 'skip'; msg = '任期日期有误'; }
+      if (v.no) seen.add(v.no);
+      return { line: i + 2, v, st, msg };
+    });
+    modal._import = items;
+    const okN = items.filter((x) => x.st === 'ok').length;
+    const trs = items.map(({ line, v, st, msg }) => `<tr><td>${line}</td><td>${esc(v.name) || '—'}</td><td>${esc(v.no) || '—'}</td><td>${esc(v.college) || '—'}</td><td>${esc(v.duty) || '—'}</td>`
+      + `<td class="nowrap">${v.from || v.to ? `${esc(v.from)} 至 ${esc(v.to)}` : '—'}</td><td><span class="tag ${st === 'ok' ? 'tag-success' : 'tag-danger'}">${esc(msg)}</span></td></tr>`).join('');
+    box.innerHTML = `<div class="import-sum"><b>预览校验结果</b><span>共 ${items.length} 行</span><span class="c-success">可导入 ${okN} 行</span><span class="c-danger">将跳过 ${items.length - okN} 行</span></div>`
+      + `<div class="table-wrap"><table class="tbl"><thead><tr><th>行号</th><th>姓名</th><th>工号</th><th>所在学院</th><th>职务</th><th>任期</th><th>校验结果</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+  }
+
+  function termMark(c) {
+    const item = c.closest('.term-item');
+    item.classList.toggle('leave', !c.checked);
+    const tg = $('[data-term-tag]', item);
+    tg.textContent = c.checked ? '续任' : '离任';
+    tg.className = `tag ${c.checked ? 'tag-success' : 'tag-gray'}`;
+  }
+  function termSum(modal) {
+    const keeps = $$('[data-term-keep]', modal);
+    const k = keeps.filter((c) => c.checked).length;
+    $('[data-term-sum]', modal).textContent = keeps.length ? `在任 ${keeps.length} 人 · 续任 ${k} 人 · 离任 ${keeps.length - k} 人` : '';
+    const all = $('[data-term-all]', modal);
+    if (keeps.length) { all.checked = k === keeps.length; all.indeterminate = k > 0 && k < keeps.length; }
+  }
+
+  /* ========== 人员名单：按工号回显 ========== */
+  function staffDir() {
+    const seen = new Set();
+    return [...(DATA.staff || []), ...(DATA.teachers || [])].filter((p) => !seen.has(p.no) && seen.add(p.no));
+  }
+  function staffShowMore(modal, show) { $$('.js-staff-more', modal).forEach((f) => f.classList.toggle('hidden', !show)); }
+  function staffMsg(modal, html, cls = '') {
+    const m = $('[data-staff-msg]', modal);
+    if (m) { m.innerHTML = html; m.className = cls; }
+  }
+  function staffReset(modal, edit) {
+    modal._echo = null;
+    const input = $('[data-staff-lookup]', modal);
+    input._last = `${input.value.trim()}!`;
+    staffShowMore(modal, edit);
+    const m = $('[data-staff-msg]', modal);
+    staffMsg(modal, edit ? '修改工号可重新回显人员信息，也可直接修改下方信息' : esc(m.dataset.defaultMsg));
+    $$('.staff-picker .picker-list', modal).forEach((l) => l.classList.remove('open'));
+  }
+  function staffInTable(modal, no) {
+    const save = $('[data-action="crud-save"]', modal);
+    const tbl = save && $(save.dataset.table);
+    return tbl && $$('tbody tr', tbl).some((r) => r !== modal._row && r.style.display !== 'none' && ($('[data-key="no"]', r) || {}).textContent === no);
+  }
+  function staffFill(modal, p) {
+    const set = (name, v) => { const el = $(`[name="${name}"]`, modal); if (el) { el.value = v; clearError(el); } };
+    set('no', p.no); set('name', p.name); set('college', p.college); set('duty', p.title); set('title', p.title);
+    modal._echo = p.no;
+    $('[data-staff-lookup]', modal)._last = `${p.no}!`;
+    staffShowMore(modal, true);
+    $$('.staff-picker .picker-list', modal).forEach((l) => l.classList.remove('open'));
+    if (staffInTable(modal, p.no)) staffMsg(modal, `工号 ${esc(p.no)}（${esc(p.name)}）已在名单中，保存将新增一条重复记录`, 'c-warn');
+    else staffMsg(modal, `已按工号回显：<b>${esc(p.name)}</b> · ${esc(p.college)} · ${esc(p.title)}，信息可修改`, 'c-success');
+  }
+  function staffLookup(input, final) {
+    const modal = input.closest('.modal');
+    const v = input.value.trim();
+    const key = `${v}${final ? '!' : ''}`;
+    if (input._last === key || input._last === `${v}!`) return;
+    input._last = key;
+    const dir = staffDir();
+    const hit = dir.find((p) => p.no === v);
+    if (hit) { if (modal._echo !== hit.no) staffFill(modal, hit); return; }
+    if (modal._echo) {
+      ['name', 'college', 'duty', 'title'].forEach((n) => { const el = $(`[name="${n}"]`, modal); if (el) el.value = ''; });
+      modal._echo = null;
+    }
+    if (!v) { staffMsg(modal, esc($('[data-staff-msg]', modal).dataset.defaultMsg)); return; }
+    const partial = dir.some((p) => p.no.startsWith(v) || p.name.includes(v));
+    if (final || !partial) {
+      staffShowMore(modal, true);
+      staffMsg(modal, `人员库中未找到工号「${esc(v)}」，请手动填写姓名、学院、职务后保存`, 'c-warn');
+    }
+  }
+  function renderStaffPicker(input) {
+    const list = $('.picker-list', input.closest('.staff-picker'));
+    const k = input.value.trim();
+    const items = k ? staffDir().filter((p) => p.no.includes(k) || p.name.includes(k)).slice(0, 8) : [];
+    if (!items.length || (items.length === 1 && items[0].no === k)) { list.classList.remove('open'); return; }
+    list.innerHTML = items.map((p) => `<div class="picker-item" data-no="${esc(p.no)}"><b>${esc(p.no)} · ${esc(p.name)}</b><span>${esc(p.college)} · ${esc(p.title)}</span></div>`).join('');
+    list.classList.add('open');
   }
 
   /* ========== 敏感词检测 ========== */
@@ -418,7 +591,7 @@
     async save(btn) {
       const modalEl = btn.closest('.modal');
       const form = btn.dataset.form ? $(btn.dataset.form) : (btn.closest('form') || (modalEl && $('form', modalEl)));
-      if (form && !validate(form)) return;
+      if (form && (!validate(form) || !checkRanges(form))) return;
       if (btn.dataset.confirm && !(await confirmBox({ title: '确认保存', text: btn.dataset.confirm }))) return;
       toast(btn.dataset.msg || '保存成功，已记入操作日志');
       const m = btn.closest('.modal');
@@ -448,7 +621,7 @@
       download(`${btn.dataset.filename || '导出数据'}.csv`, new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
       toast(`${fmt === 'Excel' ? 'Excel 表格' : 'CSV 文件'}已开始下载，导出行为已记入操作日志`);
       if (btn.dataset.log) addLog(btn.dataset.log);
-      closeModal(btn.closest('.modal[id]'));
+      if (!btn.dataset.keep) closeModal(btn.closest('.modal[id]'));
     },
 
     async 'export-zip'(btn) {
@@ -493,6 +666,12 @@
         if (f.type === 'radio') f.checked = f.value === v;
         else f.value = v;
       });
+      $$('[data-range]', modal).forEach((r) => {
+        const [from, to] = $(`[name="${r.dataset.range}"]`, r).value.split(' 至 ');
+        $(`[name="${r.dataset.range}From"]`, r).value = from || '';
+        $(`[name="${r.dataset.range}To"]`, r).value = to || '';
+      });
+      if ($('[data-staff-lookup]', modal)) staffReset(modal, true);
       openModal(btn.dataset.modal);
     },
 
@@ -502,26 +681,117 @@
       modal._row = null;
       $('.modal-head span', modal).textContent = btn.dataset.title || '新增';
       $$('[name]', modal).forEach((f) => { if (f.type === 'radio') f.checked = f.defaultChecked; else f.value = f.dataset.default || ''; });
-      $$('.field.is-error', modal).forEach((el) => el.classList.remove('is-error'));
+      $$('.field.is-error', modal).forEach((el) => { el.classList.remove('is-error'); const e = $(':scope > .field-error', el); if (e) e.remove(); });
+      if ($('[data-staff-lookup]', modal)) staffReset(modal, false);
       openModal(btn.dataset.modal);
+    },
+
+    // 人员名单导出：按当前筛选结果，任期拆为开始 / 结束两列
+    'export-staff'(btn) {
+      const tbl = $(btn.dataset.table);
+      const rows = liveRows(tbl).filter((r) => rowMatches(r, tbl));
+      const q = (x) => `"${String(x).replace(/"/g, '""')}"`;
+      const lines = ['姓名,工号,所在学院,职务,任期开始,任期结束,状态,累计审核'];
+      rows.forEach((r) => {
+        const [from, to] = cellText(r, 'term').split(' 至 ');
+        lines.push([cellText(r, 'name'), cellText(r, 'no'), cellText(r, 'college'), cellText(r, 'duty'), from || '', to || '',
+          ($('.js-tag', r) || {}).textContent || '', cellText(r, 'count')].map(q).join(','));
+      });
+      download(`${btn.dataset.filename || '人员名单'}.csv`, new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+      toast(`已导出 ${rows.length} 名人员（按当前筛选条件），导出行为已记入操作日志`);
+    },
+
+    // 人员名单导入：打开时清空上次的预览
+    'staff-import-open'(btn) {
+      const modal = document.getElementById(btn.dataset.modal);
+      modal._import = null;
+      $('[data-import-preview]', modal).innerHTML = '';
+      $('[data-import-name]', modal).textContent = '选择填写好的 CSV 文件';
+      openModal(btn.dataset.modal);
+    },
+
+    'staff-import'(btn) {
+      const modal = btn.closest('.modal');
+      const items = modal._import;
+      if (!items) { toast('请先选择要导入的 CSV 文件', 'warn'); return; }
+      const tbl = $(btn.dataset.table);
+      const have = new Set(liveRows(tbl).map((r) => cellText(r, 'no')));
+      const ok = items.filter((x) => x.st === 'ok' && !have.has(x.v.no));
+      const skip = items.length - ok.length;
+      if (!ok.length) { toast(`没有可导入的数据，${skip} 行均已跳过`, 'warn'); return; }
+      const tpl = $(btn.dataset.template);
+      ok.slice().reverse().forEach(({ v }) => addTemplateRow(tbl, tpl, { name: v.name, no: v.no, college: v.college, duty: v.duty, term: `${v.from} 至 ${v.to}` }));
+      closeModal(modal);
+      refreshTableOf($('tbody', tbl));
+      toast(`导入完成：新增 ${ok.length} 人，跳过 ${skip} 行`);
+    },
+
+    // 学年换届：列出在任人员，勾选续任、取消勾选离任
+    'term-open'(btn) {
+      const modal = document.getElementById(btn.dataset.modal);
+      const rows = liveRows($(btn.dataset.table)).filter((r) => r.dataset.status === '在任');
+      modal._rows = rows;
+      $$('[data-range] input[type=date]', modal).forEach((i) => { i.value = i.dataset.default || ''; });
+      $$('.field.is-error', modal).forEach((el) => { el.classList.remove('is-error'); const er = $(':scope > .field-error', el); if (er) er.remove(); });
+      $('[data-term-list]', modal).innerHTML = rows.length ? rows.map((r, i) => `<label class="term-item"><input type="checkbox" data-term-keep data-i="${i}" checked>`
+        + `<span><b>${esc(cellText(r, 'name'))}</b><div class="t-sub">工号 ${esc(cellText(r, 'no'))}</div></span>`
+        + `<span>${esc(cellText(r, 'college'))}<div class="t-sub">${esc(cellText(r, 'duty'))}</div></span>`
+        + `<span class="t-sub">现任期<br>${esc(cellText(r, 'term'))}</span><span class="tag tag-success" data-term-tag>续任</span></label>`).join('')
+        : '<div class="term-empty">当前名单中没有在任人员，无需换届</div>';
+      const all = $('[data-term-all]', modal);
+      all.checked = true; all.disabled = !rows.length;
+      termSum(modal);
+      openModal(btn.dataset.modal);
+    },
+
+    async 'term-apply'(btn) {
+      const modal = btn.closest('.modal');
+      const rows = modal._rows || [];
+      if (!rows.length) { toast('当前名单中没有在任人员，无需换届', 'warn'); return; }
+      if (!validate($('form', modal))) return;
+      const from = $('[name="newTermFrom"]', modal).value;
+      const toEl = $('[name="newTermTo"]', modal);
+      if (toEl.value <= from) { setError(toEl, '结束日期须晚于开始日期'); toast('新任期结束日期须晚于开始日期', 'danger'); return; }
+      const keeps = $$('[data-term-keep]', modal);
+      const keepN = keeps.filter((c) => c.checked).length;
+      const leaveN = keeps.length - keepN;
+      if (!(await confirmBox({ title: '确认换届', text: `新任期 ${from} 至 ${toEl.value}：续任 ${keepN} 人，离任 ${leaveN} 人。离任人员将停用账号并收回审核权限，确认执行吗？`, okText: '确认换届', danger: leaveN > 0 }))) return;
+      const prev = dayBefore(from);
+      keeps.forEach((c) => {
+        const r = rows[Number(c.dataset.i)];
+        const cell = $('[data-key="term"]', r);
+        if (c.checked) { cell.textContent = `${from} 至 ${toEl.value}`; setRowStatus(r, '在任'); }
+        else { const start = cell.textContent.split(' 至 ')[0]; cell.textContent = `${start} 至 ${prev < start ? start : prev}`; setRowStatus(r, '已离任'); }
+        r.classList.add('is-new');
+        setTimeout(() => r.classList.remove('is-new'), 3000);
+      });
+      closeModal(modal);
+      refreshTableOf($('tbody', $(btn.dataset.table)));
+      toast(`换届完成：续任 ${keepN} 人，离任 ${leaveN} 人`);
+    },
+
+    // 人员名单：工号库中没有的人员，展开姓名、学院、职务手动填写
+    'staff-manual'(btn) {
+      const modal = btn.closest('.modal');
+      staffShowMore(modal, true);
+      staffMsg(modal, '已切换为手动填写，请补充姓名、学院、职务和任期');
+      const name = $('[name="name"]', modal);
+      if (name) name.focus();
     },
 
     // 保存弹窗：编辑时更新原行，新增时按 <template> 插入新行
     'crud-save'(btn) {
       const modal = btn.closest('.modal');
       const form = $('form', modal) || modal;
+      const lookup = $('[data-staff-lookup]', form);
+      if (lookup && lookup.value.trim() && $('.js-staff-more.hidden', form)) staffLookup(lookup, true);
       if (!validate(form)) return;
+      if (!checkRanges(form)) return;
       const vals = {};
       $$('[name]', form).forEach((f) => { if (f.type !== 'radio' || f.checked) vals[f.name] = f.value.trim(); });
       let row = modal._row;
       if (!row) {
-        const tbl = $(btn.dataset.table);
-        const tpl = $(btn.dataset.template);
-        const html = tpl.innerHTML.replace(/\{(\w+)\}/g, (_, k) => esc(vals[k] ?? (k === 'now' ? `2026-09-30 ${now()}` : '')));
-        const tb = $('tbody', tbl);
-        tb.insertAdjacentHTML('afterbegin', html);
-        row = tb.firstElementChild;
-        row.classList.add('is-new');
+        row = addTemplateRow($(btn.dataset.table), $(btn.dataset.template), vals);
       } else {
         Object.entries(vals).forEach(([k, v]) => {
           const cell = $(`[data-key="${k}"]`, row);
@@ -618,7 +888,7 @@
       if (!rows.length) { toast('请先勾选需要操作的数据', 'warn'); return; }
       if (!(await confirmBox({ title: btn.dataset.title || '批量操作', text: (btn.dataset.confirm || '确认对选中的 {n} 条数据执行操作？').replace('{n}', rows.length), danger: !!btn.dataset.danger }))) return;
       rows.forEach((r) => {
-        if (btn.dataset.value) { const t = $('.js-tag', r); if (t) { t.textContent = btn.dataset.value; t.className = `tag js-tag ${TAG_CLASS[btn.dataset.value] || ''}`; } const sw = $('.switch', r); if (sw) sw.classList.toggle('on', btn.dataset.value === '启用' || btn.dataset.value === '在任'); }
+        if (btn.dataset.value) setRowStatus(r, btn.dataset.value);
         else { r.classList.add('removed'); r.style.display = 'none'; }
         const c = $('input.row-check', r); if (c) c.checked = false;
       });
@@ -728,6 +998,11 @@
     if (ddBtn) { e.preventDefault(); const dd = ddBtn.closest('.dropdown'); const open = dd.classList.contains('open'); $$('.dropdown.open').forEach((d) => d.classList.remove('open')); if (!open) dd.classList.add('open'); return; }
     if (!t.closest('.dropdown-menu')) $$('.dropdown.open').forEach((d) => d.classList.remove('open'));
 
+    // 人员工号检索列表
+    const sp = t.closest('.staff-picker .picker-item');
+    if (sp) { const p = staffDir().find((x) => x.no === sp.dataset.no); if (p) staffFill(sp.closest('.modal'), p); return; }
+    if (!t.closest('.staff-picker')) $$('.staff-picker .picker-list.open').forEach((l) => l.classList.remove('open'));
+
     // 指导老师选择列表
     const pick = t.closest('.picker-item');
     if (pick) { const wrap = pick.closest('.teacher-picker'); const input = $('input', wrap); input.value = pick.dataset.value; clearError(input); $('.picker-list', wrap).classList.remove('open'); toast(`已选择指导老师：${pick.dataset.value}`, 'info', 1500); return; }
@@ -807,7 +1082,7 @@
       sw.classList.toggle('on', on);
       const row = sw.closest('tr, [data-row]');
       const tagEl = row && $('.js-tag', row);
-      if (tagEl) { const v = on ? (tagEl.dataset.on || '启用') : (tagEl.dataset.off || '停用'); tagEl.textContent = v; tagEl.className = `tag js-tag ${TAG_CLASS[v] || ''}`; }
+      if (tagEl) { const v = on ? (tagEl.dataset.on || '启用') : (tagEl.dataset.off || '停用'); tagEl.textContent = v; tagEl.className = `tag js-tag ${TAG_CLASS[v] || ''}`; if (row.hasAttribute('data-status')) row.dataset.status = v; }
       toast(on ? (sw.dataset.onMsg || '已启用') : (sw.dataset.offMsg || '已停用'), on ? 'success' : 'info');
       return;
     }
@@ -872,6 +1147,9 @@
   document.addEventListener('change', (e) => {
     const t = e.target;
     if (t.matches('input[type=file][data-upload]')) { handleUpload(t); return; }
+    if (t.matches('[data-import-file]')) { readImport(t); return; }
+    if (t.matches('[data-term-keep]')) { termMark(t); termSum(t.closest('.modal')); return; }
+    if (t.matches('[data-term-all]')) { const m = t.closest('.modal'); $$('[data-term-keep]', m).forEach((c) => { c.checked = t.checked; termMark(c); }); termSum(m); return; }
     if (t.matches('[data-nav-radio]') && t.checked) { location.href = t.value; return; }
     if (t.matches('[data-ed-file]')) {
       const file = t.files[0];
@@ -911,6 +1189,17 @@
     if (t.matches && t.matches('[data-filter][data-live]')) { const tbl = document.getElementById(t.dataset.for); tables[tbl.id].page = 1; renderTable(tbl); }
     // 指导老师搜索
     if (t.closest && t.closest('.teacher-picker')) renderPicker(t.closest('.teacher-picker'), t.value);
+    // 人员工号回显
+    if (t.matches && t.matches('[data-staff-lookup]')) {
+      renderStaffPicker(t);
+      clearTimeout(t._lookup);
+      t._lookup = setTimeout(() => staffLookup(t, false), 300);
+    }
+  });
+
+  document.addEventListener('focusout', (e) => {
+    const t = e.target;
+    if (t.matches && t.matches('[data-staff-lookup]')) { clearTimeout(t._lookup); t._lookup = setTimeout(() => staffLookup(t, true), 200); }
   });
 
   document.addEventListener('keydown', (e) => {
@@ -918,6 +1207,15 @@
       const pop = e.target.closest('.ed-pop');
       if (e.key === 'Enter') { e.preventDefault(); $('[data-ed="ok"]', pop).click(); return; }
       if (e.key === 'Escape') { $('[data-ed="cancel"]', pop).click(); return; }
+    }
+    if (e.key === 'Enter' && e.target.matches('[data-staff-lookup]')) {
+      e.preventDefault();
+      const first = $('.picker-list.open .picker-item', e.target.closest('.staff-picker'));
+      const p = first && staffDir().find((x) => x.no === first.dataset.no);
+      if (p && e.target.value.trim() !== p.no && !staffDir().some((x) => x.no === e.target.value.trim())) staffFill(e.target.closest('.modal'), p);
+      else staffLookup(e.target, true);
+      $$('.staff-picker .picker-list', e.target.closest('.modal')).forEach((l) => l.classList.remove('open'));
+      return;
     }
     if (e.key === 'Escape') $$('.modal.open').forEach((m) => { if (m.id) closeModal(m); });
     if (e.key === 'Enter' && e.target.matches('.chip-input input')) { e.preventDefault(); actions['add-chip']($('button', e.target.closest('.chip-input'))); }

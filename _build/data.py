@@ -32,13 +32,13 @@ AVATAR = {
 # 角色配置：当前演示用户、PC 与移动端入口
 ROLES = {
     'correspondent': dict(name='投稿人（全校师生）', user='陈雨桐', dept='计算机学院 · 学生', avatar=AVATAR['corr'],
-                          pc='pc/correspondent/dashboard.html', mobile='mobile/correspondent/home.html'),
+                          pc='pc/correspondent/my-submissions.html', mobile='mobile/correspondent/home.html'),
     'teacher': dict(name='指导老师', user='王海峰', dept='计算机学院 · 团委副书记', avatar=AVATAR['teacher'],
                     pc='pc/teacher/dashboard.html', mobile='mobile/teacher/todo.html'),
     'reviewer1': dict(name='一审员', user='刘子涵', dept='校团委宣传部 · 学生干部', avatar=AVATAR['r1'],
-                      pc='pc/reviewer1/dashboard.html', mobile='mobile/reviewer1/todo.html'),
+                      pc='pc/reviewer1/todo.html', mobile='mobile/reviewer1/todo.html'),
     'reviewer2': dict(name='二审员', user='周明轩', dept='校团委宣传部 · 副部长', avatar=AVATAR['r2'],
-                      pc='pc/reviewer2/dashboard.html', mobile='mobile/reviewer2/todo.html'),
+                      pc='pc/reviewer2/todo.html', mobile='mobile/reviewer2/todo.html'),
     'admin': dict(name='校团委管理员', user='张静', dept='校团委宣传部 · 老师', avatar=AVATAR['admin'],
                   pc='pc/admin/dashboard.html', mobile='mobile/admin/home.html'),
 }

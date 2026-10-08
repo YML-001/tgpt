@@ -93,7 +93,7 @@ def c_home():
 <div class="m-item-meta"><span>《“青春志愿行”社区服务周纪实》</span></div><div class="msg-desc">二审意见：第三段引用居民原话未注明姓名与身份……</div></a>
 <div class="m-section"><span>最近投稿</span><a href="my-submissions.html">全部 ›</a></div>{recent}
 <div class="m-card"><div class="m-card-title">全校学院排行榜<a href="ranking.html">完整榜单 ›</a></div>{ranks}</div>'''
-    cw('home.html', '团学投稿', body, tab='home.html', pc_link='../../pc/correspondent/dashboard.html')
+    cw('home.html', '团学投稿', body, tab='home.html', pc_link='../../pc/correspondent/my-submissions.html')
 
 
 def c_forms():
@@ -248,13 +248,13 @@ def c_profile():
 <a class="m-list-link" href="ranking.html"><span class="ll-ic">{icon('trophy', 17)}</span>全校排行榜{icon('chev-r', 16)}</a>
 <a class="m-list-link" href="messages.html"><span class="ll-ic">{icon('bell', 17)}</span>消息通知{icon('chev-r', 16)}</a>
 <button type="button" class="m-list-link" data-open="ruleSheet"><span class="ll-ic">{icon('book', 17)}</span>投稿须知{icon('chev-r', 16)}</button>
-<a class="m-list-link" href="../../pc/correspondent/dashboard.html"><span class="ll-ic">{icon('monitor', 17)}</span>切换到 PC 端{icon('chev-r', 16)}</a>
+<a class="m-list-link" href="../../pc/correspondent/my-submissions.html"><span class="ll-ic">{icon('monitor', 17)}</span>切换到 PC 端{icon('chev-r', 16)}</a>
 </div>
 <a class="btn btn-block btn-danger-o" href="../../index.html" data-confirm="确认退出登录？演示环境将返回原型导航页。">退出登录</a>'''
     rules = f'''<div class="modal" id="ruleSheet"><div class="modal-box"><div class="modal-head"><span>投稿须知</span><button class="modal-x" data-close aria-label="关闭">{icon('x', 18)}</button></div>
 <div class="modal-body" style="font-size:14px;line-height:1.9;color:var(--text-2)">1. 涉密信息请勿上网。<br>2. 学生投稿必须指定指导老师，先由指导老师审核；教师投稿直接进入一审。<br>3. 稿件依次经过一审、二审、三审终审，每个环节 3 个工作日内处理。<br>4. 被退回的稿件可修改后重新提交，历史版本与意见永久保留。<br>5. 视频请提供永久有效的云盘链接。</div>
 <div class="modal-foot"><button class="btn btn-primary" data-close>我知道了</button></div></div></div>'''
-    cw('profile.html', '我的', body, tab='profile.html', modals=rules, pc_link='../../pc/correspondent/dashboard.html')
+    cw('profile.html', '我的', body, tab='profile.html', modals=rules, pc_link='../../pc/correspondent/my-submissions.html')
 
 
 # =============== 审核类角色通用 ===============

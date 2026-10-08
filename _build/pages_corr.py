@@ -4,7 +4,7 @@ from lib import (icon, tag, type_tag, stat, card, page_head, btn, a_btn, options
                  pc_page, write)
 from data import MY_SUBS, RANKING, IMG, ARCHIVE, TYPE_NAME
 from common import (RETURNED, RETURN_OPINIONS, article, gallery, info_kv, returned_timeline, op_log_table,
-                    msg_item, messages_page_body, rank_rows, donut, bars, college_detail_modal)
+                    messages_page_body, rank_rows, donut, bars, college_detail_modal)
 
 R = 'correspondent'
 P = 'pc/correspondent/'
@@ -49,7 +49,7 @@ def form_foot(sensitive, type_name):
     confirm = '提交后稿件将进入审核流程（学生投稿先由指导老师审核，教师投稿直接进入校团委一审），审核期间不可修改。确认提交吗？'
     return f'''<div class="form-foot">
 <span class="draft-status" data-draft-status>{icon("clock", 14)}&nbsp;每 30 秒自动保存草稿</span>
-{a_btn('取消', 'dashboard.html', '', None, 'data-confirm="当前内容已自动保存为草稿，确认离开本页吗？"')}
+{a_btn('取消', 'my-submissions.html', '', None, 'data-confirm="当前内容已自动保存为草稿，确认离开本页吗？"')}
 {btn('保存草稿', '', 'save', 'data-action="save-draft"')}
 {btn('提交投稿', 'btn-primary', 'send', f'data-action="submit" data-sensitive="{sensitive}" data-confirm="{confirm}" data-msg="投稿提交成功" data-next="submit-success.html?type={type_name}&identity={{identity}}"')}
 </div>'''
@@ -77,46 +77,6 @@ def news_form(prefill=None, sensitive='#newsTitle,#newsIntro,#newsEditor'):
 <div class="form-section"><div class="form-section-title">新闻配图<span class="hint">原图存储，不做压缩</span></div>
 {upload_field('新闻配图', hint='支持 JPG / PNG，可多选，单张不超过 20MB；建议 3 张以上', prefill=p.get('files'))}
 </div>'''
-
-
-# ---------- 1 工作台 ----------
-def dashboard():
-    recent = ''
-    for sid, title, t, ident, teacher, time, st in MY_SUBS[1:6]:
-        recent += (f'<tr><td><a class="t-title" href="submission-detail.html">{title}</a><div class="t-sub">{sid}</div></td>'
-                   f'<td>{type_tag(t)}</td><td>{time[5:]}</td><td>{tag(st)}</td></tr>')
-    ranks = ''
-    for i, (c, s, a, b) in enumerate(RANKING[:5]):
-        rc = f' r{i + 1}' if i < 3 else ''
-        me = ' <span class="tag tag-primary">本院</span>' if c == '计算机学院' else ''
-        ranks += (f'<div class="todo-item"><span class="rank-no{rc}">{i + 1}</span><div class="ti-main"><div class="ti-title">{c}{me}</div>'
-                  f'<div class="ti-sub">投稿 {s} · 采用 {a}</div></div><b class="num">{a}</b></div>')
-    body = f'''
-<div class="welcome">
-  <div><h1>下午好，陈雨桐</h1><p>2026—2027 学年你已投稿 12 篇，其中 5 篇被采用；有 1 篇稿件被退回待修改。</p></div>
-  <div class="flex gap12">{a_btn('立即投稿', 'submit-news.html', '', 'edit')}{a_btn('我的投稿', 'my-submissions.html', 'btn-ghost-w', 'inbox')}</div>
-</div>
-<div class="grid g4 mt20">
-{stat('file', 'blue', 86, '本院本学年投稿', '<span class="c-success">较上学年同期 +12%</span>', 'college-stats.html')}
-{stat('check-circle', 'green', 52, '本院已采用', '采用率 60.5%', 'college-stats.html')}
-{stat('clock', 'orange', 14, '本院审核中', '含待指导老师审核 5 篇', 'college-stats.html')}
-{stat('undo', 'red', 9, '本院被退回', '已重提 7 篇', 'college-stats.html')}
-</div>
-<div class="grid g-main mt20">
-  <div class="grid">
-    {card('我的待办', f"""
-      <div class="todo-item"><span class="stat-ic red" style="width:36px;height:36px">{icon('undo', 18)}</span><div class="ti-main"><div class="ti-title">“青春志愿行”社区服务周纪实 · 被二审退回</div><div class="ti-sub">退回意见：第三段引用居民原话未注明姓名与身份……</div></div>{a_btn('去修改', 'resubmit.html', 'btn-sm btn-danger-o')}</div>
-      <div class="todo-item"><span class="stat-ic gray" style="width:36px;height:36px">{icon('edit', 18)}</span><div class="ti-main"><div class="ti-title">2026年“青春心向党”国庆主题快闪活动 · 草稿未提交</div><div class="ti-sub">最后保存于今天 09:12</div></div>{a_btn('继续编辑', 'submit-news.html', 'btn-sm')}</div>
-      <div class="todo-item"><span class="stat-ic orange" style="width:36px;height:36px">{icon('clock', 18)}</span><div class="ti-main"><div class="ti-title">计算机学院举办2026级新生“科技启航”主题团日活动</div><div class="ti-sub">等待指导老师王海峰审核 · 剩余 0.5 个工作日</div></div>{a_btn('查看进度', 'submission-detail.html', 'btn-sm')}</div>
-    """, 'flag', '<a class="link" href="my-submissions.html">全部稿件 ›</a>')}
-    {card('最近投稿', table('recentTable', ['稿件', '类型', '投稿时间', '状态'], [recent], pager=False), 'inbox', '<a class="link" href="my-submissions.html">查看全部 ›</a>', 'card-body" style="padding:0')}
-  </div>
-  <div class="grid" style="align-content:start">
-    {card('全校学院排行榜', ranks + '<div class="notice notice-info mt12">' + icon('trophy', 15) + '<div>本院本学年采用 52 篇，全校排名 <b>第 1</b></div></div>', 'trophy', '<a class="link" href="ranking.html">完整榜单 ›</a>')}
-    {card('最新消息', '<div style="margin:-20px">' + msg_item('undo', 'red', '稿件被退回', '《“青春志愿行”社区服务周纪实》被二审退回，请查看意见后修改', '1 小时前', 'resubmit.html', True) + msg_item('check-circle', 'green', '稿件终审采用', '《红色经典诵读活动》已终审采用，计入本院采用统计', '昨天', 'submission-detail.html', True) + '</div>', 'bell', '<a class="link" href="messages.html">全部 ›</a>')}
-  </div>
-</div>'''
-    page('dashboard.html', '工作台', body)
 
 
 # ---------- 2-5 四类投稿 ----------
@@ -443,6 +403,6 @@ def no_permission():
 
 
 def build():
-    dashboard(); submit_news(); submit_video(); submit_photo(); submit_clue(); submit_success()
+    submit_news(); submit_video(); submit_photo(); submit_clue(); submit_success()
     my_submissions(); submission_detail(); version_history(); resubmit(); college_stats(); ranking()
     messages(); no_permission()

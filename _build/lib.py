@@ -253,7 +253,7 @@ def teacher_picker(value='王海峰（计算机学院）', name='teacher'):
 # ---------- PC 框架 ----------
 MENUS = {
     'correspondent': [
-        ('投稿管理', [('dashboard', '工作台', 'dashboard.html'), ('inbox', '我的投稿', 'my-submissions.html')]),
+        ('投稿管理', [('inbox', '我的投稿', 'my-submissions.html')]),
         ('统计分析', [('chart', '本院投稿统计', 'college-stats.html'), ('trophy', '全校排行榜', 'ranking.html')]),
     ],
     'teacher': [
@@ -261,7 +261,6 @@ MENUS = {
                   ('bell', '催办/抄送', 'cc.html'), ('layers', '批量审批', 'batch.html')]),
     ],
     'reviewer': [
-        ('首页', [('dashboard', '工作台', 'dashboard.html')]),
         ('我的待办', [('inbox', '待办', 'todo.html', '{todo}'), ('file-check', '已办', 'my-ledger.html'),
                   ('bell', '催办/抄送', 'cc.html'), ('layers', '批量审批', 'batch.html')]),
         ('稿件查询', [('archive', '稿件查询', 'submissions.html')]),

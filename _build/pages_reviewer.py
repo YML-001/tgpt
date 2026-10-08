@@ -1,8 +1,8 @@
 # PC 端 · 一审员 / 二审员（结构相同，节点与数据不同）
-from lib import icon, tag, type_tag, remain, stat, card, page_head, btn, a_btn, filter_select, search_box, \
+from lib import icon, tag, type_tag, card, page_head, btn, a_btn, filter_select, search_box, \
     date_range, filter_bar, table, pc_page, write
 from data import R1_TODO, R2_TODO, FEATURED, ADOPTED, ARCHIVE, COLLEGES
-from common import featured_flow_timeline, adopted_timeline, messages_page_body, article, gallery, info_kv, op_log_table, bars
+from common import featured_flow_timeline, adopted_timeline, messages_page_body, article, gallery, info_kv, op_log_table
 from review import review_body, reject_modal, q
 from workflow import norm, todo_body, done_body, cc_body, batch_body, detail_body, node_chart, flow_name, NAMES
 from publish import publish_panel, export_buttons
@@ -39,30 +39,6 @@ def build_for(role):
 
     def page(file, title, body, crumbs=None, modals='', active=None):
         write(P + file, pc_page(role, active or file, title, body, crumbs=crumbs, modals=modals, todo_count=n_todo))
-
-    # ---------- 工作台 ----------
-    items = ''
-    for sid, title, t, col, ident, time, rem, lv in rows[:5]:
-        dot = {'over': 'red', 'warn': 'orange', 'ok': 'blue'}[lv]
-        items += (f'<div class="todo-item"><span class="stat-ic {dot}" style="width:36px;height:36px">{icon("file" if t == "新闻" else {"视频": "video", "照片": "image", "线索": "bulb"}[t], 18)}</span>'
-                  f'<div class="ti-main"><a class="ti-title" style="display:block" href="review.html">{title}</a><div class="ti-sub">{col} · {ident}投稿 · 到达 {time[5:]}</div></div>{remain(rem, lv)}</div>')
-    week = [('周一', [9, 2]), ('周二', [12, 1]), ('周三', [8, 3]), ('周四', [11, 1]), ('周五', [10, 2]), ('周六', [3, 0]), ('周日', [2, 0])]
-    body = f'''<div class="welcome"><div><h1>{c["user"]}，今天有 {n_todo} 篇稿件等待{node}</h1><p>其中 {n_over} 篇已超时、{n_warn} 篇即将超时，请优先处理。{c["peers"]}。</p></div>
-<div class="flex gap12">{a_btn('开始审核', 'review.html', '', 'play')}{a_btn('查看待办', 'todo.html', 'btn-ghost-w', 'inbox')}</div></div>
-<div class="grid g4 mt20">
-{stat('inbox', 'blue', n_todo, f'待{node}稿件', '', 'todo.html', True)}
-{stat('alert', 'red', n_over, '已超时', '已记入超时台账', 'todo.html')}
-{stat('clock', 'orange', n_warn, '即将超时', '剩余不足 1 个工作日', 'todo.html')}
-{stat('check-circle', 'green', 55, '本周已审核', '及时率 96.4%', 'my-ledger.html')}
-</div>
-<div class="grid g-main mt20">
-  {card('优先处理', items, 'flag', '<a class="link" href="todo.html">全部待办 ›</a>')}
-  <div class="grid" style="align-content:start">
-    {card('本周处理情况', bars(week, ('#3087CC', '#F6BCBE'), 180) + '<div class="legend mt12"><span><i style="background:#3087CC"></i>通过</span><span><i style="background:#F6BCBE"></i>退回</span></div>', 'chart')}
-    {card('审核规范', f'<div class="notice notice-info">{icon("book", 15)}<div>① 稿件到达后 3 个工作日内处理；② 退回必须填写具体意见；③ 涉及敏感词的稿件请重点核对；④ 常用意见可在审核弹窗中一键插入。</div></div>', 'shield')}
-  </div>
-</div>'''
-    page('dashboard.html', '工作台', body)
 
     # ---------- 待办 ----------
     wrows = norm(rows, c['kind'])

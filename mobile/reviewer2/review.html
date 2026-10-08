@@ -170,6 +170,28 @@ mark.low{background:var(--warn-bg);color:#B86E00;padding:0 2px;border-radius:3px
 .picker-item:hover{background:var(--primary-light)}
 .picker-item span{font-size:12px;color:var(--text-3)}
 .picker-empty{padding:12px;color:var(--text-3);font-size:13px}
+.picker-item.on{background:var(--primary-light)}
+.staff-picker{position:relative}
+.staff-tip{display:flex;align-items:center;gap:12px;margin-top:6px;font-size:12px;color:var(--text-3);line-height:1.5}
+.staff-tip .link{margin-left:auto;flex:none;font-size:12px}
+.field .f-range{height:36px;padding:2px 6px;border-color:var(--border)}
+.field .f-range .input{height:30px;width:auto;flex:1}
+.field.is-error .f-range{border-color:var(--danger)}
+.field.is-error .f-range .input{box-shadow:none!important}
+.nowrap{white-space:nowrap}
+.import-drop{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px}
+.import-preview .tbl th,.import-preview .tbl td{padding:8px 10px;font-size:13px}
+.import-preview .table-wrap{max-height:260px;overflow:auto}
+.import-sum{display:flex;gap:16px;align-items:center;margin-bottom:10px;font-size:13px}
+.term-head{display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px;border-bottom:1px solid var(--line)}
+.term-all{display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer}
+.term-list{max-height:280px;overflow:auto}
+.term-item{display:grid;grid-template-columns:24px 1.1fr 1.6fr 1.4fr 72px;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer}
+.term-item b{font-weight:500;color:var(--text)}
+.term-item .t-sub{font-size:12px;color:var(--text-3)}
+.term-item.leave{background:#FAFAFB}
+.term-item.leave b{color:var(--text-3)}
+.term-empty{padding:28px 0;text-align:center;color:var(--text-3);font-size:13px}
 .dot-ok{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--success);margin-right:6px;vertical-align:middle}
 .is-new,.is-new td{animation:flash 2.4s ease-out}
 .only-unread .msg-item:not(.unread){display:none}
