@@ -1,6 +1,6 @@
 # 多个角色共用的业务区块：稿件正文、投稿信息、流转记录、消息、排行榜等
 from lib import icon, tag, type_tag, timeline, card, table, modal, filter_select
-from data import FEATURED, ADOPTED, IMG, RANKING, ARCHIVE
+from data import FEATURED, ADOPTED, IMG, RANKING, ARCHIVE, deputy_of
 
 RETURNED = dict(
     id='TG2026092203', title='“青春志愿行”社区服务周纪实', type='新闻', college='计算机学院',
@@ -13,6 +13,7 @@ RETURNED = dict(
     ],
     images=[IMG['volunteer'], IMG['students'], IMG['group']],
     captions=['志愿者为老人讲解手机使用', '编程启蒙课堂', '志愿者合影'],
+    files=[('居民访谈记录.docx', '64 KB')],
 )
 
 RETURN_OPINIONS = [
@@ -48,51 +49,34 @@ def info_kv(sub, extra=None):
     rows = [('稿件编号', sub['id']), ('稿件类型', type_tag(sub['type'])), ('所属学院', sub['college']),
             ('投稿人', sub['author']), ('投稿人身份', sub['identity']),
             ('指导老师', sub['teacher'] if sub['identity'] == '学生' else '—（教师投稿无需指定）'),
-            ('投稿时间', sub['time']), ('撰稿人', sub['writer']), ('拍摄时间', sub['shoot'])]
+            ('副书记', f'{deputy_of(sub["college"])} · 学工系统'), ('投稿时间', sub['time']), ('撰稿人', sub['writer']), ('拍摄时间', sub['shoot'])]
     rows += extra or []
     return '<dl class="kv c2">' + ''.join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in rows) + '</dl>'
 
 
 def featured_flow_timeline(upto='teacher'):
-    """重点稿件当前的流转记录；upto 表示已走到的节点"""
-    items = []
-    if upto in ('r3',):
-        items.append(('primary', '到达三审终审', tag('待三审'), '2026-09-30 09:00 · 系统', '', ''))
-        items.append(('ok', '二审通过', '', '周明轩（二审员）· 2026-09-29 17:40', '内容扎实，同意报送终审。', ''))
-    if upto in ('r2', 'r3'):
-        if upto == 'r2':
-            items.append(('primary', '到达二审', tag('待二审'), '2026-09-29 11:20 · 系统', '', ''))
-        items.append(('ok', '一审通过', '', '刘子涵（一审员）· 2026-09-29 11:20', '标题、要素齐全，配图清晰。', ''))
-    if upto in ('r1', 'r2', 'r3'):
-        if upto == 'r1':
-            items.append(('primary', '到达一审', tag('待一审'), '2026-09-28 16:35 · 系统', '', ''))
-        items.append(('ok', '指导老师审核通过', '', '王海峰（指导老师）· 2026-09-28 16:35', '内容基本符合要求，同意报送校团委。', ''))
-    if upto == 'teacher':
-        items.append(('primary', '到达指导老师审核', tag('待指导老师审核'), '2026-09-28 10:24 · 系统 · 计时开始（3 个工作日）', '', ''))
-    items.append(('ok', '提交投稿（v1）', '', '陈雨桐（学生 · 计算机学院）· 2026-09-28 10:24 · IP 10.12.34.21', '', ''))
-    return timeline(items)
+    """重点稿件当前的流转记录；upto 表示当前待处理的节点"""
+    from detail import flow_records
+    return flow_records(FEATURED, upto)
 
 
 def returned_timeline():
     return timeline([
         ('danger', '二审退回', tag('已退回'), '周明轩（二审员）· 2026-09-22 14:18', RETURN_OPINIONS[0][4], 'danger'),
         ('ok', '一审通过', '', '刘子涵（一审员）· 2026-09-21 09:20', '修改到位，同意报送二审。', ''),
+        ('ok', '副书记审核通过', '', f'{deputy_of("计算机学院")} · 2026-09-20 17:30', '内容导向正确，同意报送校团委一审。', ''),
         ('ok', '指导老师审核通过', '', '李晓琳（指导老师）· 2026-09-20 16:10', '已按意见修改，同意报送。', ''),
         ('primary', '修改后重新提交（v2）', '', '陈雨桐 · 2026-09-20 11:40 · 重新进入审核流程', '', ''),
         ('danger', '一审退回', '', '刘子涵（一审员）· 2026-09-19 10:05', RETURN_OPINIONS[1][4], 'danger'),
-        ('ok', '指导老师审核通过', '', '李晓琳（指导老师）· 2026-09-18 15:20', '同意报送校团委。', ''),
+        ('ok', '副书记审核通过', '', f'{deputy_of("计算机学院")} · 2026-09-18 17:05', '同意报送校团委一审。', ''),
+        ('ok', '指导老师审核通过', '', '李晓琳（指导老师）· 2026-09-18 15:20', '同意报送。', ''),
         ('ok', '提交投稿（v1）', '', '陈雨桐（学生 · 计算机学院）· 2026-09-18 09:30', '', ''),
     ])
 
 
 def adopted_timeline():
-    return timeline([
-        ('ok', '三审终审：采用', tag('已终审采用'), '张静（校团委管理员）· 2026-09-19 10:30 · 计入采用统计', '内容质量较高，予以采用，计入学院采用统计。', ''),
-        ('ok', '二审通过', '', '周明轩（二审员）· 2026-09-18 15:12', '同意报送终审。', ''),
-        ('ok', '一审通过', '', '刘子涵（一审员）· 2026-09-17 09:40', '要素齐全。', ''),
-        ('ok', '指导老师审核通过', '', '赵明哲（指导老师）· 2026-09-16 11:05', '同意报送。', ''),
-        ('ok', '提交投稿（v1）', '', '赵一帆（学生 · 商学院）· 2026-09-15 16:40', '', ''),
-    ])
+    from detail import flow_records
+    return flow_records(ADOPTED, 'adopted')
 
 
 def op_log_table(rows, table_id='logTable'):
@@ -101,7 +85,12 @@ def op_log_table(rows, table_id='logTable'):
             f'<th>操作行为</th><th>IP 地址</th></tr></thead><tbody>{trs}</tbody></table></div>')
 
 
-def sensitive_card():
+def sensitive_card(t='新闻'):
+    if t != '新闻':
+        scope = {'视频': '视频标题、简介、用途说明', '照片': '照片主题、场景简述、单张备注', '线索': '线索标题、线索内容'}[t]
+        return (f'<div class="sens-card"><div class="flex between"><b class="flex gap8">{icon("shield", 16)}敏感词检测结果</b>'
+                f'<span class="tag tag-success">未命中</span></div>'
+                f'<div class="hint mt8">检测模式：语义匹配 · 检测范围：{scope} · 高危词 <b class="c-success">0</b> 个 · 低危词 <b class="c-success">0</b> 个</div></div>')
     return (f'<div class="sens-card"><div class="flex between"><b class="flex gap8">{icon("shield", 16)}敏感词检测结果</b>'
             f'<span class="tag tag-warn">低危 1 处</span></div>'
             f'<div class="hint mt8">检测模式：语义匹配 · 高危词 <b class="c-success">0</b> 个 · 低危词 <b class="c-warn">1</b> 个</div>'

@@ -2,14 +2,15 @@
 from lib import (icon, tag, type_tag, stat, card, page_head, btn, a_btn, options, filter_select, search_box,
                  date_range, filter_bar, table, field, modal, flow_steps, editor, upload_field, teacher_picker,
                  pc_page, write)
-from data import MY_SUBS, RANKING, IMG, ARCHIVE, TYPE_NAME
-from common import (RETURNED, RETURN_OPINIONS, article, gallery, info_kv, returned_timeline, op_log_table,
+from data import MY_SUBS, RANKING, IMG, ARCHIVE, TYPE_NAME, VIDEO, PHOTO, CLUE, typed
+from detail import sub_content, full_detail
+from common import (RETURNED, RETURN_OPINIONS, info_kv, returned_timeline, op_log_table,
                     messages_page_body, rank_rows, donut, bars, college_detail_modal)
 
 R = 'correspondent'
 P = 'pc/correspondent/'
 
-GROUP = {'草稿': '草稿', '待指导老师审核': '审核中', '待一审': '审核中', '待二审': '审核中', '待三审': '审核中',
+GROUP = {'草稿': '草稿', '待指导老师审核': '审核中', '待副书记审核': '审核中', '待一审': '审核中', '待二审': '审核中', '待三审': '审核中',
          '已退回': '已退回', '已终审采用': '已采用', '已发布': '已采用', '已终审不采用': '未采用'}
 
 
@@ -40,19 +41,28 @@ def identity_section(identity='学生', teacher='王海峰（计算机学院）'
 {field('所属学院', '<input class="input" value="计算机学院" disabled>', hint='所属学院取自统一身份认证，稿件计入本院统计')}
 {field('投稿人身份', radios, req=True)}
 <div class="field full" data-show-when="identity=学生"><label class="lbl req">指导老师</label>{teacher_picker(teacher)}
-<div class="hint">默认预填上次选择的指导老师；只能从指导老师名单中选择，可输入姓名 / 工号搜索其他学院老师。学生稿件将先由指导老师审核，通过后进入校团委一审。</div></div>
-<div class="field full hidden" data-show-when="identity=教师"><div class="notice notice-info">{icon("info", 15)}<div>教师投稿无需指定指导老师，提交后直接进入<b>校团委一审</b>。</div></div></div>
+<div class="hint">默认预填上次选择的指导老师；只能从指导老师名单中选择，可输入姓名 / 工号搜索其他学院老师。学生稿件依次经过指导老师审核、学院副书记审核，通过后进入校团委一审。</div></div>
+<div class="field full hidden" data-show-when="identity=教师"><div class="notice notice-info">{icon("info", 15)}<div>教师投稿无需指定指导老师，提交后先由<b>本院副书记</b>审核（副书记取自学工系统，按所在学院自动确定），通过后进入校团委一审。</div></div></div>
 </div></div>'''
 
 
 def form_foot(sensitive, type_name):
-    confirm = '提交后稿件将进入审核流程（学生投稿先由指导老师审核，教师投稿直接进入校团委一审），审核期间不可修改。确认提交吗？'
+    confirm = '提交后稿件将进入审核流程（学生投稿：指导老师 → 副书记 → 一审；教师投稿：副书记 → 一审），审核期间不可修改。确认提交吗？'
     return f'''<div class="form-foot">
 <span class="draft-status" data-draft-status>{icon("clock", 14)}&nbsp;每 30 秒自动保存草稿</span>
 {a_btn('取消', 'my-submissions.html', '', None, 'data-confirm="当前内容已自动保存为草稿，确认离开本页吗？"')}
 {btn('保存草稿', '', 'save', 'data-action="save-draft"')}
 {btn('提交投稿', 'btn-primary', 'send', f'data-action="submit" data-sensitive="{sensitive}" data-confirm="{confirm}" data-msg="投稿提交成功" data-next="submit-success.html?type={type_name}&identity={{identity}}"')}
 </div>'''
+
+
+ATTACH_ACCEPT = '.doc,.docx,.pdf,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.jpg,.jpeg,.png'
+
+
+def attach_section(hint='如活动策划方案、签到表、授权说明等'):
+    return (f'<div class="form-section"><div class="form-section-title">附件<span class="hint">选填 · {hint}</span></div>'
+            + upload_field('附件', kind='doc', accept=ATTACH_ACCEPT, hint='选填，支持 Word / PDF / Excel / PPT / ZIP / 图片，可多选，单个不超过 50MB', req=False, max_mb=50)
+            + '</div>')
 
 
 DURATION_INPUT = r'<input class="input" name="duration" required placeholder="如 03:25" data-pattern="^\d{1,3}:\d{2}$" data-pattern-msg="请按“分:秒”格式填写，如 03:25">'
@@ -71,12 +81,13 @@ def news_form(prefill=None, sensitive='#newsTitle,#newsIntro,#newsEditor'):
 {field('新闻标题', f'<input class="input" id="newsTitle" name="title" maxlength="50" required value="{p.get("title", "")}" placeholder="请输入新闻标题，建议 30 字以内" data-counter="#titleCount">', req=True, full=True, hint=f'已输入 <b id="titleCount">{len(p.get("title", ""))}</b> / 50 字')}
 {field('撰稿人', f'<input class="input" name="writer" required value="{p.get("writer", "")}" placeholder="多位撰稿人用顿号分隔">', req=True)}
 {field('拍摄时间', f'<input type="date" class="input" name="shoot" required value="{p.get("shoot", "")}">', req=True)}
-{field('活动简介', f'<textarea class="textarea" id="newsIntro" name="intro" required maxlength="200" placeholder="一句话概括活动时间、地点、主体和亮点（200 字以内）">{p.get("intro", "")}</textarea>', req=True, full=True)}
+{field('活动简介', f'<textarea class="textarea" id="newsIntro" name="intro" maxlength="200" placeholder="选填，一句话概括活动时间、地点、主体和亮点（200 字以内）">{p.get("intro", "")}</textarea>', full=True, hint='选填')}
 <div class="field full"><label class="lbl req">新闻正文</label>{editor('newsEditor', content)}</div>
 </div></div>
-<div class="form-section"><div class="form-section-title">新闻配图<span class="hint">原图存储，不做压缩</span></div>
-{upload_field('新闻配图', hint='支持 JPG / PNG，可多选，单张不超过 20MB；建议 3 张以上', prefill=p.get('files'))}
-</div>'''
+<div class="form-section"><div class="form-section-title">新闻配图<span class="hint">选填 · 原图存储，不做压缩</span></div>
+{upload_field('新闻配图', hint='选填，支持 JPG / PNG，可多选，单张不超过 20MB；建议 3 张以上', prefill=p.get('files'), req=False)}
+</div>
+{attach_section()}'''
 
 
 # ---------- 2-5 四类投稿 ----------
@@ -108,6 +119,7 @@ def submit_video():
 </div>
 <div class="mt16">{upload_field('视频封面图', hint='选填，JPG / PNG，建议 16:9', req=False)}</div>
 </div>
+{attach_section('如拍摄脚本、字幕文稿、音乐授权说明等')}
 {form_foot('#videoTitle,#videoIntro', '视频')}</form>'''
     page('submit-video.html', '视频投稿', body, ['我的投稿', '视频投稿'])
 
@@ -139,6 +151,8 @@ def submit_clue():
 <div class="form-grid">
 {field('线索标题', '<input class="input" id="clueTitle" name="title" required maxlength="50" placeholder="一句话概括线索">', req=True, full=True)}
 {field('线索详细描述', '<textarea class="textarea" id="clueDesc" name="desc" required style="min-height:130px" placeholder="请描述人物 / 事件的基本情况、新闻价值与时间节点"></textarea>', req=True, full=True)}
+{field('线索类型', f'<select class="select" name="clueType">{options(["人物事迹", "活动预告", "成果荣誉", "突发事件", "其他"], "选填")}</select>')}
+{field('事件时间地点', '<input class="input" name="whenWhere" placeholder="选填，如 2026-10-10 14:30 · 校本部图书馆报告厅">')}
 {field('线索来源', f'<select class="select" name="source" required>{src}</select>', req=True)}
 <div class="field"><label class="lbl req">是否接受采访</label><div class="radio-group"><label class="radio-card"><input type="radio" name="interview" value="是" required checked>接受采访</label><label class="radio-card"><input type="radio" name="interview" value="否">不接受</label></div></div>
 <div class="field full" data-show-when="interview=是"><label class="lbl req">可采访时间段</label><input class="input" name="interviewTime" required placeholder="如：工作日 14:00—17:00，或 10月8日—10月15日"></div>
@@ -155,12 +169,12 @@ def submit_clue():
 # ---------- 6 提交成功 ----------
 def submit_success():
     stu = f'''<div data-when-param-hide="identity=教师">
-  <p class="page-desc" style="font-size:14px">稿件已进入 <b class="c-warn">待指导老师审核</b>，指导老师王海峰将在 3 个工作日内处理，审核结果会通过消息通知你。</p>
+  <p class="page-desc" style="font-size:14px">稿件已进入 <b class="c-warn">待指导老师审核</b>，指导老师王海峰将在 3 个工作日内处理；通过后由学院副书记审核，再进入校团委一审。审核结果会通过消息通知你。</p>
   <div class="card mt20" style="padding:20px">{flow_steps('学生', 1)}</div>
   <div class="flex gap12 mt24" style="justify-content:center">{a_btn('查看我的投稿', 'my-submissions.html?new=TG2026093005&identity=学生', 'btn-primary btn-lg', 'inbox')}{a_btn('查看稿件档案', 'submission-detail.html', 'btn-lg', 'file')}{a_btn('继续投稿', 'submit-news.html', 'btn-lg', 'plus')}</div>
 </div>'''
     tea = f'''<div class="hidden" data-when-param="identity=教师">
-  <p class="page-desc" style="font-size:14px">教师投稿无需指导老师审核，稿件已直接进入 <b class="c-warn">待一审</b>，校团委一审员将在 3 个工作日内处理。</p>
+  <p class="page-desc" style="font-size:14px">教师投稿无需指导老师审核，稿件已进入 <b class="c-warn">待副书记审核</b>，由本院副书记（取自学工系统）在 3 个工作日内处理，通过后进入校团委一审。</p>
   <div class="card mt20" style="padding:20px">{flow_steps('教师', 1)}</div>
   <div class="flex gap12 mt24" style="justify-content:center">{a_btn('查看我的投稿', 'my-submissions.html?new=TG2026093005&identity=教师', 'btn-primary btn-lg', 'inbox')}{a_btn('查看稿件档案', 'submission-detail.html', 'btn-lg', 'file')}{a_btn('继续投稿', 'submit-news.html', 'btn-lg', 'plus')}</div>
 </div>'''
@@ -179,25 +193,27 @@ def my_submissions():
     new_row = (f'<tr class="hidden" data-when-param="new=TG2026093005" data-highlight data-group="审核中" data-type="新闻" data-date="2026-09-30">'
                f'<td><a class="t-title" href="submission-detail.html">【新提交】你刚刚提交的稿件</a><div class="t-sub">TG2026093005</div></td>'
                f'<td>{type_tag("新闻")}</td><td><span data-param-text="identity">学生</span></td><td>—</td><td>2026-09-30 16:20</td>'
-               f'<td><span data-when-param-hide="identity=教师">{tag("待指导老师审核")}</span><span class="hidden" data-when-param="identity=教师">{tag("待一审")}</span></td>'
+               f'<td><span data-when-param-hide="identity=教师">{tag("待指导老师审核")}</span><span class="hidden" data-when-param="identity=教师">{tag("待副书记审核")}</span></td>'
                f'<td><div class="ops"><a class="link" href="submission-detail.html">查看进度</a></div></td></tr>')
     rows.append(new_row)
     for sid, title, t, ident, teacher, time, st in MY_SUBS:
         g = GROUP[st]
+        dh = 'submission-detail.html' if t == '新闻' else typed('submission-detail.html', t)
         if st == '草稿':
             ops = f'<a class="link" href="submit-news.html">继续编辑</a><button class="link link-danger" data-action="delete-row" data-confirm="确认删除该草稿吗？删除后不可恢复。">删除</button>'
         elif st == '已退回':
             ops = '<a class="link" href="submission-detail.html">查看意见</a><a class="link" href="resubmit.html">修改重提</a>'
         elif g == '审核中':
-            ops = '<a class="link" href="submission-detail.html">查看进度</a>'
+            ops = f'<a class="link" href="{dh}">查看进度</a>'
         else:
-            ops = '<a class="link" href="submission-detail.html">稿件档案</a>'
+            ops = f'<a class="link" href="{dh}">稿件档案</a>'
         status = tag(st)
         if sid == 'TG2026092203':
             status = f'<span data-when-param-hide="re=1">{tag(st)}</span><span class="hidden" data-when-param="re=1">{tag("待指导老师审核")}</span>'
-        rows.append(f'<tr data-group="{g}" data-type="{t}" data-date="{time[:10]}"><td><a class="t-title" href="submission-detail.html">{title}</a><div class="t-sub">{sid}</div></td>'
+        rows.append(f'<tr data-group="{g}" data-type="{t}" data-date="{time[:10]}"><td><a class="t-title" href="{dh}">{title}</a><div class="t-sub">{sid}</div></td>'
                     f'<td>{type_tag(t)}</td><td>{ident}</td><td>{teacher}</td><td>{time}</td><td>{status}</td><td><div class="ops">{ops}</div></td></tr>')
-    tabs = [('全部', '', 12), ('草稿', '草稿', 1), ('审核中', '审核中', 4), ('已退回', '已退回', 1), ('已采用', '已采用', 5), ('未采用', '未采用', 1)]
+    cnt = lambda g: sum(1 for r in MY_SUBS if not g or GROUP[r[6]] == g)
+    tabs = [(n, v, cnt(v)) for n, v in [('全部', ''), ('草稿', '草稿'), ('审核中', '审核中'), ('已退回', '已退回'), ('已采用', '已采用'), ('未采用', '未采用')]]
     tab_html = ''.join(f'<button class="tab{" on" if i == 0 else ""}" data-tab="t{i}" data-filter-table="#mySubs" data-filter-key="group" data-filter-value="{v}">{n}<span class="cnt">{c}</span></button>'
                        for i, (n, v, c) in enumerate(tabs))
     ctrls = filter_select('mySubs', 'type', '全部类型', ['新闻', '视频', '照片', '线索']) + date_range('mySubs') + search_box('mySubs')
@@ -219,6 +235,7 @@ def submission_detail():
     logs = op_log_table([
         ('2026-09-22 14:18', '周明轩（二审员）', '二审退回，填写退回意见', '10.12.8.66'),
         ('2026-09-21 09:20', '刘子涵（一审员）', '一审通过', '10.12.8.51'),
+        ('2026-09-20 17:30', '杨振华（计算机学院副书记）', '副书记审核通过', '10.12.30.2'),
         ('2026-09-20 16:10', '李晓琳（指导老师）', '指导老师审核通过', '10.12.30.12'),
         ('2026-09-20 11:40', '陈雨桐', '编辑稿件并重新提交，生成 v2', '10.12.34.21'),
         ('2026-09-19 10:05', '刘子涵（一审员）', '一审退回，填写退回意见', '10.12.8.51'),
@@ -227,11 +244,11 @@ def submission_detail():
     ])
     body = f'''{page_head(f'{s["title"]} {tag("已退回")}', f'稿件编号 {s["id"]} · 新闻投稿 · 当前版本 v2 · 稿件档案永久保存',
                         a_btn('版本对比', 'version-history.html', '', 'compare') + a_btn('修改后重新提交', 'resubmit.html', 'btn-primary', 'edit'))}
-<div class="card" style="padding:20px 24px">{flow_steps('学生', 3, back_at=3)}</div>
+<div class="card" style="padding:20px 24px">{flow_steps('学生', 4, back_at=4)}</div>
 <div class="grid g-main mt16">
   <div class="card" data-tabs-scope>
-    <div class="tabs" data-tabs><button class="tab on" data-tab="content">稿件内容</button><button class="tab" data-tab="flow">流转记录<span class="cnt">7</span></button><button class="tab" data-tab="ver">修改历史<span class="cnt">2</span></button><button class="tab" data-tab="log">操作日志</button></div>
-    <div class="tab-panel on card-body" data-panel="content">{article(s)}<div class="form-section-title mt24">全部配图（3）</div>{gallery(s)}</div>
+    <div class="tabs" data-tabs><button class="tab on" data-tab="content">稿件内容</button><button class="tab" data-tab="flow">流转记录<span class="cnt">9</span></button><button class="tab" data-tab="ver">修改历史<span class="cnt">2</span></button><button class="tab" data-tab="log">操作日志</button></div>
+    <div class="tab-panel on card-body" data-panel="content">{sub_content(s)}</div>
     <div class="tab-panel card-body" data-panel="flow">{returned_timeline()}</div>
     <div class="tab-panel card-body" data-panel="ver">{versions}</div>
     <div class="tab-panel" data-panel="log">{logs}</div>
@@ -243,6 +260,12 @@ def submission_detail():
   </div>
 </div>'''
     page('submission-detail.html', '稿件档案', body, ['我的投稿', '稿件档案'])
+    for sub, stage, status in ((VIDEO, 'adopted', '已终审采用'), (PHOTO, 'adopted', '已终审采用'), (CLUE, 'r3', '待三审')):
+        side = card('统计归档属性', '<div class="flex between"><span class="c-muted">是否计入采用</span>' + tag('计入采用' if status == '已终审采用' else '不计入采用') +
+                    '</div><div class="hint mt8">终审采用后自动计入学院采用统计</div>', 'chart')
+        head = page_head(f'{sub["title"]} {tag(status)}', f'稿件编号 {sub["id"]} · {TYPE_NAME[sub["type"]]} · 当前版本 v1 · 稿件档案永久保存',
+                         a_btn('返回我的投稿', 'my-submissions.html', '', 'arrow-l'))
+        page(typed('submission-detail.html', sub['type']), '稿件档案', head + full_detail(sub, status, stage, side=side), ['我的投稿', '稿件档案'])
 
 
 # ---------- 9 版本对比 ----------
@@ -306,7 +329,7 @@ def resubmit():
 # ---------- 11 本院统计 ----------
 def college_stats():
     own = [r for r in ARCHIVE if r[3] == '计算机学院']
-    rows = ''.join(f'<tr data-type="{t}" data-status="{st}"><td><a class="t-title" href="submission-detail.html">{title}</a><div class="t-sub">{sid}</div></td>'
+    rows = ''.join(f'<tr data-type="{t}" data-status="{st}"><td><a class="t-title" href="{typed("submission-detail.html", t)}">{title}</a><div class="t-sub">{sid}</div></td>'
                    f'<td>{type_tag(t)}</td><td>{author}</td><td>{ident}</td><td>{d}</td><td>{tag(st)}</td></tr>'
                    for sid, title, t, c, author, ident, d, st in own)
 
@@ -327,7 +350,7 @@ def college_stats():
   {panel('y25', 214, 131, 38, 27, [('9月', [14, 8]), ('10月', [16, 10]), ('11月', [18, 9]), ('12月', [15, 8]), ('3月', [17, 9]), ('4月', [21, 10]), ('5月', [19, 12]), ('6月', [11, 7])])}
   {panel('s1', 86, 52, 12, 9, [('9月', [52, 34]), ('10月', [0, 0]), ('11月', [0, 0]), ('12月', [0, 0])])}
 </div>
-<div class="card mt16"><div class="card-head"><div class="card-title">{icon('list', 18)}本院稿件明细</div><div class="flex gap8">{filter_select('ownTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索'])}{filter_select('ownTable', 'status', '全部状态', ['待指导老师审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布'])}</div></div>
+<div class="card mt16"><div class="card-head"><div class="card-title">{icon('list', 18)}本院稿件明细</div><div class="flex gap8">{filter_select('ownTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索'])}{filter_select('ownTable', 'status', '全部状态', ['待指导老师审核', '待副书记审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布'])}</div></div>
 {table('ownTable', ['稿件', '类型', '投稿人', '身份', ('投稿日期', 'data-sort'), '状态'], [rows])}</div>'''
     page('college-stats.html', '本院投稿统计', body)
 
@@ -363,7 +386,7 @@ def messages():
     items = [
         ('undo', 'red', '稿件被退回', '《“青春志愿行”社区服务周纪实》被二审员周明轩退回：第三段引用居民原话未注明姓名与身份……点击查看并修改', '1 小时前', 'resubmit.html', True),
         ('check-circle', 'green', '稿件终审采用', '《计算机学院学生党支部开展“红色经典诵读”活动》已终审采用，计入本院采用统计', '昨天 10:30', 'submission-detail.html', True),
-        ('check', 'blue', '指导老师审核通过', '《学院“算法之星”编程挑战赛精彩瞬间》已由王海峰老师审核通过，进入校团委一审', '09-28 16:35', 'submission-detail.html'),
+        ('check', 'blue', '指导老师审核通过', '《计算机学院“网络安全宣传周”系列活动》已由王海峰老师审核通过，进入学院副书记审核', '09-29 15:40', 'my-submissions.html'),
         ('x-circle', 'orange', '稿件终审未采用', '《新学期“书香计院”读书分享会》终审未采用：同类题材近期已有报道', '09-12 09:10', 'submission-detail.html'),
         ('trophy', 'blue', '排行榜已更新', '9 月学院投稿排行榜已更新，计算机学院以 52 篇采用量位列第 1', '09-30 08:00', 'ranking.html'),
         ('bell', 'blue', '系统通知', '国庆假期（10月1日—7日）不计入审核工作日，节后审核时效顺延', '09-26 17:00', 'messages.html'),

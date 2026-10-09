@@ -1,9 +1,10 @@
 # PC 端 · 一审员 / 二审员（结构相同，节点与数据不同）
 from lib import icon, tag, type_tag, card, page_head, btn, a_btn, filter_select, search_box, \
     date_range, filter_bar, table, pc_page, write
-from data import R1_TODO, R2_TODO, FEATURED, ADOPTED, ARCHIVE, COLLEGES
-from common import featured_flow_timeline, adopted_timeline, messages_page_body, article, gallery, info_kv, op_log_table
-from review import review_body, reject_modal, q
+from data import R1_TODO, R2_TODO, FEATURED, ADOPTED, ARCHIVE, COLLEGES, typed, TYPE_NAME
+from common import featured_flow_timeline, adopted_timeline, messages_page_body, info_kv, op_log_table
+from review import review_body, reject_modal, q, type_review_pages, type_done_pages, SAMPLE_STAGE
+from detail import sub_content, full_detail, default_logs, sample_for
 from workflow import norm, todo_body, done_body, cc_body, batch_body, detail_body, node_chart, flow_name, NAMES
 from publish import publish_panel, export_buttons
 
@@ -12,9 +13,9 @@ TPL_REVIEW = ['标题过长，请控制在 30 字以内并突出新闻点。', '
               '图片涉及人物肖像，请确认已取得本人同意。', '内容与团学工作关联度不高，建议调整报道角度。']
 
 CONF = {
-    'reviewer1': dict(kind='r1', node='一审', status='待一审', cur=2, upto='r1', todo=R1_TODO, next_node='二审', arrive='2026-09-28 16:35',
+    'reviewer1': dict(kind='r1', node='一审', status='待一审', cur=3, upto='r1', todo=R1_TODO, next_node='二审', arrive='2026-09-28 16:35',
                       user='刘子涵', peers='一审员共 6 人（学生干部，按学期轮换）'),
-    'reviewer2': dict(kind='r2', node='二审', status='待二审', cur=3, upto='r2', todo=R2_TODO, next_node='三审终审', arrive='2026-09-29 11:20',
+    'reviewer2': dict(kind='r2', node='二审', status='待二审', cur=4, upto='r2', todo=R2_TODO, next_node='三审终审', arrive='2026-09-29 11:20',
                       user='周明轩', peers='二审员共 3 人（高年级学生干部，按学年换届）'),
 }
 
@@ -53,33 +54,33 @@ def build_for(role):
         modals = reject_modal('rejectBox', '退回稿件', '退回意见', TPL_REVIEW, reject_next) if rej else ''
         page('review-reject.html' if rej else 'review.html', '办理', body, ['待办', '新闻投稿审核'], modals, active='todo.html')
 
+    made = type_review_pages(page, wrows, node, c['kind'], 'todo.html', 'my-ledger.html', 'review', f'{node}通过，提交{c["next_node"]}',
+                             f'{node}通过，稿件已流转至{c["next_node"]}', '待办')
+    new_rows = [(sid, title, t, author, col, '2026-09-30 16:40') for sid, title, t, author, col in made.values()]
+    type_done_pages(page, node, 'my-ledger.html')
+
     # ---------- 稿件查询 ----------
     trs = ''
     for sid, title, t, col, author, ident, d, st in ARCHIVE:
         can = t == '新闻' and st in ('已终审采用', '已发布')
         pub = f'<span class="tag tag-success">可导出</span>' if can else '<span class="c-muted">—</span>'
-        trs += (f'<tr data-college="{col}" data-type="{t}" data-status="{st}" data-date="{d}"><td><a class="t-title" href="submission-detail.html">{title}</a><div class="t-sub">{sid}</div></td>'
+        h = typed('submission-detail.html', t)
+        trs += (f'<tr data-college="{col}" data-type="{t}" data-status="{st}" data-date="{d}"><td><a class="t-title" href="{h}">{title}</a><div class="t-sub">{sid}</div></td>'
                 f'<td>{type_tag(t)}</td><td>{col}</td><td>{author}（{ident}）</td><td>{d}</td><td>{tag(st)}</td><td>{pub}</td>'
-                f'<td><a class="link" href="submission-detail.html">查看档案</a></td></tr>')
+                f'<td><a class="link" href="{h}">查看档案</a></td></tr>')
     ctrls = filter_select('subTable', 'college', '全部学院', COLLEGES) + filter_select('subTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索']) + \
-        filter_select('subTable', 'status', '全部状态', ['待指导老师审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']) + date_range('subTable') + search_box('subTable')
+        filter_select('subTable', 'status', '全部状态', ['待指导老师审核', '待副书记审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']) + date_range('subTable') + search_box('subTable')
     body = f'''{page_head('稿件查询', '可浏览全校全部稿件档案，按学院、类型、时间范围、状态组合筛选', btn('导出查询结果', '', 'download', 'data-action="export-csv" data-table="#subTable" data-filename="稿件查询结果"'))}
 <div class="card">{filter_bar('subTable', ctrls)}{table('subTable', ['稿件', '类型', '投稿学院', '投稿人', ('投稿日期', 'data-sort'), '流转状态', '升华网素材', ('操作', 'class="no-export"')], [trs])}</div>'''
     page('submissions.html', '稿件查询', body)
 
     # ---------- 稿件档案（已终审采用的新闻稿） ----------
-    logs = op_log_table([
-        ('2026-09-19 10:30', '张静（管理员）', '三审终审：采用', '10.12.8.10'),
-        ('2026-09-18 15:12', '周明轩（二审员）', '二审通过', '10.12.8.66'),
-        ('2026-09-17 09:40', '刘子涵（一审员）', '一审通过', '10.12.8.51'),
-        ('2026-09-16 11:05', '赵明哲（指导老师）', '指导老师审核通过', '10.12.40.3'),
-        ('2026-09-15 16:40', '赵一帆', '提交投稿，生成 v1', '10.12.40.77'),
-    ])
+    logs = op_log_table(default_logs(ADOPTED, 'adopted'))
     body = f'''{page_head(f'{ADOPTED["title"]} {tag("已终审采用")}', f'稿件编号 {ADOPTED["id"]} · 新闻投稿 · 商学院 · 计入采用统计', a_btn('返回查询', 'submissions.html', '', 'arrow-l') + export_buttons())}
 <div class="grid g-main-wide">
   <div class="card" data-tabs-scope>
     <div class="tabs" data-tabs><button class="tab on" data-tab="content">稿件内容</button><button class="tab" data-tab="pub">升华网发布素材</button><button class="tab" data-tab="flow">流转记录</button><button class="tab" data-tab="log">操作日志</button></div>
-    <div class="tab-panel on card-body" data-panel="content">{article(ADOPTED)}<div class="form-section-title mt24">全部配图（3）</div>{gallery(ADOPTED)}</div>
+    <div class="tab-panel on card-body" data-panel="content">{sub_content(ADOPTED)}</div>
     <div class="tab-panel card-body" data-panel="pub">{publish_panel()}</div>
     <div class="tab-panel card-body" data-panel="flow">{adopted_timeline()}</div>
     <div class="tab-panel" data-panel="log">{logs}</div>
@@ -90,6 +91,11 @@ def build_for(role):
   </div>
 </div>'''
     page('submission-detail.html', '稿件档案', body, ['稿件查询', '稿件档案'], active='submissions.html')
+    for t in ('视频', '照片', '线索'):
+        sub = sample_for(t)
+        stage, status = SAMPLE_STAGE[t]
+        head = page_head(f'{sub["title"]} {tag(status)}', f'稿件编号 {sub["id"]} · {TYPE_NAME[t]} · {sub["college"]} · 稿件档案永久保存', a_btn('返回查询', 'submissions.html', '', 'arrow-l'))
+        page(typed('submission-detail.html', t), '稿件档案', head + full_detail(sub, status, stage), ['稿件查询', '稿件档案'], active='submissions.html')
 
     # ---------- 已办 ----------
     hist = [
@@ -104,7 +110,7 @@ def build_for(role):
     ]
     drows = [(sid, title, t, NAMES[(i * 7 + 3) % len(NAMES)], col, st, op, time, cost, ok) for i, (sid, title, t, col, time, st, cost, ok, op) in enumerate(hist)]
     body = done_body('ledger', drows, node, 'done-detail.html', ('已通过', '已退回'),
-                     (SID, FEATURED['title'], '新闻', '陈雨桐', '计算机学院', '2026-09-30 16:40'), f'{node}已办记录')
+                     [(SID, FEATURED['title'], '新闻', '陈雨桐', '计算机学院', '2026-09-30 16:40')] + new_rows, f'{node}已办记录')
     page('my-ledger.html', '已办', body, ['已办'])
 
     # ---------- 催办 / 抄送 ----------
@@ -119,8 +125,8 @@ def build_for(role):
     page('batch.html', '批量审批', batch_body(wrows, node, 'review.html'), ['批量审批'])
 
     # ---------- 已办详情 ----------
-    body = detail_body(ADOPTED, '已终审采用', 'tag-solid-ok', node_chart('学生', 6), adopted_timeline(), 'my-ledger.html',
-                       ADOPTED['time'], '2026-09-16 11:05' if node == '一审' else '2026-09-17 09:40', article(ADOPTED))
+    body = detail_body(ADOPTED, '已终审采用', 'tag-solid-ok', node_chart('学生', 7), adopted_timeline(), 'my-ledger.html',
+                       ADOPTED['time'], ADOPTED['times']['deputy'] if node == '一审' else ADOPTED['times']['r1'], sub_content(ADOPTED))
     page('done-detail.html', '已办详情', body, ['已办', '新闻投稿审核'], active='my-ledger.html')
 
     # ---------- 消息 ----------

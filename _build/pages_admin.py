@@ -1,10 +1,11 @@
 # PC 端 · 校团委管理员（三审终审 + 后台管理）
 from lib import icon, tag, type_tag, remain, stat, card, page_head, btn, a_btn, options, filter_select, search_box, \
     date_range, filter_bar, table, field, modal, pc_page, write
-from data import R3_TODO, FEATURED, ADOPTED, ARCHIVE, RANKING, TIMEOUTS, COLLEGES
+from data import R3_TODO, FEATURED, ADOPTED, ARCHIVE, RANKING, TIMEOUTS, COLLEGES, typed, type_of, TYPE_NAME
 from common import featured_flow_timeline, adopted_timeline, messages_page_body, article, gallery, info_kv, \
     op_log_table, rank_rows, donut, bars, hbars, college_detail_modal
-from review import review_body, reject_modal, q
+from review import review_body, reject_modal, q, type_review_pages, SAMPLE_STAGE
+from detail import sub_content, full_detail, default_logs, sample_for
 from workflow import norm, todo_body, done_body, cc_body, batch_body, flow_name
 from publish import publish_panel, export_buttons
 
@@ -67,7 +68,7 @@ def switch(on=True, name=''):
 def dashboard():
     month = [('3月', [48, 30]), ('4月', [62, 35]), ('5月', [58, 40]), ('6月', [41, 22]), ('7月', [26, 12]), ('8月', [33, 17]), ('9月', [96, 58])]
     colleges = [(c, a, s) for c, s, a, b in RANKING[:10]]
-    nodes = [('指导老师审核', 0.8, 3.1, 96.9), ('一审', 1.1, 5.4, 94.6), ('二审', 0.9, 4.2, 95.8), ('三审终审', 1.3, 6.0, 94.0)]
+    nodes = [('指导老师审核', 0.8, 3.1, 96.9), ('副书记审核', 0.6, 2.4, 97.6), ('一审', 1.1, 5.4, 94.6), ('二审', 0.9, 4.2, 95.8), ('三审终审', 1.3, 6.0, 94.0)]
     node_html = ''.join(f'<div class="hbar"><span class="hb-name">{n}</span><div class="hb-track"><i style="width:{ok}%;background:#1BB975"></i><i style="width:{100 - ok}%;background:#F6BCBE"></i></div><span class="hb-val">{ok}%</span></div>'
                         f'<div class="hint" style="margin:-8px 0 12px 120px">平均处理 {avg} 个工作日 · 超时率 {over}%</div>' for n, avg, over, ok in nodes)
     kpi = lambda total, news, video, photo, clue, adopt, rej, back, rate: f'''<div class="grid g5">
@@ -144,10 +145,14 @@ def final_review(reject=False):
     actions = (btn('终审采用', 'btn-success btn-lg', 'check', f'data-action="pass" data-opinion="optional" data-tpl="final" data-title="终审采用" data-label="终审意见" data-ok="确认采用" data-msg="已终审采用，计入学院采用统计" data-next="{adopt_next}"') +
                a_btn('终审不采用', 'final-reject.html', 'btn-danger-o btn-lg', 'x-circle'))
     extra = card('终审规则', f'<div style="font-size:13px;line-height:1.9;color:var(--text-2)">· 采用：流转状态变为【已终审采用】，统计归档属性为【计入采用】，参与学院排行榜。<br>· 不采用：必须填写终审意见，状态为【已终审不采用】，不计入采用统计。<br>· 新闻类采用稿件可导出升华网发布素材。</div>', 'book')
-    body = review_body(FEATURED, '待三审', '三审终审', 4, ('剩余 3 个工作日', 'ok'), featured_flow_timeline('r3'), actions, 'final-list.html', extra_right=extra,
+    body = review_body(FEATURED, '待三审', '三审终审', 5, ('剩余 3 个工作日', 'ok'), featured_flow_timeline('r3'), actions, 'final-list.html', extra_right=extra,
                        start=FEATURED['time'], arrive='2026-09-30 09:00')
     modals = reject_modal('rejectBox', '终审不采用', '终审意见', TPL_FINAL, reject_next, ok='确认不采用', cancel='final-review.html') if reject else ''
     page('final-reject.html' if reject else 'final-review.html', '办理', body, ['待办', '新闻投稿审核'], modals, active='final-list.html')
+    if not reject:
+        type_review_pages(page, norm(final_rows(), 'r3'), '三审终审', 'r3', 'final-list.html', 'final-done.html', 'final', '终审采用',
+                          '已终审采用，计入学院采用统计', '待办', reject_title='终审不采用', reject_label='终审意见', reject_text='终审不采用',
+                          reject_icon='x-circle', reject_msg='已终审不采用，不计入采用统计，已通知投稿人', handle='final-review.html', extra_right=extra)
 
 
 # ---------- 5-6 稿件档案库 ----------
@@ -157,12 +162,12 @@ def archive():
         adopt = '计入采用' if st in ('已终审采用', '已发布') else '不计入采用'
         pub = '<a class="link" href="publish-export.html">发布素材</a>' if t == '新闻' and st == '已终审采用' else ''
         trs += (f'<tr data-college="{col}" data-type="{t}" data-status="{st}" data-adopt="{adopt}" data-identity="{ident}" data-date="{d}">'
-                f'<td><input type="checkbox" class="row-check" aria-label="选择"></td><td><a class="t-title" href="archive-detail.html">{title}</a><div class="t-sub">{sid}</div></td>'
+                f'<td><input type="checkbox" class="row-check" aria-label="选择"></td><td><a class="t-title" href="{typed("archive-detail.html", t)}">{title}</a><div class="t-sub">{sid}</div></td>'
                 f'<td>{type_tag(t)}</td><td>{col}</td><td>{author}</td><td>{ident}</td><td>{d}</td><td>{tag(st)}</td><td>{tag(adopt)}</td>'
-                f'<td><div class="ops"><a class="link" href="archive-detail.html">档案</a>{pub}</div></td></tr>')
+                f'<td><div class="ops"><a class="link" href="{typed("archive-detail.html", t)}">档案</a>{pub}</div></td></tr>')
     ctrls = (search_box('archTable', '标题 / 编号 / 投稿人') + filter_select('archTable', 'college', '全部学院', COLLEGES) +
              filter_select('archTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索']) +
-             filter_select('archTable', 'status', '审核流转状态', ['待指导老师审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']) +
+             filter_select('archTable', 'status', '审核流转状态', ['待指导老师审核', '待副书记审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']) +
              filter_select('archTable', 'adopt', '是否终审采用', ['计入采用', '不计入采用']) + filter_select('archTable', 'identity', '投稿身份', ['学生', '教师']) + date_range('archTable'))
     body = f'''{page_head('稿件档案库', '全校所有稿件永久存档，支持跨学年历史查询与多条件组合检索', btn('导出', '', 'download', 'data-open="exportModal"'))}
 <div class="grid g5 mb16">{stat('archive', 'blue', 1024, '本学年档案')}{stat('file', 'blue', 532, '新闻')}{stat('video', 'orange', 146, '视频')}{stat('image', 'green', 248, '照片')}{stat('bulb', 'orange', 98, '线索')}</div>
@@ -172,14 +177,8 @@ def archive():
 
 
 def archive_detail():
-    logs = op_log_table([
-        ('2026-09-19 10:30', '张静（管理员 · 教师）', '三审终审：采用，统计归档改为“计入采用”', '10.12.8.10'),
-        ('2026-09-18 15:12', '周明轩（二审员 · 学生）', '二审通过', '10.12.8.66'),
-        ('2026-09-17 09:40', '刘子涵（一审员 · 学生）', '一审通过', '10.12.8.51'),
-        ('2026-09-16 11:05', '赵明哲（指导老师 · 教师）', '指导老师审核通过', '10.12.40.3'),
-        ('2026-09-15 16:52', '赵一帆（投稿人 · 学生）', '编辑稿件：修改标题（“挑战杯获奖” → 现标题）', '10.12.40.77'),
-        ('2026-09-15 16:40', '赵一帆（投稿人 · 学生）', '提交投稿，生成 v1', '10.12.40.77'),
-    ])
+    logs = op_log_table(default_logs(ADOPTED, 'adopted')[:1] + [('2026-09-15 16:52', '赵一帆（投稿人 · 学生）', '编辑稿件：修改标题（“挑战杯获奖” → 现标题）', '10.12.40.77')]
+                        + default_logs(ADOPTED, 'adopted')[1:])
     versions = f'''<table class="tbl"><thead><tr><th>版本</th><th>提交时间</th><th>标题</th><th>说明</th></tr></thead><tbody>
 <tr><td><span class="tag tag-primary">v1 当前</span></td><td>2026-09-15 16:40</td><td>{ADOPTED["title"]}</td><td>首次提交即通过全部审核</td></tr></tbody></table>
 <div class="notice notice-info mt16">{icon('info', 15)}<div>稿件档案禁止直接覆盖旧内容，每次修改都保留版本记录。</div></div>'''
@@ -187,7 +186,7 @@ def archive_detail():
 <div class="grid g-main-wide">
   <div class="card" data-tabs-scope>
     <div class="tabs" data-tabs><button class="tab on" data-tab="content">稿件内容</button><button class="tab" data-tab="pub">升华网发布素材</button><button class="tab" data-tab="flow">完整流转记录</button><button class="tab" data-tab="ver">修改历史</button><button class="tab" data-tab="log">操作日志</button></div>
-    <div class="tab-panel on card-body" data-panel="content">{article(ADOPTED)}<div class="form-section-title mt24">全部附件（3）</div>{gallery(ADOPTED)}</div>
+    <div class="tab-panel on card-body" data-panel="content">{sub_content(ADOPTED)}</div>
     <div class="tab-panel card-body" data-panel="pub">{publish_panel()}</div>
     <div class="tab-panel card-body" data-panel="flow">{adopted_timeline()}</div>
     <div class="tab-panel card-body" data-panel="ver">{versions}</div>
@@ -205,6 +204,20 @@ def archive_detail():
   </div>
 </div>'''
     page('archive-detail.html', '稿件档案详情', body, ['稿件档案库', '稿件档案详情'], active='archive.html')
+    for t in ('视频', '照片', '线索'):
+        sub = sample_for(t)
+        stage, status = SAMPLE_STAGE[t]
+        if t == '线索':
+            side = card('线索处置', f'<div class="flex between"><span class="c-muted">流转状态</span>{tag(status)}</div><div class="hint mt12">终审采用后进入线索跟进：待跟进 → 已跟进 → 已转为正式新闻。</div>'
+                        + a_btn('打开线索跟进', 'clue-tracking.html', 'btn-primary mt12', 'bulb', 'style="width:100%"'), 'bulb')
+            acts = a_btn('三审终审', 'final-review-clue.html', 'btn-primary', 'award')
+        else:
+            side = card('稿件状态', f'<div class="flex between"><span class="c-muted">流转状态</span>{tag(status)}</div><div class="flex between mt12"><span class="c-muted">统计归档</span>{tag("计入采用")}</div>'
+                        '<div class="hint mt12">视频、照片类稿件不导出升华网正文，原图 / 云盘链接可在“稿件内容”中查看。</div>', 'tag')
+            acts = ''
+        head = page_head(f'{sub["title"]} {tag(status)}', f'稿件编号 {sub["id"]} · {TYPE_NAME[t]} · {sub["college"]} · 档案永久保存',
+                         a_btn('返回档案库', 'archive.html', '', 'arrow-l') + acts)
+        page(typed('archive-detail.html', t), '稿件档案详情', head + full_detail(sub, status, stage, side=side), ['稿件档案库', '稿件档案详情'], active='archive.html')
 
 
 # ---------- 7 升华网发布素材 ----------
@@ -249,7 +262,7 @@ def clue_tracking():
     link_attr = ' data-open="linkModal"'
     for sid, title, col, who, iv, when, st, owner in clues:
         sel = ''.join(f'<option value="{o}"{" selected" if o == st else ""}{link_attr if o == "已转为正式新闻" else ""}>{o}</option>' for o in opts)
-        trs += (f'<tr data-status="{st}"><td><a class="t-title" href="archive-detail.html">{title}</a><div class="t-sub">{sid}</div></td><td>{col}</td><td>{who}</td>'
+        trs += (f'<tr data-status="{st}"><td><a class="t-title" href="archive-detail-clue.html">{title}</a><div class="t-sub">{sid}</div></td><td>{col}</td><td>{who}</td>'
                 f'<td>{iv}</td><td>{when}</td><td><span class="tag js-tag {("tag-warn" if st == "待跟进" else "tag-primary" if st == "已跟进" else "tag-success" if st == "已转为正式新闻" else "tag-gray")}">{st}</span></td><td>{owner}</td>'
                 f'<td><div class="flex gap8"><select class="select" style="height:30px;font-size:12px;min-width:120px" data-set-tag aria-label="修改处置状态">{sel}</select>'
                 f'<button class="link" data-open="followModal">跟进记录</button></div></td></tr>')
@@ -274,18 +287,18 @@ def timeout_ledger():
     trs = ''
     for sid, title, nd, who, arrive, done, over, st in TIMEOUTS:
         op = f'<button class="link" data-toast="已向 {who} 发送催办提醒（站内消息 + 移动端推送）" data-toast-type="success">催办</button>' if st == '处理中' else '<span class="c-muted">—</span>'
-        trs += (f'<tr data-node="{nd}" data-who="{who}" data-status="{st}"><td><a class="t-title" href="archive-detail.html">{title}</a><div class="t-sub">{sid}</div></td>'
+        trs += (f'<tr data-node="{nd}" data-who="{who}" data-status="{st}"><td><a class="t-title" href="{typed("archive-detail.html", type_of(sid, title))}">{title}</a><div class="t-sub">{sid}</div></td>'
                 f'<td>{nd}</td><td>{who}</td><td>{arrive}</td><td>{done}</td><td class="overdue-txt">{over}</td><td>{tag(st)}</td><td>{op}</td></tr>')
-    nodes = [('指导老师审核', 12, 386), ('一审', 14, 259), ('二审', 8, 190), ('三审终审', 4, 67)]
+    nodes = [('指导老师审核', 12, 386), ('副书记审核', 5, 342), ('一审', 14, 259), ('二审', 8, 190), ('三审终审', 4, 67)]
     nh = ''.join(f'<div class="hbar"><span class="hb-name">{n}</span><div class="hb-track"><i style="width:{o / t * 100 * 8:.0f}%;background:#DF2027"></i></div><span class="hb-val">{o / t * 100:.1f}%</span></div>' for n, o, t in nodes)
-    ctrls = filter_select('toTable', 'node', '全部节点', ['指导老师审核', '一审', '二审', '三审']) + filter_select('toTable', 'who', '全部审核人', sorted(set(t[3] for t in TIMEOUTS))) + \
+    ctrls = filter_select('toTable', 'node', '全部节点', ['指导老师审核', '副书记审核', '一审', '二审', '三审']) + filter_select('toTable', 'who', '全部审核人', sorted(set(t[3] for t in TIMEOUTS))) + \
         filter_select('toTable', 'status', '全部状态', ['处理中', '已处理']) + search_box('toTable', '搜索稿件')
     body = f'''{page_head('审核超时台账', '稿件到达审核节点后超过 3 个工作日未处理即记为超时；时限可在“业务参数”中调整', btn('导出超时台账', 'btn-primary', 'download', 'data-action="export-csv" data-format="Excel" data-table="#toTable" data-filename="审核超时台账"'))}
 <div class="grid g5 mb16">{stat('alert', 'red', 38, '本学年超时次数')}{stat('clock', 'orange', 5, '当前超时未处理', '', None)}{stat('check', 'gray', 33, '超时后已处理')}{stat('check-circle', 'green', '94.8', '审核及时率', unit='%')}{stat('trend', 'red', '5.2', '审核超时率', unit='%')}</div>
 <div class="grid g-main">
   <div class="card">{filter_bar('toTable', ctrls)}{table('toTable', ['稿件', '超时节点', '审核人', ('到达节点时间', 'data-sort'), '处理时间', '超时时长', '状态', ('操作', 'class="no-export"')], [trs])}</div>
   <div class="grid" style="align-content:start">{card('各节点超时率', nh + '<div class="hint">超时率 = 超时次数 / 节点处理总数</div>', 'chart')}
-  {card('超时最多的审核人', ''.join(f'<div class="todo-item"><span class="rank-no{" r" + str(i + 1) if i < 3 else ""}">{i + 1}</span><div class="ti-main"><div class="ti-title">{n}</div><div class="ti-sub">{r}</div></div><b class="c-danger">{c} 次</b></div>' for i, (n, r, c) in enumerate([('刘子涵', '一审员', 6), ('王海峰', '指导老师', 4), ('周明轩', '二审员', 3), ('陈思琪', '一审员', 2)])), 'users')}</div>
+  {card('超时最多的审核人', ''.join(f'<div class="todo-item"><span class="rank-no{" r" + str(i + 1) if i < 3 else ""}">{i + 1}</span><div class="ti-main"><div class="ti-title">{n}</div><div class="ti-sub">{r}</div></div><b class="c-danger">{c} 次</b></div>' for i, (n, r, c) in enumerate([('刘子涵', '一审员', 6), ('王海峰', '指导老师', 4), ('周明轩', '二审员', 3), ('杨振华', '副书记', 2), ('陈思琪', '一审员', 2)])), 'users')}</div>
 </div>'''
     page('timeout-ledger.html', '超时台账', body, ['审核管理', '超时台账'])
 
@@ -390,7 +403,7 @@ def reviewer_manage(level):
 
 def teacher_manage():
     y1, y2 = '2026-09-01 至 2027-08-31', '2025-09-01 至 2027-08-31'
-    teachers = [('王海峰', '200108', '计算机学院', '团委副书记', 36, y2), ('李晓琳', '201532', '计算机学院', '辅导员', 21, y1), ('赵明哲', '199921', '商学院', '团委书记', 28, y2),
+    teachers = [('王海峰', '200108', '计算机学院', '辅导员', 36, y2), ('李晓琳', '201532', '计算机学院', '辅导员', 21, y1), ('赵明哲', '199921', '商学院', '团委书记', 28, y2),
                 ('孙雅婷', '201877', '湘雅医学院', '辅导员', 33, y1), ('周建国', '200356', '机电工程学院', '团委书记', 19, y2), ('吴芳芳', '201244', '文学院', '辅导员', 15, y1),
                 ('郑一鸣', '201609', '外国语学院', '团委副书记', 17, y1), ('钱慧敏', '200988', '法学院', '辅导员', 12, y1), ('冯启航', '201713', '自动化学院', '团委书记', 22, y2),
                 ('何静怡', '202015', '土木工程学院', '辅导员', 26, y1)]
@@ -412,35 +425,42 @@ def teacher_manage():
 
 
 # ---------- 16 角色权限配置 ----------
-PERM_ROLES = ['投稿人（全校师生）', '指导老师', '一审员', '二审员', '校团委管理员']
+PERM_ROLES = ['投稿人（全校师生）', '指导老师', '副书记（学工系统）', '一审员', '二审员', '校团委管理员']
+DEPUTY_COL = 2
+ADMIN_COL = 5
 PERMS = [
-    ('投稿', [('四类稿件投稿 / 草稿', [1, 0, 0, 0, 0]), ('修改退回稿件并重提', [1, 0, 0, 0, 0])]),
-    ('审核', [('指导老师审核（学生稿件）', [0, 1, 0, 0, 0]), ('一审', [0, 0, 1, 0, 0]), ('二审', [0, 0, 0, 1, 0]), ('三审终审', [0, 0, 0, 0, 1]), ('填写 / 维护审核意见模板', [0, 0, 0, 0, 1])]),
-    ('查看', [('查看本人稿件与审核意见', [1, 1, 1, 1, 1]), ('查看本院稿件明细与统计', [1, 1, 0, 0, 1]), ('浏览全校稿件档案', [0, 0, 1, 1, 1]), ('查看全校排行榜', [1, 1, 1, 1, 1]), ('查看超时台账与操作日志', [0, 0, 0, 0, 1])]),
-    ('导出', [('导出本院稿件数据', [1, 0, 0, 0, 1]), ('导出全校稿件台账', [0, 0, 0, 0, 1]), ('升华网素材复制 / 导出', [0, 0, 1, 1, 1]), ('标记稿件已发布', [0, 0, 0, 0, 1])]),
-    ('管理', [('人员名单与账号管理', [0, 0, 0, 0, 1]), ('角色权限配置', [0, 0, 0, 0, 1]), ('业务参数 / 敏感词配置', [0, 0, 0, 0, 1])]),
+    ('投稿', [('四类稿件投稿 / 草稿', [1, 0, 0, 0, 0, 0]), ('修改退回稿件并重提', [1, 0, 0, 0, 0, 0])]),
+    ('审核', [('指导老师审核（学生稿件）', [0, 1, 0, 0, 0, 0]), ('副书记审核（本院稿件）', [0, 0, 1, 0, 0, 0]), ('一审', [0, 0, 0, 1, 0, 0]), ('二审', [0, 0, 0, 0, 1, 0]),
+              ('三审终审', [0, 0, 0, 0, 0, 1]), ('填写 / 维护审核意见模板', [0, 0, 0, 0, 0, 1])]),
+    ('查看', [('查看本人稿件与审核意见', [1, 1, 1, 1, 1, 1]), ('查看本院稿件明细与统计', [1, 1, 1, 0, 0, 1]), ('浏览全校稿件档案', [0, 0, 0, 1, 1, 1]), ('查看全校排行榜', [1, 1, 1, 1, 1, 1]), ('查看超时台账与操作日志', [0, 0, 0, 0, 0, 1])]),
+    ('导出', [('导出本院稿件数据', [1, 0, 0, 0, 0, 1]), ('导出全校稿件台账', [0, 0, 0, 0, 0, 1]), ('升华网素材复制 / 导出', [0, 0, 0, 1, 1, 1]), ('标记稿件已发布', [0, 0, 0, 0, 0, 1])]),
+    ('管理', [('人员名单与账号管理', [0, 0, 0, 0, 0, 1]), ('角色权限配置', [0, 0, 0, 0, 0, 1]), ('业务参数 / 敏感词配置', [0, 0, 0, 0, 0, 1])]),
 ]
 
 
 def role_permission():
     rows = ''
     for group, items in PERMS:
-        rows += f'<tr><td colspan="6" style="background:#FAFBFC;font-weight:600;color:var(--text)">{group}</td></tr>'
+        rows += f'<tr><td colspan="{len(PERM_ROLES) + 1}" style="background:#FAFBFC;font-weight:600;color:var(--text)">{group}</td></tr>'
         for name, flags in items:
             cells = ''
             for i, f in enumerate(flags):
-                lock = ' disabled title="核心权限，不可取消"' if i == 4 and name in ('三审终审', '角色权限配置') else ''
+                lock = ' disabled title="核心权限，不可取消"' if i == ADMIN_COL and name in ('三审终审', '角色权限配置') else ''
+                if i == DEPUTY_COL:
+                    lock = ' disabled title="副书记取自学工系统，无需配置"'
                 cells += f'<td style="text-align:center"><input type="checkbox" aria-label="{PERM_ROLES[i]} - {name}"{" checked" if f else ""}{lock} data-toast-change="权限已修改，保存后生效"></td>'
             rows += f'<tr><td style="color:var(--text)">{name}</td>{cells}</tr>'
     scope = ''.join(f'<tr><td style="color:var(--text)">{r}</td><td><select class="select" data-toast-change="数据范围已修改，保存后生效">{options(s, selected=d)}</select></td><td class="c-muted">{h}</td></tr>'
                     for r, s, d, h in [('投稿人（全校师生）', ['本人', '本院', '全校'], '本院', '只能看本院稿件明细，看不到其他学院稿件详情'),
                                        ('指导老师', ['本人指导的稿件', '本院'], '本人指导的稿件', '仅审核指定自己为指导老师的学生稿件'),
+                                       ('副书记（学工系统）', ['本院'], '本院', '待办只展示本院稿件的副书记审核环节；取自学工系统，无需配置'),
                                        ('一审员', ['分配给本人的环节', '全校'], '分配给本人的环节', '待办只展示一审环节稿件，可浏览全部稿件档案'),
                                        ('二审员', ['分配给本人的环节', '全校'], '分配给本人的环节', '待办只展示二审环节稿件，可浏览全部稿件档案'),
                                        ('校团委管理员', ['全校'], '全校', '全部稿件、审核记录与统计数据')])
     heads = ''.join(f'<th style="text-align:center">{r}</th>' for r in PERM_ROLES)
     body = f'''{page_head('角色权限配置', '所有审核与数据权限均在后台配置，不在代码中写死', btn('恢复默认', '', 'refresh', 'data-toast="已恢复为系统默认权限配置（尚未保存）"') + btn('保存配置', 'btn-primary', 'save', 'data-action="save" data-confirm="保存后权限立即生效，并记入操作日志。确认保存吗？" data-msg="权限配置已保存并生效，变更已记入操作日志"'))}
 <div class="notice notice-info mb16">{icon('users', 15)}<div><b>投稿人（全校师生）无需单独开通账号：</b>全校教职工和学生通过统一身份认证登录即可投稿，所属学院取自统一身份认证。</div></div>
+<div class="notice notice-info mb16">{icon('user', 15)}<div><b>副书记取自学工系统，无需配置：</b>副书记为投稿人所在学院的副书记，是学工系统的固定角色，本平台不维护名单、不分配人员；稿件按投稿人所在学院自动路由（学生稿件指导老师通过后、教师稿件提交后到达）。副书记的权限列已锁定。</div></div>
 <div class="notice notice-warn mb16">{icon('shield', 15)}<div>规则约束：学生干部（一审员、二审员）不能操作三审；三审终审仅限校团委管理员（宣传部老师）。带锁的核心权限不可取消。</div></div>
 <div class="card" data-tabs-scope><div class="tabs" data-tabs><button class="tab on" data-tab="func">功能权限</button><button class="tab" data-tab="data">数据范围</button></div>
 <div class="tab-panel on" data-panel="func"><div class="table-wrap"><table class="tbl"><thead><tr><th>权限项</th>{heads}</tr></thead><tbody>{rows}</tbody></table></div></div>
@@ -458,7 +478,7 @@ def params():
     body = f'''{page_head('业务参数配置', '业务规则全部通过参数配置，修改后即时生效并记入操作日志', btn('保存全部参数', 'btn-primary', 'save', 'data-action="save" data-form="#paramForm" data-confirm="参数修改将影响后续所有稿件的审核计时与统计，确认保存吗？" data-msg="业务参数已保存并生效，已记入操作日志"'))}
 <form id="paramForm" novalidate class="grid">
 <div class="card"><div class="card-head"><div class="card-title">{icon('clock', 18)}审核时效</div><span class="hint">稿件到达节点开始计时，超时自动记入超时台账</span></div>
-<div class="card-body"><div class="form-grid" style="grid-template-columns:repeat(4,1fr)">{field('指导老师审核时限', num(3, 't0'), req=True)}{field('一审时限', num(3, 't1'), req=True)}{field('二审时限', num(3, 't2'), req=True)}{field('三审时限', num(3, 't3'), req=True)}</div>
+<div class="card-body"><div class="form-grid" style="grid-template-columns:repeat(5,1fr)">{field('指导老师审核时限', num(3, 't0'), req=True)}{field('副书记审核时限', num(3, 'td'), req=True)}{field('一审时限', num(3, 't1'), req=True)}{field('二审时限', num(3, 't2'), req=True)}{field('三审时限', num(3, 't3'), req=True)}</div>
 <div class="form-grid mt16">{field('超时预警提前量', '<div class="flex gap8"><input type="number" class="input" value="1" min="0" step="0.5" style="width:120px" required><span class="c-muted">个工作日（剩余时限低于该值时标记“即将超时”）</span></div>', req=True)}
 {field('节假日（不计入工作日）', f'<div class="chip-input"><div class="chips">{holidays}</div><div class="flex gap8"><input class="input" placeholder="如：2027-05-01 至 05-05 劳动节" style="flex:1"><button type="button" class="btn" data-action="add-chip">{icon("plus", 14)}添加</button></div></div>')}</div></div></div>
 <div class="grid g2">
@@ -477,15 +497,16 @@ def params():
 # ---------- 18 审核意见模板 ----------
 def opinion_templates():
     data = [('指导老师审核', '稿件导语不够精炼，请突出活动核心亮点后重新提交。', 42), ('指导老师审核', '配图数量不足或清晰度不够，请补充 3 张以上高清原图。', 37),
-            ('指导老师审核', '活动时间、地点等要素缺失，请补全新闻五要素。', 29), ('一审 / 二审', '标题过长，请控制在 30 字以内并突出新闻点。', 88),
+            ('指导老师审核', '活动时间、地点等要素缺失，请补全新闻五要素。', 29), ('副书记审核', '稿件政治导向需进一步把关，请修改相关表述后重新提交。', 9),
+            ('副书记审核', '活动信息需与学院官方发布保持一致，请补充核实来源。', 6), ('一审 / 二审', '标题过长，请控制在 30 字以内并突出新闻点。', 88),
             ('一审 / 二审', '正文存在错别字和标点不规范问题，请仔细校对。', 64), ('一审 / 二审', '图片涉及人物肖像，请确认已取得本人同意。', 21),
             ('一审 / 二审', '云盘链接为临时分享链接，请更换为永久有效链接。', 18), ('三审终审', '稿件时效性已过，不予采用。', 15), ('三审终审', '同类题材近期已有报道，不予采用。', 12)]
     trs = ''.join(f'<tr data-scope="{s}"><td data-key="scope">{s}</td><td data-key="content" style="color:var(--text)">{c}</td><td class="num">{n}</td><td>{ops_edit("tplModal", "编辑意见模板")}</td></tr>' for s, c, n in data)
     tpl = f'<template id="tplTpl"><tr><td data-key="scope">{{scope}}</td><td data-key="content" style="color:var(--text)">{{content}}</td><td class="num">0</td><td>{ops_edit("tplModal", "编辑意见模板")}</td></tr></template>'
-    fields = (field('适用环节', '<select class="select" name="scope" required><option value="">请选择</option><option>指导老师审核</option><option>一审 / 二审</option><option>三审终审</option></select>', req=True, full=True) +
+    fields = (field('适用环节', '<select class="select" name="scope" required><option value="">请选择</option><option>指导老师审核</option><option>副书记审核</option><option>一审 / 二审</option><option>三审终审</option></select>', req=True, full=True) +
               field('意见内容', '<textarea class="textarea" name="content" required maxlength="200" placeholder="请输入常用审核意见"></textarea>', req=True, full=True))
     body = f'''{page_head('审核意见模板', '维护常用审核意见，审核人员在退回 / 终审时可一键插入，提升审核效率', btn('新增模板', 'btn-primary', 'plus', 'data-action="crud-add" data-modal="tplModal" data-title="新增意见模板"'))}
-<div class="card"><div class="filters">{filter_select('tplTable', 'scope', '全部环节', ['指导老师审核', '一审 / 二审', '三审终审'])}{search_box('tplTable', '搜索意见内容')}</div>
+<div class="card"><div class="filters">{filter_select('tplTable', 'scope', '全部环节', ['指导老师审核', '副书记审核', '一审 / 二审', '三审终审'])}{search_box('tplTable', '搜索意见内容')}</div>
 {table('tplTable', ['适用环节', '意见内容', ('使用次数', 'data-sort'), ('操作', 'class="no-export"')], [trs])}</div>{tpl}'''
     page('opinion-templates.html', '审核意见模板', body, ['系统配置', '审核意见模板'], crud_modal('tplModal', fields, 'tplTable', 'tplTpl'))
 
@@ -545,7 +566,8 @@ def operation_logs():
         ('2026-09-29 17:40', '张静', '管理员', '三审终审：采用', 'TG2026091805', '10.12.8.10', '待三审 → 已终审采用；不计入采用 → 计入采用'),
         ('2026-09-29 16:12', '王海峰', '指导老师', '指导老师审核退回', 'TG2026092601', '10.12.30.8', '待指导老师审核 → 已退回'),
         ('2026-09-29 10:30', '张静', '管理员', '数据导出', '—', '10.12.8.10', '导出全校稿件总表（1024 条）'),
-        ('2026-09-28 16:35', '王海峰', '指导老师', '指导老师审核通过', 'TG2026092702', '10.12.30.8', '待指导老师审核 → 待一审'),
+        ('2026-09-28 16:35', '杨振华', '副书记', '副书记审核通过', 'TG2026092801', '10.12.30.2', '待副书记审核 → 待一审'),
+        ('2026-09-28 14:10', '王海峰', '指导老师', '指导老师审核通过', 'TG2026092801', '10.12.30.8', '待指导老师审核 → 待副书记审核'),
         ('2026-09-22 14:18', '周明轩', '二审员', '二审退回', 'TG2026092203', '10.12.8.66', '待二审 → 已退回'),
         ('2026-09-20 11:40', '陈雨桐', '投稿人', '重新提交', 'TG2026092203', '10.12.34.21', '已退回 → 待指导老师审核；生成 v2'),
         ('2026-09-20 11:35', '陈雨桐', '投稿人', '稿件编辑修改', 'TG2026092203', '10.12.34.21', '标题：“青春志愿行社区服务周活动圆满结束” → “‘青春志愿行’社区服务周纪实”'),
@@ -562,7 +584,7 @@ def operation_logs():
 def messages():
     items = [
         ('inbox', 'blue', '新的待三审稿件', f'《{FEATURED["title"]}》已通过二审，等待您终审', '15 分钟前', 'final-review.html', True),
-        ('alert', 'red', '审核超时预警', '当前有 5 篇稿件超时未处理，涉及一审、二审、三审和指导老师审核节点', '今天 09:00', 'timeout-ledger.html', True),
+        ('alert', 'red', '审核超时预警', '当前有 6 篇稿件超时未处理，涉及指导老师、副书记、一审、二审、三审节点', '今天 09:00', 'timeout-ledger.html', True),
         ('clock', 'orange', '三审即将超时', '《校友返校讲述“北斗”研发故事》剩余 0.5 个工作日', '今天 09:00', 'final-list.html', True),
         ('globe', 'blue', '待发布升华网', '有 3 篇已采用新闻尚未标记为已发布', '昨天 17:00', 'publish-export.html', True),
         ('bell', 'blue', '系统通知', '通用敏感词库已更新至 v2026.09，新增 326 条', '09-01 08:00', 'sensitive-words.html'),

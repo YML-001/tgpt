@@ -25,7 +25,7 @@
 
   // 稿件状态与标签颜色的对应关系
   const TAG_CLASS = {
-    '草稿': 'tag-gray', '待指导老师审核': 'tag-warn', '待一审': 'tag-warn', '待二审': 'tag-warn',
+    '草稿': 'tag-gray', '待指导老师审核': 'tag-warn', '待副书记审核': 'tag-warn', '待一审': 'tag-warn', '待二审': 'tag-warn',
     '待三审': 'tag-warn', '已退回': 'tag-danger', '已终审采用': 'tag-success', '已终审不采用': 'tag-gray',
     '已发布': 'tag-primary', '无需处理': 'tag-gray', '待跟进': 'tag-warn', '已跟进': 'tag-primary',
     '已转为正式新闻': 'tag-success', '计入采用': 'tag-success', '不计入采用': 'tag-gray',
@@ -606,8 +606,8 @@
     },
 
     async copy(btn) {
-      const el = $(btn.dataset.target);
-      const text = el ? (el.value ?? el.innerText) : '';
+      const el = btn.dataset.target && $(btn.dataset.target);
+      const text = btn.dataset.text || (el ? (el.value ?? el.innerText) : '');
       try { await navigator.clipboard.writeText(text); }
       catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
       toast(btn.dataset.msg || '已复制到剪贴板，复制行为已记入操作日志');
@@ -1126,13 +1126,13 @@
       list.insertAdjacentHTML('beforeend', `
         <div class="file-item">${thumb}
           <button type="button" class="fi-del" aria-label="删除">×</button>
-          <div class="fi-meta"><span class="fi-name">${esc(f.name)}</span><span>${size} · 原图</span></div>
+          <div class="fi-meta"><span class="fi-name">${esc(f.name)}</span><span>${size} · ${kind === 'doc' ? '附件' : '原图'}</span></div>
           ${input.dataset.remark !== undefined ? '<input placeholder="单张照片备注（选填）">' : ''}
         </div>`);
     });
     input.value = '';
     updateFileCount(box);
-    toast('上传成功，原图已保存', 'success', 1500);
+    toast(kind === 'doc' ? '附件上传成功' : '上传成功，原图已保存', 'success', 1500);
   }
 
   function evalShowWhen(scope = document) {

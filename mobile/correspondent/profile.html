@@ -349,6 +349,19 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .m-article h2{font-size:19px;line-height:1.5;margin-bottom:8px}
 .m-article p{font-size:15px;line-height:1.9;text-indent:2em;margin-bottom:10px;color:#434A55}
 .m-article img{width:100%;border-radius:8px;margin:6px 0 10px;height:180px;object-fit:cover}
+.m-sub-t{font-size:13px;font-weight:600;color:var(--text);margin:12px 0 6px}
+.m-att{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.m-att:last-child{border-bottom:none}
+.m-att .att-ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;flex:none}
+.m-att .att-main{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13px}
+.m-att .att-main b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-att .att-main span{font-size:12px;color:var(--text-3)}
+.m-cover{width:100%;height:170px;object-fit:cover;border-radius:8px;margin:8px 0}
+.m-photo{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.m-photo img{width:96px;height:72px;object-fit:cover;border-radius:6px;flex:none}
+.m-photo div{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--text-3);min-width:0}
+.m-photo b{font-size:13px;color:var(--text);font-weight:500}
+.m-photo em{font-style:normal;color:var(--text-2)}
 .m-list-link{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #E3F1F9;color:#303133;font-size:14px}
 .m-card:has(> .m-list-link){border-radius:20px;background:linear-gradient(180deg,#E2F3FF -9%,#fff 11%);border:1px solid #fff;padding:4px 16px 8px}
 button.m-list-link{width:100%;background:none;border:0;border-bottom:1px solid #E3F1F9;font:inherit;font-size:14px;text-align:left;cursor:pointer}
@@ -451,7 +464,7 @@ button.m-list-link{width:100%;background:none;border:0;border-bottom:1px solid #
   <nav class="tabbar"><a href="home.html" class=""><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="tb-txt">首页</span></a><a href="my-submissions.html" class=""><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span class="tb-txt">我的投稿</span></a><a href="submit-news.html" class="tb-btn" aria-label="新建投稿"><span class="tb-plus"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></a><a href="messages.html" class=""><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="tb-txt">消息</span><span class="tb-badge" data-unread-count>2</span></a><a href="profile.html" class="on"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="tb-txt">我的</span></a></nav>
   <span class="home-ind"></span>
 <div class="modal" id="ruleSheet"><div class="modal-box"><div class="modal-head"><span>投稿须知</span><button class="modal-x" data-close aria-label="关闭"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-<div class="modal-body" style="font-size:14px;line-height:1.9;color:var(--text-2)">1. 涉密信息请勿上网。<br>2. 学生投稿必须指定指导老师，先由指导老师审核；教师投稿直接进入一审。<br>3. 稿件依次经过一审、二审、三审终审，每个环节 3 个工作日内处理。<br>4. 被退回的稿件可修改后重新提交，历史版本与意见永久保留。<br>5. 视频请提供永久有效的云盘链接。</div>
+<div class="modal-body" style="font-size:14px;line-height:1.9;color:var(--text-2)">1. 涉密信息请勿上网。<br>2. 学生投稿必须指定指导老师：指导老师审核 → 学院副书记审核 → 一审；教师投稿先由学院副书记审核，再进入一审。<br>3. 之后依次经过二审、三审终审，每个环节 3 个工作日内处理。<br>4. 被退回的稿件可修改后重新提交，历史版本与意见永久保留。<br>5. 视频请提供永久有效的云盘链接。</div>
 <div class="modal-foot"><button class="btn btn-primary" data-close>我知道了</button></div></div></div>
 </div>
 <aside class="notes">

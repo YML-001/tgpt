@@ -11,7 +11,7 @@ ROOT = '../../'
 WRITTEN = []
 
 TAG_CLASS = {
-    '草稿': 'tag-gray', '待指导老师审核': 'tag-warn', '待一审': 'tag-warn', '待二审': 'tag-warn', '待三审': 'tag-warn',
+    '草稿': 'tag-gray', '待指导老师审核': 'tag-warn', '待副书记审核': 'tag-warn', '待一审': 'tag-warn', '待二审': 'tag-warn', '待三审': 'tag-warn',
     '已退回': 'tag-danger', '已终审采用': 'tag-success', '已终审不采用': 'tag-gray', '已发布': 'tag-primary',
     '无需处理': 'tag-gray', '待跟进': 'tag-warn', '已跟进': 'tag-primary', '已转为正式新闻': 'tag-success',
     '计入采用': 'tag-success', '不计入采用': 'tag-gray', '启用': 'tag-success', '停用': 'tag-gray',
@@ -151,8 +151,8 @@ def timeline(items):
 
 def flow_steps(identity='学生', cur=1, back_at=None):
     """审核进度条：cur 为当前所在节点下标"""
-    names = ['提交投稿', '指导老师审核', '一审', '二审', '三审终审', '采用归档'] if identity == '学生' else \
-            ['提交投稿', '一审', '二审', '三审终审', '采用归档']
+    names = ['提交投稿', '指导老师审核', '副书记审核', '一审', '二审', '三审终审', '采用归档'] if identity == '学生' else \
+            ['提交投稿', '副书记审核', '一审', '二审', '三审终审', '采用归档']
     out = ''
     for i, n in enumerate(names):
         cls = 'done' if i < cur else ('cur' if i == cur else '')
@@ -260,6 +260,10 @@ MENUS = {
         ('我的待办', [('inbox', '待办', 'dashboard.html', 5), ('file-check', '已办', 'history.html'),
                   ('bell', '催办/抄送', 'cc.html'), ('layers', '批量审批', 'batch.html')]),
     ],
+    'deputy': [
+        ('我的待办', [('inbox', '待办', 'todo.html', '{todo}'), ('file-check', '已办', 'history.html'),
+                  ('bell', '催办/抄送', 'cc.html'), ('layers', '批量审批', 'batch.html')]),
+    ],
     'reviewer': [
         ('我的待办', [('inbox', '待办', 'todo.html', '{todo}'), ('file-check', '已办', 'my-ledger.html'),
                   ('bell', '催办/抄送', 'cc.html'), ('layers', '批量审批', 'batch.html')]),
@@ -293,6 +297,8 @@ MSG_PREVIEW = {
                       ('check-circle', 'green', '稿件终审采用', '《红色经典诵读活动》已终审采用，计入本院采用统计', '昨天 10:30', 'submission-detail.html')],
     'teacher': [('inbox', 'blue', '新的待审稿件', '陈雨桐提交了《科技启航主题团日活动》', '10 分钟前', 'review.html'),
                 ('alert', 'red', '审核超时提醒', '《“代码为桥”乡村小学编程支教纪实》已超时 1.5 个工作日', '今天 09:00', 'dashboard.html')],
+    'deputy': [('inbox', 'blue', '新的待审稿件', '《计算机学院“网络安全宣传周”系列活动》已通过指导老师审核', '20 分钟前', 'review.html'),
+               ('alert', 'red', '审核超时提醒', '《计算机学院“程序设计月”闭幕式》已超时 0.5 个工作日', '今天 09:00', 'todo.html')],
     'reviewer': [('inbox', 'blue', '新的待办稿件', '《科技启航主题团日活动》已到达本环节', '30 分钟前', 'review.html'),
                  ('alert', 'red', '审核超时预警', '有 2 篇稿件已超过审核时限，已记入超时台账', '今天 09:00', 'todo.html'),
                  ('clock', 'orange', '即将超时提醒', '有 2 篇稿件剩余时限不足 1 个工作日', '今天 09:00', 'todo.html')],
@@ -354,7 +360,7 @@ def pc_page(role, active, title, body, crumbs=None, css='', modals='', todo_coun
     links = {it[1]: it[2] for _, items in groups for it in items}
     home_tab += ''.join(f'<a class="vt" href="{links[c]}">{c}</a>' for c in crumbs[:-1] if c in links and links[c] != home)
     close = f'<a class="vt-x" href="{home}" aria-label="关闭当前页签">{icon("x", 12)}</a>' if home_tab else ''
-    msg_count = {'correspondent': 2, 'teacher': 2, 'reviewer1': 3, 'reviewer2': 3, 'admin': 4}[role]
+    msg_count = {'correspondent': 2, 'teacher': 2, 'deputy': 2, 'reviewer1': 3, 'reviewer2': 3, 'admin': 4}[role]
     user_menu = (f'<div class="dropdown"><div class="user-chip" data-dropdown role="button" tabindex="0">'
                  f'<img class="avatar" src="{r["avatar"]}" alt="{r["user"]}"><span class="uc-main"><b>{r["user"]}</b><small>{r["name"]}</small></span>{icon("chev-d", 14)}</div>'
                  f'<div class="dropdown-menu"><div class="dm-title">{r["user"]} · {r["dept"]}</div>'
@@ -413,6 +419,7 @@ TABBARS = {
                       ('plus', '投稿', None), ('bell', '消息', 'messages.html', 2),
                       ('user', '我的', 'profile.html')],
     'teacher': [('inbox', '待办', 'todo.html', 5), ('history', '已办', 'history.html'), ('bell', '消息', 'messages.html', 2)],
+    'deputy': [('inbox', '待办', 'todo.html', '{todo}'), ('history', '已办', 'history.html'), ('bell', '消息', 'messages.html', 2)],
     'reviewer': [('inbox', '待办', 'todo.html', '{todo}'), ('list', '台账', 'ledger.html'), ('bell', '消息', 'messages.html', 3)],
     'admin': [('dashboard', '看板', 'home.html'), ('inbox', '终审', 'final-list.html', 6), ('bell', '消息', 'messages.html', 4)],
 }

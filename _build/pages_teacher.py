@@ -2,17 +2,19 @@
 from lib import icon, tag, type_tag, remain, stat, card, page_head, btn, a_btn, filter_select, search_box, \
     filter_bar, table, pc_page, write
 from data import TEACHER_TODO, FEATURED
-from common import featured_flow_timeline, messages_page_body, article
+from common import featured_flow_timeline, messages_page_body
+from detail import sub_content
 from workflow import norm, todo_body, done_body, cc_body, batch_body, detail_body, node_chart, flow_name
-from review import review_body, reject_modal, q
+from review import review_body, reject_modal, q, type_review_pages, type_done_pages
 
 R = 'teacher'
 P = 'pc/teacher/'
 SID = FEATURED['id']
+NEW_ROWS = []
 TPL_TEACHER = ['稿件导语不够精炼，请突出活动核心亮点后重新提交。', '配图数量不足或清晰度不够，请补充 3 张以上高清原图。',
                '活动时间、地点等要素缺失，请补全新闻五要素。']
 
-PASS_NEXT = q('dashboard.html', done=SID, msg='已审核通过，稿件已报送校团委一审', link=q('history.html', new=SID, act='pass'), linkText='查看已办')
+PASS_NEXT = q('dashboard.html', done=SID, msg='已审核通过，稿件已提交学院副书记审核', link=q('history.html', new=SID, act='pass'), linkText='查看已办')
 REJECT_NEXT = q('dashboard.html', done=SID, type='warn', msg='已退回稿件，系统已通知投稿学生陈雨桐', link=q('history.html', new=SID, act='reject'), linkText='查看已办')
 
 
@@ -26,7 +28,7 @@ def dashboard():
 
 
 def review_actions():
-    return (btn('审核通过，报送一审', 'btn-success btn-lg', 'check', f'data-action="pass" data-opinion="optional" data-tpl="teacher" data-title="审核通过" data-ok="确认通过" data-msg="审核通过，稿件已进入校团委一审" data-next="{PASS_NEXT}"') +
+    return (btn('通过，提交副书记审核', 'btn-success btn-lg', 'check', f'data-action="pass" data-opinion="optional" data-tpl="teacher" data-title="通过，提交副书记审核" data-ok="确认通过" data-msg="审核通过，稿件已提交学院副书记审核" data-next="{PASS_NEXT}"') +
             a_btn('退回修改', 'review-reject.html', 'btn-danger-o btn-lg', 'undo'))
 
 
@@ -36,6 +38,14 @@ def review(reject=False):
     modals = reject_modal('rejectBox', '退回稿件', '退回意见', TPL_TEACHER, REJECT_NEXT) if reject else ''
     file = 'review-reject.html' if reject else 'review.html'
     page(file, '办理', body, ['待办', '新闻投稿审核'], modals, active='dashboard.html')
+
+
+def typed_pages():
+    global NEW_ROWS
+    made = type_review_pages(page, norm(TEACHER_TODO, 'teacher'), '指导老师审核', 'teacher', 'dashboard.html', 'history.html', 'teacher',
+                             '通过，提交副书记审核', '审核通过，稿件已提交学院副书记审核', '待办')
+    NEW_ROWS = [(sid, title, t, author, col, '2026-09-30 16:30') for sid, title, t, author, col in made.values()]
+    type_done_pages(page, '指导老师审核', 'history.html')
 
 
 def history():
@@ -50,7 +60,7 @@ def history():
     ]
     rows = [(sid, title, t, author, '计算机学院', st, op, time, cost, ok) for sid, title, t, author, time, st, cost, ok, op in base]
     body = done_body('tHis', rows, '指导老师审核', 'done-detail.html', ('已通过', '已退回'),
-                     (SID, FEATURED['title'], '新闻', '陈雨桐', '计算机学院', '2026-09-30 16:30'), '指导老师已办记录')
+                     [(SID, FEATURED['title'], '新闻', '陈雨桐', '计算机学院', '2026-09-30 16:30')] + NEW_ROWS, '指导老师已办记录')
     page('history.html', '已办', body, ['已办'])
 
 
@@ -67,8 +77,8 @@ def batch():
 
 
 def done_detail():
-    body = detail_body(FEATURED, '已通过', 'tag-solid-ok', node_chart('学生', 2), featured_flow_timeline('r1'), 'history.html',
-                       FEATURED['time'], FEATURED['time'], article(FEATURED))
+    body = detail_body(FEATURED, '已通过', 'tag-solid-ok', node_chart('学生', 2), featured_flow_timeline('deputy'), 'history.html',
+                       FEATURED['time'], FEATURED['time'], sub_content(FEATURED))
     page('done-detail.html', '已办详情', body, ['已办', '新闻投稿审核'], active='history.html')
 
 
@@ -83,4 +93,4 @@ def messages():
 
 
 def build():
-    dashboard(); review(); review(True); history(); cc(); batch(); done_detail(); messages()
+    dashboard(); review(); review(True); typed_pages(); history(); cc(); batch(); done_detail(); messages()

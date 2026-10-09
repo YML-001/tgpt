@@ -7,12 +7,15 @@ from styles import BASE_CSS
 # ---------- 页面目录：（文件, 页面名, 图标, 说明） ----------
 PC_PAGES = {
     'correspondent': [
-        ('submit-news', '新闻投稿', 'file', '富文本、多图上传、身份切换、指导老师搜索、敏感词检测'),
-        ('submit-video', '视频投稿', 'video', '永久云盘链接提示、时长格式校验、视频用途'),
+        ('submit-news', '新闻投稿', 'file', '富文本、配图与简介选填、多附件上传、身份切换、指导老师搜索、敏感词检测'),
+        ('submit-video', '视频投稿', 'video', '永久云盘链接提示、时长格式校验、视频用途、多附件上传'),
         ('submit-photo', '照片投稿', 'image', '批量上传原图、单张备注、涉及重要领导'),
         ('submit-clue', '新闻线索', 'bulb', '是否接受采访联动显示可采访时间段'),
-        ('submit-success', '提交成功', 'check-circle', '按投稿身份显示下一个审核节点'),
+        ('submit-success', '提交成功', 'check-circle', '按投稿身份显示下一个审核节点（学生：指导老师；教师：副书记）'),
         ('my-submissions', '我的投稿', 'inbox', 'PC 端首页；状态筛选，“新建投稿”进入投稿表单，“导出”弹窗'),
+        ('submission-detail-video', '稿件档案 · 视频', 'video', '时长、云盘链接与提取码、封面、简介、附件'),
+        ('submission-detail-photo', '稿件档案 · 照片', 'image', '拍摄信息、涉及领导、原图与单张备注'),
+        ('submission-detail-clue', '稿件档案 · 线索', 'bulb', '线索类型、内容、时间地点、联系人、处置状态'),
         ('submission-detail', '稿件档案', 'archive', '稿件内容、流转时间轴、历次审核意见'),
         ('version-history', '版本对比', 'compare', '新旧版本并排差异，附当时退回意见'),
         ('resubmit', '退回修改', 'undo', '顶部固定退回意见，修改后重新提交'),
@@ -23,7 +26,8 @@ PC_PAGES = {
     ],
     'teacher': [
         ('dashboard', '我的待办 · 待办', 'inbox', '统一待办列表：流程名称、当前节点、发起人、到达时间、剩余时限'),
-        ('review', '办理', 'file-check', '表单信息 / 流程图 / 审批记录 / 操作日志，通过 / 退回'),
+        ('review', '办理', 'file-check', '表单信息 / 流程图 / 审批记录 / 操作日志；通过后提交副书记审核'),
+        ('review-video', '办理 · 视频', 'video', '视频类稿件的完整字段与审核'),
         ('review-reject', '退回弹窗', 'undo', '退回意见必填，可插入常用模板'),
         ('history', '我的待办 · 已办', 'history', '流程状态、意见、处理时间与时效'),
         ('done-detail', '已办详情', 'file', '基础信息、稿件内容、节点流程图与操作日志'),
@@ -31,12 +35,24 @@ PC_PAGES = {
         ('batch', '批量审批', 'layers', '按流程分类勾选，批量通过 / 批量不通过（意见必填）'),
         ('messages', '消息通知', 'bell', '新待审稿件、超时提醒'),
     ],
+    'deputy': [
+        ('todo', '我的待办 · 待办', 'inbox', 'PC 端首页；本院稿件到达副书记审核节点，超时优先'),
+        ('review', '办理', 'file-check', '通过报送一审 / 退回（意见必填、模板、敏感词、时限）'),
+        ('review-photo', '办理 · 照片', 'image', '教师照片稿件：提交后直接到达副书记'),
+        ('review-reject', '退回弹窗', 'undo', '退回意见必填，可插入常用模板'),
+        ('history', '我的待办 · 已办', 'history', '通过 / 退回记录与时效'),
+        ('done-detail', '已办详情', 'file', '稿件内容、节点流程图与审批记录'),
+        ('cc', '催办 / 抄送', 'bell', '超时自动催办与审核结果抄送'),
+        ('batch', '批量审批', 'layers', '批量通过 / 批量不通过（意见必填）'),
+        ('messages', '消息通知', 'bell', '新待审稿件、教师投稿到达、超时提醒'),
+    ],
     'reviewer': [
         ('todo', '我的待办 · 待办', 'inbox', 'PC 端首页；统一待办列表，超时标红优先'),
         ('review', '办理', 'file-check', '表单信息 / 流程图 / 审批记录 / 操作日志、敏感词检测'),
         ('review-reject', '退回弹窗', 'undo', '退回意见必填，可插入常用模板'),
         ('submissions', '稿件查询', 'search', '按学院、类型、时间、状态组合筛选'),
         ('submission-detail', '稿件档案', 'package', '已采用新闻稿可复制升华网正文、导出素材包'),
+        ('submission-detail-video', '稿件档案 · 视频', 'video', '云盘链接、封面、附件与审核流程'),
         ('my-ledger', '我的待办 · 已办', 'list', '流程状态、意见、处理时间与时效'),
         ('done-detail', '已办详情', 'file', '基础信息、稿件内容、节点流程图与操作日志'),
         ('cc', '催办 / 抄送', 'bell', '超时自动催办与终审结果抄送'),
@@ -53,6 +69,8 @@ PC_PAGES = {
         ('final-reject', '不采用弹窗', 'x-circle', '终审意见必填，标记不计入采用'),
         ('archive', '稿件档案库', 'archive', '多条件检索；“导出”弹窗含全校总表、分学院明细'),
         ('archive-detail', '档案详情', 'file', '内容、流转、版本、操作日志（含 IP）'),
+        ('archive-detail-photo', '档案详情 · 照片', 'image', '原图与单张备注、涉及领导'),
+        ('archive-detail-clue', '档案详情 · 线索', 'bulb', '线索内容、联系人、处置状态'),
         ('publish-export', '升华网发布素材', 'globe', '清洗正文、一键复制、ZIP 素材包、标记已发布'),
         ('clue-tracking', '线索跟进', 'bulb', '待跟进 → 已跟进 → 已转为正式新闻'),
         ('timeout-ledger', '超时台账', 'clock', '按节点和人员筛选，及时率，导出'),
@@ -72,13 +90,15 @@ PC_PAGES = {
 M_PAGES = {
     'correspondent': [
         ('home', '首页', 'home', '个人统计、四类投稿入口；底栏“+”弹出投稿类型面板'),
-        ('submit-news', '新闻投稿', 'file', '身份切换、指导老师、正文、配图'),
-        ('submit-video', '视频投稿', 'video', '永久云盘链接'),
+        ('submit-news', '新闻投稿', 'file', '身份切换、指导老师、正文、配图与附件（选填）'),
+        ('submit-video', '视频投稿', 'video', '永久云盘链接、附件'),
         ('submit-photo', '照片投稿', 'image', '拍照或相册多选，单张备注'),
         ('submit-clue', '新闻线索', 'bulb', '采访意愿联动'),
         ('submit-success', '提交成功', 'check-circle', '按身份显示下一节点'),
         ('my-submissions', '我的投稿', 'inbox', '状态分段筛选'),
         ('detail', '稿件档案', 'archive', '退回意见、流转记录'),
+        ('detail-video', '稿件档案 · 视频', 'video', '云盘链接、封面、附件'), ('detail-photo', '稿件档案 · 照片', 'image', '原图与单张备注'),
+        ('detail-clue', '稿件档案 · 线索', 'bulb', '线索内容与联系人'),
         ('resubmit', '修改重提', 'undo', '历次意见 + 修改表单'),
         ('ranking', '全校排行榜', 'trophy', '学年 / 学期切换'),
         ('messages', '消息', 'bell', '点击已读、全部已读'),
@@ -87,6 +107,10 @@ M_PAGES = {
     'teacher': [
         ('todo', '待审稿件', 'inbox', '超时筛选'), ('review', '审核稿件', 'file-check', '底部面板填写意见'),
         ('history', '审核记录', 'history', '通过 / 退回筛选'), ('messages', '消息', 'bell', '新待审提醒'),
+    ],
+    'deputy': [
+        ('todo', '待审稿件', 'inbox', '本院稿件，超时筛选'), ('review', '审核稿件', 'file-check', '通过报送一审 / 退回'),
+        ('review-video', '审核 · 视频', 'video', '教师视频稿件'), ('history', '审核记录', 'history', '通过 / 退回筛选'), ('messages', '消息', 'bell', '新待审提醒'),
     ],
     'reviewer': [
         ('todo', '待办', 'inbox', '超时优先'), ('review', '审核稿件', 'file-check', '通过 / 退回'),
@@ -98,43 +122,44 @@ M_PAGES = {
     ],
 }
 
-ROLE_ORDER = ['correspondent', 'teacher', 'reviewer1', 'reviewer2', 'admin']
-ROLE_ICON = {'correspondent': 'edit', 'teacher': 'user', 'reviewer1': 'file-check', 'reviewer2': 'shield', 'admin': 'settings'}
+ROLE_ORDER = ['correspondent', 'teacher', 'deputy', 'reviewer1', 'reviewer2', 'admin']
+ROLE_ICON = {'correspondent': 'edit', 'teacher': 'user', 'deputy': 'flag', 'reviewer1': 'file-check', 'reviewer2': 'shield', 'admin': 'settings'}
 
 # ---------- 权限矩阵：Y 有，N 无，C 仅本院，S 仅本人相关 ----------
-MATRIX_COLS = ['投稿人（学生）', '投稿人（教师）', '指导老师', '一审员', '二审员', '管理员']
+MATRIX_COLS = ['投稿人（学生）', '投稿人（教师）', '指导老师', '副书记', '一审员', '二审员', '管理员']
 MATRIX = [
     ('投稿', [
-        ('新闻 / 视频 / 照片 / 线索投稿', 'YYNNNN'),
-        ('保存草稿、退回修改重提', 'YYNNNN'),
-        ('必须指定指导老师', 'YNNNNN'),
-        ('查看我的投稿与稿件档案', 'SSNNNN'),
+        ('新闻 / 视频 / 照片 / 线索投稿', 'YYNNNNN'),
+        ('保存草稿、退回修改重提', 'YYNNNNN'),
+        ('必须指定指导老师', 'YNNNNNN'),
+        ('查看我的投稿与稿件档案', 'SSNNNNN'),
     ]),
     ('审核', [
-        ('指导老师审核（学生稿件）', 'NNSNNN'),
-        ('一审', 'NNNYNN'),
-        ('二审', 'NNNNYN'),
-        ('三审终审（采用 / 不采用）', 'NNNNNY'),
-        ('查看敏感词检测结果', 'NNYYYY'),
+        ('指导老师审核（学生稿件）', 'NNSNNNN'),
+        ('副书记审核（本院学生 / 教师稿件）', 'NNNCNNN'),
+        ('一审', 'NNNNYNN'),
+        ('二审', 'NNNNNYN'),
+        ('三审终审（采用 / 不采用）', 'NNNNNNY'),
+        ('查看敏感词检测结果', 'NNYYYYY'),
     ]),
     ('查询与统计', [
-        ('稿件查询与档案', 'CCSYYY'),
-        ('本院统计', 'CCNNNY'),
-        ('全校学院排行榜', 'YYNNNY'),
-        ('我的待办 · 已办（本人处理记录）', 'NNSSSN'),
-        ('统计驾驶舱、超时台账', 'NNNNNY'),
-        ('数据导出', 'CCNNNY'),
+        ('稿件查询与档案', 'CCSCYYY'),
+        ('本院统计', 'CCNCNNY'),
+        ('全校学院排行榜', 'YYNNNNY'),
+        ('我的待办 · 已办（本人处理记录）', 'NNSSSSN'),
+        ('统计驾驶舱、超时台账', 'NNNNNNY'),
+        ('数据导出', 'CCNNNNY'),
     ]),
     ('发布', [
-        ('升华网正文复制 / 素材包导出', 'NNNNYY'),
-        ('标记“已发布”', 'NNNNNY'),
-        ('线索跟进', 'NNNNNY'),
+        ('升华网正文复制 / 素材包导出', 'NNNNNYY'),
+        ('标记“已发布”', 'NNNNNNY'),
+        ('线索跟进', 'NNNNNNY'),
     ]),
     ('系统配置', [
-        ('人员名单与账号', 'NNNNNY'),
-        ('角色权限、业务参数', 'NNNNNY'),
-        ('意见模板、敏感词库', 'NNNNNY'),
-        ('操作日志（只读）', 'NNNNNY'),
+        ('人员名单与账号', 'NNNNNNY'),
+        ('角色权限、业务参数', 'NNNNNNY'),
+        ('意见模板、敏感词库', 'NNNNNNY'),
+        ('操作日志（只读）', 'NNNNNNY'),
     ]),
 ]
 
@@ -152,6 +177,7 @@ def flow_html():
     main = ''.join([
         node('草稿 / 提交', '投稿人', 'fn-start', 'edit', href='pc/correspondent/submit-news.html'),
         node('待指导老师审核', '仅学生稿件', 'fn-review', 'user', True, 'pc/teacher/review.html'),
+        node('待副书记审核', '本院副书记 · 学工系统', 'fn-review', 'flag', True, 'pc/deputy/review.html'),
         node('待一审', '一审员', 'fn-review', 'file-check', True, 'pc/reviewer1/review.html'),
         node('待二审', '二审员', 'fn-review', 'shield', True, 'pc/reviewer2/review.html'),
         node('待三审', '管理员终审', 'fn-review', 'award', True, 'pc/admin/final-review.html'),
@@ -160,14 +186,14 @@ def flow_html():
     ])
     return f'''<div class="flow-scroll"><div class="flow">
 <div class="flow-main">{main}</div>
-<div class="flow-bypass"><span>{icon("arrow-r", 13)}教师投稿：跳过指导老师，直接进入一审</span></div>
+<div class="flow-bypass"><span>{icon("arrow-r", 13)}教师投稿：跳过指导老师，从副书记审核开始</span></div>
 <div class="flow-no">{node('已终审不采用', '不计入采用，意见必填', 'fn-no', 'x-circle')}</div>
-<div class="flow-back"><div class="fb-ups"><i>{icon("undo", 13)}退回</i><i>{icon("undo", 13)}退回</i><i>{icon("undo", 13)}退回</i></div>
+<div class="flow-back"><div class="fb-ups"><i>{icon("undo", 13)}退回</i><i>{icon("undo", 13)}退回</i><i>{icon("undo", 13)}退回</i><i>{icon("undo", 13)}退回</i></div>
 <a class="fb-bar" href="pc/correspondent/resubmit.html">{icon("repeat", 15)}<b>已退回</b><span>退回意见必填 → 投稿人修改后重新提交 → 生成新版本（旧版本与意见永久保留）→ 回到起点重新流转</span></a></div>
 </div></div>
 <div class="rule-grid">
 <div class="rule"><span class="rule-ic">{icon("clock", 18)}</span><b>计时规则</b><p>每个审核节点从稿件到达时开始计时，默认 3 个工作日（后台可改）；剩余不足 1 天标橙，超时标红并记入超时台账。</p></div>
-<div class="rule"><span class="rule-ic">{icon("undo", 18)}</span><b>退回规则</b><p>指导老师、一审、二审均可退回，意见必填、可选模板；投稿人收到消息后修改重提，版本号递增。</p></div>
+<div class="rule"><span class="rule-ic">{icon("undo", 18)}</span><b>退回规则</b><p>指导老师、副书记、一审、二审均可退回，意见必填、可选模板；投稿人收到消息后修改重提，版本号递增。</p></div>
 <div class="rule"><span class="rule-ic">{icon("award", 18)}</span><b>终审规则</b><p>三审二选一：采用计入学院采用统计；不采用必须填写意见，不计入采用。</p></div>
 <div class="rule"><span class="rule-ic">{icon("globe", 18)}</span><b>发布规则</b><p>仅已终审采用的新闻类稿件可导出升华网素材；人工发布后由管理员标记“已发布”。</p></div>
 </div>'''
@@ -176,7 +202,7 @@ def flow_html():
 def status_html():
     def col(title, desc, tags):
         return f'<div class="card st-col"><h4>{title}</h4><p>{desc}</p><div class="tags">{"".join(tags)}</div></div>'
-    flow = [tag(s) for s in ['草稿', '待指导老师审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']]
+    flow = [tag(s) for s in ['草稿', '待指导老师审核', '待副书记审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']]
     clue = [tag(s) for s in ['无需处理', '待跟进', '已跟进', '已转为正式新闻']]
     stat = [tag(s) for s in ['计入采用', '不计入采用']]
     timer = [f'<span class="tag tag-dot {c}">{t}</span>' for c, t in [('tag-success', '剩余 ≥ 1 个工作日'), ('tag-warn', '即将超时（不足 1 天）'), ('tag-danger', '已超时 · 记入超时台账')]]
@@ -190,16 +216,16 @@ def status_html():
 
 
 # ---------- 原型导航页各区块 ----------
-ROLE_COLOR = {'投稿人': '#2A8DC7', '指导老师': '#F29100', '一审员': '#1BB975', '二审员': '#6B5BD2', '管理员': '#1F77AD'}
-ROLE_OF = {'correspondent': '投稿人', 'teacher': '指导老师', 'reviewer1': '一审员', 'reviewer2': '二审员', 'admin': '管理员'}
+ROLE_COLOR = {'投稿人': '#2A8DC7', '指导老师': '#F29100', '副书记': '#D9480F', '一审员': '#1BB975', '二审员': '#6B5BD2', '管理员': '#1F77AD'}
+ROLE_OF = {'correspondent': '投稿人', 'teacher': '指导老师', 'deputy': '副书记', 'reviewer1': '一审员', 'reviewer2': '二审员', 'admin': '管理员'}
 
 
 def hero(total):
     return f'''<header class="hero"><div class="wrap-in">
   <div class="hero-logo">稿</div>
   <h1>中南大学团学组织新闻投稿平台 · 原型页面导航</h1>
-  <p class="lead">覆盖团学新闻稿件<b>投稿 → 指导老师审核 → 一审 → 二审 → 三审终审 → 采用归档 → 升华网发布 → 统计排行</b>全流程的交互原型。<br>
-  <b>全校师生均可投稿</b>（统一身份认证登录，无需单独开通投稿账号）；<b>PC 管理后台（投稿人 / 指导老师 / 一审员 / 二审员 / 管理员）+ 移动端（全部角色）</b>，14 条演示剧本贯穿各角色，业务逻辑闭环、按钮均可点击。</p>
+  <p class="lead">覆盖团学新闻稿件<b>投稿 → 指导老师审核 → 副书记审核 → 一审 → 二审 → 三审终审 → 采用归档 → 升华网发布 → 统计排行</b>全流程的交互原型（教师投稿从副书记审核开始）。<br>
+  <b>全校师生均可投稿</b>（统一身份认证登录，无需单独开通投稿账号）；<b>PC 管理后台（投稿人 / 指导老师 / 副书记 / 一审员 / 二审员 / 管理员）+ 移动端（全部角色）</b>，15 条演示剧本贯穿各角色，业务逻辑闭环、按钮均可点击。</p>
   <div class="pills">
     <span class="pill blue">{icon("file", 15)}高保真交互原型</span>
     <span class="pill">{icon("layers", 15)}每页独立 HTML · 样式内联</span>
@@ -209,8 +235,8 @@ def hero(total):
     <div><b>{total}</b><span>HTML 页面</span></div>
     <div><b>2</b><span>终端形态</span></div>
     <div><b>6</b><span>核心角色</span></div>
-    <div><b>4</b><span>级审核</span></div>
-    <div><b>14</b><span>演示剧本</span></div>
+    <div><b>5</b><span>级审核（学生 5 级 · 教师 4 级）</span></div>
+    <div><b>15</b><span>演示剧本</span></div>
   </div>
 </div></header>
 <div class="tipbar"><div class="wrap-in flex gap8">{icon("info", 15)}
@@ -234,10 +260,12 @@ def box(title, body, extra=''):
 def entries():
     items = [
         ('PC 端 · 投稿人（全校师生）', '计算机学院 陈雨桐：四类投稿、跟踪进度、退回修改、本院统计', 'edit', '#2A8DC7', 'pc/correspondent/my-submissions.html', 1440,
-         [('新闻投稿', 'pc/correspondent/submit-news.html'), ('稿件档案', 'pc/correspondent/submission-detail.html'), ('退回修改', 'pc/correspondent/resubmit.html'),
+         [('新闻投稿', 'pc/correspondent/submit-news.html'), ('稿件档案', 'pc/correspondent/submission-detail.html'), ('视频详情', 'pc/correspondent/submission-detail-video.html'), ('退回修改', 'pc/correspondent/resubmit.html'),
           ('本院统计', 'pc/correspondent/college-stats.html'), ('全校排行榜', 'pc/correspondent/ranking.html')]),
         ('PC 端 · 指导老师', '计算机学院 王海峰：审核指定本人为指导老师的学生稿件', 'user', '#F29100', 'pc/teacher/dashboard.html', 1440,
          [('办理', 'pc/teacher/review.html'), ('已办', 'pc/teacher/history.html'), ('催办/抄送', 'pc/teacher/cc.html'), ('批量审批', 'pc/teacher/batch.html')]),
+        ('PC 端 · 副书记', '计算机学院 杨振华：学工系统固定角色，审核本院学生稿件（指导老师通过后）与教师稿件，无需配置', 'flag', '#D9480F', 'pc/deputy/todo.html', 1440,
+         [('办理', 'pc/deputy/review.html'), ('办理 · 教师照片稿', 'pc/deputy/review-photo.html'), ('已办', 'pc/deputy/history.html'), ('批量审批', 'pc/deputy/batch.html')]),
         ('PC 端 · 一审员', '校团委宣传部 刘子涵：我的待办（待办 / 已办 / 催办抄送 / 批量审批）、稿件查询', 'file-check', '#1BB975', 'pc/reviewer1/todo.html', 1440,
          [('办理', 'pc/reviewer1/review.html'), ('已办', 'pc/reviewer1/my-ledger.html'), ('批量审批', 'pc/reviewer1/batch.html'), ('稿件查询', 'pc/reviewer1/submissions.html')]),
         ('PC 端 · 二审员', '校团委宣传部 周明轩：待二审稿件、升华网正文复制与素材导出', 'shield', '#6B5BD2', 'pc/reviewer2/todo.html', 1440,
@@ -248,8 +276,8 @@ def entries():
         ('移动端 · 投稿人（全校师生）', '陈雨桐：随时投稿、查看进度、收到退回后修改重提', 'mobile', '#2A8DC7', 'mobile/correspondent/home.html', 1100,
          [('新闻投稿', 'mobile/correspondent/submit-news.html'), ('我的投稿', 'mobile/correspondent/my-submissions.html'),
           ('修改重提', 'mobile/correspondent/resubmit.html'), ('消息', 'mobile/correspondent/messages.html')]),
-        ('移动端 · 审核角色', '指导老师 / 一审员 / 二审员：待办、底部面板填写意见、审核台账', 'file-check', '#1BB975', 'mobile/reviewer1/todo.html', 1100,
-         [('指导老师待审', 'mobile/teacher/todo.html'), ('一审待办', 'mobile/reviewer1/todo.html'), ('二审待办', 'mobile/reviewer2/todo.html'), ('审核稿件', 'mobile/reviewer1/review.html')]),
+        ('移动端 · 审核角色', '指导老师 / 副书记 / 一审员 / 二审员：待办、底部面板填写意见、审核台账', 'file-check', '#1BB975', 'mobile/reviewer1/todo.html', 1100,
+         [('指导老师待审', 'mobile/teacher/todo.html'), ('副书记待审', 'mobile/deputy/todo.html'), ('一审待办', 'mobile/reviewer1/todo.html'), ('二审待办', 'mobile/reviewer2/todo.html'), ('审核稿件', 'mobile/reviewer1/review.html')]),
         ('移动端 · 校团委管理员', '张静：统计看板、三审终审、超时与发布提醒', 'dashboard', '#1F77AD', 'mobile/admin/home.html', 1100,
          [('待三审', 'mobile/admin/final-list.html'), ('三审终审', 'mobile/admin/final-review.html'), ('消息', 'mobile/admin/messages.html')]),
     ]
@@ -272,16 +300,19 @@ SCENARIOS = [
         ('投稿人', '我的投稿 · 新建投稿', 'pc/correspondent/my-submissions.html'), ('投稿人', '填写新闻投稿', 'pc/correspondent/submit-news.html'),
         ('投稿人', '提交成功 · 待指导老师审核', 'pc/correspondent/submit-success.html?type=新闻&identity=学生'),
         ('投稿人', '我的投稿 · 新稿件高亮', 'pc/correspondent/my-submissions.html?new=TG2026093005')]),
-    ('user', '教师投稿', '身份切换为“教师”后指导老师字段隐藏，提交后跳过指导老师直接进入一审，流程少一级。', [
+    ('user', '教师投稿', '身份切换为“教师”后指导老师字段隐藏，提交后先由本院副书记审核，再进入一审，比学生稿件少一级。', [
         ('投稿人', '新闻投稿 · 切换教师身份', 'pc/correspondent/submit-news.html'),
-        ('投稿人', '提交成功 · 直接待一审', 'pc/correspondent/submit-success.html?type=新闻&identity=教师'),
-        ('一审员', '一审待办', 'pc/reviewer1/todo.html')]),
-    ('layers', '视频、照片、线索投稿', '视频须提供永久云盘链接、时长为“分:秒”；照片多选后每张可备注；线索按是否接受采访联动显示时间段。', [
-        ('投稿人', '视频投稿', 'pc/correspondent/submit-video.html'), ('投稿人', '照片投稿', 'pc/correspondent/submit-photo.html'),
-        ('投稿人', '新闻线索', 'pc/correspondent/submit-clue.html'), ('投稿人', '提交成功', 'pc/correspondent/submit-success.html?type=线索&identity=学生')]),
-    ('user', '指导老师审核', '只看到指定本人为指导老师的学生稿件；通过后报送一审，退回意见必填并可一键插入模板。', [
+        ('投稿人', '提交成功 · 待副书记审核', 'pc/correspondent/submit-success.html?type=新闻&identity=教师'),
+        ('副书记', '副书记待办 · 教师稿件', 'pc/deputy/review-photo.html'), ('一审员', '一审待办', 'pc/reviewer1/todo.html')]),
+    ('layers', '视频、照片、线索投稿', '视频须提供永久云盘链接、时长为“分:秒”，可上传多个附件；照片多选后每张可备注；线索按是否接受采访联动显示时间段；各类型稿件详情完整展示表单字段。', [
+        ('投稿人', '视频投稿', 'pc/correspondent/submit-video.html'), ('投稿人', '视频详情', 'pc/correspondent/submission-detail-video.html'),
+        ('投稿人', '照片详情', 'pc/correspondent/submission-detail-photo.html'), ('投稿人', '线索详情', 'pc/correspondent/submission-detail-clue.html')]),
+    ('user', '指导老师审核', '只看到指定本人为指导老师的学生稿件；通过后提交学院副书记审核，退回意见必填并可一键插入模板。', [
         ('指导老师', '我的待办 · 待办', 'pc/teacher/dashboard.html'), ('指导老师', '办理', 'pc/teacher/review.html'),
         ('指导老师', '退回 · 意见必填', 'pc/teacher/review-reject.html'), ('指导老师', '已办', 'pc/teacher/history.html')]),
+    ('flag', '副书记审核', '副书记为投稿人所在学院副书记，取自学工系统、无需配置；学生稿件在指导老师通过后到达，教师稿件提交后直接到达；通过报送一审，退回意见必填。', [
+        ('副书记', '我的待办 · 待办', 'pc/deputy/todo.html'), ('副书记', '办理 · 通过报送一审', 'pc/deputy/review.html'),
+        ('副书记', '退回 · 意见必填', 'pc/deputy/review-reject.html'), ('副书记', '已办', 'pc/deputy/history.html')]),
     ('file-check', '一审、二审', '统一待办按超时优先排序、超时标红；办理页显示敏感词检测结果；处理后稿件从待办消失并出现在“已办”。', [
         ('一审员', '一审待办', 'pc/reviewer1/todo.html'), ('一审员', '一审办理', 'pc/reviewer1/review.html'), ('一审员', '已办', 'pc/reviewer1/my-ledger.html'),
         ('二审员', '二审待办', 'pc/reviewer2/todo.html'), ('二审员', '二审办理', 'pc/reviewer2/review.html'), ('一审员', '批量审批', 'pc/reviewer1/batch.html')]),
@@ -309,9 +340,9 @@ SCENARIOS = [
     ('lock', '数据隔离', '投稿人只能看到本院统计与稿件；点击其他学院进入“无权查看”提示页。', [
         ('投稿人', '全校排行榜', 'pc/correspondent/ranking.html'), ('投稿人', '无权查看', 'pc/correspondent/no-permission.html'),
         ('投稿人', '本院统计', 'pc/correspondent/college-stats.html')]),
-    ('mobile', '移动端投稿与审核', '手机上完成投稿、指导老师审核、一审到终审；审核意见在底部面板填写，右侧说明栏给出下一步链路。', [
+    ('mobile', '移动端投稿与审核', '手机上完成投稿、指导老师审核、副书记审核、一审到终审；审核意见在底部面板填写，右侧说明栏给出下一步链路。', [
         ('投稿人', '移动端首页', 'mobile/correspondent/home.html'), ('投稿人', '新闻投稿', 'mobile/correspondent/submit-news.html'),
-        ('指导老师', '移动待审', 'mobile/teacher/todo.html'), ('一审员', '移动审核', 'mobile/reviewer1/review.html'),
+        ('指导老师', '移动待审', 'mobile/teacher/todo.html'), ('副书记', '移动审核', 'mobile/deputy/review.html'), ('一审员', '移动审核', 'mobile/reviewer1/review.html'),
         ('管理员', '移动终审', 'mobile/admin/final-review.html')]),
 ]
 
@@ -343,8 +374,9 @@ def cell(v):
 def roles():
     pc_t, m_t = '<span class="tag tag-primary">PC</span>', '<span class="tag tag-success">移动</span>'
     rows = [('投稿人（学生）', '全校学生，统一身份认证登录', '本院稿件与本院统计；全校排行榜', '无审核权；投稿、存草稿、修改重提'),
-            ('投稿人（教师）', '全校教职工，统一身份认证登录', '同上', '无审核权；投稿不经过指导老师，直接进入一审'),
-            ('指导老师', '学生投稿时指定的老师，可跨学院', '指定本人为指导老师的学生稿件', '学生稿件第一道审核：通过报送一审 / 退回'),
+            ('投稿人（教师）', '全校教职工，统一身份认证登录', '同上', '无审核权；投稿不经过指导老师，先由本院副书记审核'),
+            ('指导老师', '学生投稿时指定的老师，可跨学院', '指定本人为指导老师的学生稿件', '学生稿件第一道审核：通过提交副书记审核 / 退回'),
+            ('副书记', '投稿人所在学院的副书记，<b>取自学工系统，无需配置</b>', '本院稿件（副书记审核环节）', '学生稿件第二道、教师稿件第一道审核：通过报送一审 / 退回'),
             ('一审员', '校团委宣传部学生干部', '分配给本人的待一审稿件；全校稿件查询', '一审：通过流转二审 / 退回'),
             ('二审员', '校团委宣传部高年级学生干部', '分配给本人的待二审稿件；全校稿件查询', '二审：通过流转三审 / 退回；升华网素材导出'),
             ('校团委管理员', '校团委宣传部老师', '全校全部稿件、统计与配置', '三审终审：采用 / 不采用；系统配置')]
@@ -353,27 +385,28 @@ def roles():
     heads = '<th>功能</th>' + ''.join(f'<th>{c}</th>' for c in MATRIX_COLS)
     mrows = ''
     for group, items in MATRIX:
-        mrows += f'<tr class="grp"><td colspan="7">{group}</td></tr>'
+        mrows += f'<tr class="grp"><td colspan="{len(MATRIX_COLS) + 1}">{group}</td></tr>'
         mrows += ''.join(f'<tr><td><b>{n}</b></td>{"".join(cell(v) for v in vals)}</tr>' for n, vals in items)
     mtx = (f'<div class="table-wrap"><table class="table matrix"><thead><tr>{heads}</tr></thead><tbody>{mrows}</tbody></table></div>'
            f'<div class="flex gap20 mt12 small muted wrap"><span><span class="yes">√</span> 具有该功能权限</span><span><span class="part">本院 / 本人相关</span> 仅限本院数据或与本人相关的稿件</span><span><span class="no">—</span> 不具有该权限</span></div>')
     n_func = sum(len(i) for _, i in MATRIX)
     design = box('权限设计要点', f'''<div class="grid g2">
-  <div><div class="notice notice-warn">{icon("alert", 15)}<div><b>全校师生均可投稿，无需单独开通账号。</b>区别只在投稿身份：学生稿件必须指定指导老师并先由其审核；教师稿件直接进入校团委一审。</div></div>
+  <div><div class="notice notice-warn">{icon("alert", 15)}<div><b>全校师生均可投稿，无需单独开通账号。</b>区别只在投稿身份：学生稿件必须指定指导老师，经指导老师、学院副书记审核后进入校团委一审；教师稿件先由学院副书记审核，再进入一审。</div></div>
   <div class="mt12 fs13 sub">指导老师不固定属于某个角色名单，任何被学生指定的老师都能在“我的待办 · 待办”中看到该稿件，审核范围仅限指定本人的稿件。
   <div class="flex gap8 mt8 wrap"><a class="btn btn-light btn-sm" href="pc/correspondent/submit-news.html">{icon("user", 14)}查看指导老师选择</a><a class="btn btn-light btn-sm" href="pc/admin/teacher-manage.html">{icon("users", 14)}指导老师名单</a></div></div></div>
   <div><div class="bold mb8">可配置，不写死</div>
-  <ul class="dots"><li>各角色功能权限在“角色权限配置”中勾选，保存后即生效</li><li>一审员、二审员名单按学年换届，可批量替换</li><li>审核时限、节假日、统计周期在“业务参数”中调整</li><li>所有配置变更写入只读的操作日志（含操作 IP）</li></ul>
+  <ul class="dots"><li>副书记是学工系统的固定角色（投稿人所在学院副书记），按学院自动路由，<b>无需配置</b></li><li>各角色功能权限在“角色权限配置”中勾选，保存后即生效</li><li>一审员、二审员名单按学年换届，可批量替换</li><li>审核时限、节假日、统计周期在“业务参数”中调整</li><li>所有配置变更写入只读的操作日志（含操作 IP）</li></ul>
   <div class="flex gap8 mt8 wrap"><a class="btn btn-light btn-sm" href="pc/admin/role-permission.html">{icon("shield", 14)}角色权限配置</a><a class="btn btn-light btn-sm" href="pc/admin/params.html">{icon("sliders", 14)}业务参数</a></div></div>
 </div>''')
     return (box('用户角色及数据权限', role_tbl) + '<div class="mt16"></div>' +
-            box(f'主要功能权限矩阵（{n_func} 项功能 × 6 类角色）', mtx) + '<div class="mt16"></div>' + design)
+            box(f'主要功能权限矩阵（{n_func} 项功能 × {len(MATRIX_COLS)} 类角色）', mtx) + '<div class="mt16"></div>' + design)
 
 
 FEATURE_MODS = [
-    ('edit', '四类投稿', '新闻、视频、照片、线索四类表单，学生必须指定指导老师', ['新闻', '视频', '照片', '线索', '30 秒自动保存', '敏感词检测'], 'pc/correspondent/submit-news.html'),
+    ('edit', '四类投稿', '新闻、视频、照片、线索四类表单，学生必须指定指导老师；新闻、视频支持多附件', ['新闻', '视频', '照片', '线索', '多附件', '敏感词检测'], 'pc/correspondent/submit-news.html'),
     ('inbox', '稿件跟踪', '按状态筛选我的投稿，查看流转时间轴与历次意见', ['状态筛选', '流转时间轴', '版本对比', '修改重提'], 'pc/correspondent/my-submissions.html'),
-    ('user', '指导老师审核', '只审核指定本人为指导老师的学生稿件', ['仅本人指导', '通过报送一审', '退回意见必填', '意见模板'], 'pc/teacher/dashboard.html'),
+    ('user', '指导老师审核', '只审核指定本人为指导老师的学生稿件', ['仅本人指导', '通过提交副书记', '退回意见必填', '意见模板'], 'pc/teacher/dashboard.html'),
+    ('flag', '副书记审核', '学院副书记（学工系统固定角色，无需配置）审核本院学生 / 教师稿件', ['按学院路由', '通过报送一审', '退回意见必填', '本院范围'], 'pc/deputy/todo.html'),
     ('file-check', '一审 / 二审', '校团委两级审核，统一待办：待办 / 已办 / 催办抄送 / 批量审批', ['超时优先', '敏感词结果', '已办记录', '批量审批'], 'pc/reviewer1/todo.html'),
     ('award', '三审终审', '管理员终审二选一，决定是否计入学院采用', ['终审采用', '不采用意见必填', '计入 / 不计入采用'], 'pc/admin/final-list.html'),
     ('globe', '升华网发布', '已采用新闻稿的正文清洗、素材打包与发布标记', ['清洗正文', '一键复制', 'ZIP 素材包', '标记已发布'], 'pc/admin/publish-export.html'),
@@ -410,12 +443,14 @@ def lanes(rows):
 
 def flows():
     life = [('01', '投稿', '投稿人提交四类稿件，学生指定指导老师'), ('02', '指导老师审核', '仅学生稿件，教师稿件跳过'),
-            ('03', '一审', '校团委宣传部学生干部'), ('04', '二审', '高年级学生干部'), ('05', '三审终审', '管理员：采用 / 不采用'),
-            ('06', '采用归档', '计入学院采用统计'), ('07', '升华网发布', '仅新闻类，人工发布后标记'), ('08', '统计排行', '驾驶舱、排行榜、超时台账')]
+            ('03', '副书记审核', '本院副书记，取自学工系统'), ('04', '一审', '校团委宣传部学生干部'), ('05', '二审', '高年级学生干部'),
+            ('06', '三审终审', '管理员：采用 / 不采用'), ('07', '采用归档', '计入学院采用统计'), ('08', '升华网发布', '仅新闻类，人工发布后标记'),
+            ('09', '统计排行', '驾驶舱、排行榜、超时台账')]
     life_html = ''.join(f'<div class="life-item"><div class="life-no">{n}</div><b>{t}</b><p>{d}</p></div>' for n, t, d in life)
     submit = lanes([
         ('投稿人', [nd('新建投稿', 'start', 'pc/correspondent/my-submissions.html'), nd('选择学生身份'), nd('指定指导老师', href='pc/correspondent/submit-news.html'), nd('提交')]),
-        ('指导老师', [nd('审核学生稿件', href='pc/teacher/review.html'), nd('通过 · 报送一审')]),
+        ('指导老师', [nd('审核学生稿件', href='pc/teacher/review.html'), nd('通过 · 提交副书记')]),
+        ('副书记', [nd('审核本院稿件', href='pc/deputy/review.html'), nd('通过 · 报送一审')]),
         ('一审员', [nd('一审', href='pc/reviewer1/review.html'), nd('通过 · 流转二审')]),
         ('二审员', [nd('二审', href='pc/reviewer2/review.html'), nd('通过 · 流转三审')]),
         ('管理员', [nd('三审终审', href='pc/admin/final-review.html'), nd('已终审采用', 'end'), nd('不采用 · 不计入', 'none')]),
@@ -430,15 +465,15 @@ def flows():
         ('系统', [nd('审核时限可配置', 'cfg', 'pc/admin/params.html'), nd('剩余不足 1 天标橙'), nd('超时记入台账', href='pc/admin/timeout-ledger.html')]),
     ])
     return (box('稿件全流程', f'<div class="life">{life_html}</div>') + '<div class="grid g2 mt16">' +
-            box('学生稿件审核流程（泳道）', submit) + box('退回重提 · 升华网发布', back + '<div class="divider"></div>' + clue) + '</div>')
+            box('学生稿件审核流程（泳道）', submit + '<div class="small muted mt12">教师稿件：投稿 → 副书记审核 → 一审 → 二审 → 三审终审（不经过指导老师）</div>') + box('退回重提 · 升华网发布', back + '<div class="divider"></div>' + clue) + '</div>')
 
 
 def audits():
     A = f'<span class="scn-arrow">{icon("arrow-r", 12)}</span>'
     rows = [
-        ('学生新闻 / 视频 / 照片投稿', '学生投稿人', [nd('指导老师审核'), nd('一审'), nd('二审'), nd('三审终审')], '采用 / 不采用', 'pc/teacher/review.html'),
-        ('教师投稿', '教师投稿人', [nd('指导老师审核', 'none'), nd('一审'), nd('二审'), nd('三审终审')], '采用 / 不采用', 'pc/reviewer1/review.html'),
-        ('新闻线索', '投稿人', [nd('指导老师审核（学生）'), nd('一审'), nd('二审'), nd('三审终审')], '采用后进入线索跟进', 'pc/admin/clue-tracking.html'),
+        ('学生新闻 / 视频 / 照片投稿', '学生投稿人', [nd('指导老师审核'), nd('副书记审核'), nd('一审'), nd('二审'), nd('三审终审')], '采用 / 不采用', 'pc/teacher/review.html'),
+        ('教师投稿', '教师投稿人', [nd('指导老师审核', 'none'), nd('副书记审核'), nd('一审'), nd('二审'), nd('三审终审')], '采用 / 不采用', 'pc/deputy/review-photo.html'),
+        ('新闻线索', '投稿人', [nd('指导老师审核（学生）'), nd('副书记审核'), nd('一审'), nd('二审'), nd('三审终审')], '采用后进入线索跟进', 'pc/admin/clue-tracking.html'),
         ('退回重提', '投稿人', [nd('回到首个审核节点'), nd('重新逐级流转')], '生成新版本', 'pc/correspondent/resubmit.html'),
         ('升华网发布', '二审员 / 管理员', [nd('复制正文 / 导出素材'), nd('管理员标记')], '已发布', 'pc/admin/publish-export.html'),
     ]
@@ -447,7 +482,7 @@ def audits():
     tbl = f'<div class="table-wrap"><table class="table"><thead><tr><th>业务事项</th><th>发起人</th><th>审核节点</th><th>最终结果</th><th>演示</th></tr></thead><tbody>{body}</tbody></table></div>'
     legend = (f'<div class="flex gap16 mt12 small muted wrap"><span class="flex gap6"><span class="node cfg" style="height:22px">虚线橙色</span>可在后台配置</span>'
               f'<span class="flex gap6"><span class="node none" style="height:22px">灰色</span>无需该节点</span>'
-              f'<span>每个审核节点默认 3 个工作日，可在“业务参数”中修改</span><a class="link" href="pc/admin/params.html">打开业务参数 →</a></div>')
+              f'<span>副书记取自学工系统，按投稿人所在学院自动确定，无需配置</span><span>每个审核节点默认 3 个工作日，可在“业务参数”中修改</span><a class="link" href="pc/admin/params.html">打开业务参数 →</a></div>')
     branches = box('每个审核节点的分支（闭环设计）', f'''<div class="grid g4">
   <div><span class="tag tag-success">通过</span><div class="fs13 sub mt8">进入下一节点；三审终审采用后计入学院采用统计</div></div>
   <div><span class="tag tag-danger">退回</span><div class="fs13 sub mt8">意见必填、可选模板；投稿人修改后重新提交，版本号递增</div></div>
@@ -594,8 +629,8 @@ a.node:hover{border-color:var(--primary);color:var(--primary)}
 .foot{padding:40px 0 60px;text-align:center;color:var(--text-3);font-size:12px}
 .foot code{font-family:ui-monospace,Menlo,monospace;background:#fff;border:1px solid var(--line);border-radius:4px;padding:1px 6px}
 .flow-scroll{overflow-x:auto;padding-bottom:6px}
-.flow{min-width:1000px;display:grid;grid-template-columns:repeat(7,1fr);column-gap:30px;row-gap:14px}
-.flow-main{grid-column:1/-1;display:grid;grid-template-columns:repeat(7,1fr);column-gap:30px}
+.flow{min-width:1120px;display:grid;grid-template-columns:repeat(8,1fr);column-gap:30px;row-gap:14px}
+.flow-main{grid-column:1/-1;display:grid;grid-template-columns:repeat(8,1fr);column-gap:30px}
 .fn{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:14px 8px 12px;border-radius:12px;background:#fff;border:1.5px solid var(--line);color:var(--text);transition:all .15s}
 a.fn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(48,135,204,.14)}
 .flow-main .fn:not(:last-child)::after{content:'';position:absolute;right:-26px;top:50%;width:22px;height:2px;background:var(--blue6)}
@@ -614,11 +649,11 @@ a.fn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(48,135,204,.14)
 .fn-no .fn-ic{background:#fff;color:var(--text-3)}
 .flow-bypass{grid-column:1/4;grid-row:2;position:relative;height:40px;margin:-14px calc(100% / 6 - 10px) 0;border:1.5px dashed var(--blue6);border-top:0;border-radius:0 0 14px 14px}
 .flow-bypass span{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);background:#fff;padding:0 10px;font-size:12px;color:var(--primary);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
-.flow-no{grid-column:5;grid-row:2/4;position:relative;padding-top:22px}
+.flow-no{grid-column:6;grid-row:2/4;position:relative;padding-top:22px}
 .flow-no::before{content:'不采用';position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:12px;color:var(--text-3);background:#fff;padding:0 4px;z-index:1}
 .flow-no::after{content:'';position:absolute;top:-14px;left:50%;height:36px;border-left:1.5px dashed var(--border)}
-.flow-back{grid-column:2/5;grid-row:3;margin-top:14px}
-.fb-ups{display:grid;grid-template-columns:repeat(3,1fr);column-gap:30px}
+.flow-back{grid-column:2/6;grid-row:3;margin-top:14px}
+.fb-ups{display:grid;grid-template-columns:repeat(4,1fr);column-gap:30px}
 .fb-ups i{font-style:normal;justify-self:center;display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--danger);border-left:1.5px dashed var(--danger-bd);padding:2px 0 6px 6px}
 .fb-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:var(--danger-bg);border:1.5px dashed var(--danger-bd);color:var(--danger);font-size:13px}
 .fb-bar b{white-space:nowrap}
@@ -637,11 +672,11 @@ def build():
     total = len(lib.WRITTEN) + 1
     body = (hero(total) +
             sec('entry', 'grid', '演示入口', '一键进入各角色首页，卡片内为实时页面预览', entries()) +
-            sec('scenario', 'flow', '演示剧本', '14 条业务路线贯穿投稿人、指导老师、一审员、二审员、管理员，按编号依次点击即可完整演示闭环', scenarios()) +
+            sec('scenario', 'flow', '演示剧本', f'{len(SCENARIOS)} 条业务路线贯穿投稿人、指导老师、副书记、一审员、二审员、管理员，按编号依次点击即可完整演示闭环', scenarios()) +
             sec('role', 'users', '角色权限', '系统用户角色、数据范围与功能权限矩阵', roles()) +
             sec('feature', 'layers', '功能清单', '核心功能模块，点击卡片查看对应页面', features()) +
             sec('flow', 'trend', '业务流程', '稿件全流程与审核、退回重提、发布跟进三条关键流程，节点可点击查看页面', flows()) +
-            sec('audit', 'file-check', '审核流程', '四级审核节点与分支规则，审核时限支持后台配置', audits()) +
+            sec('audit', 'file-check', '审核流程', '学生稿件 5 级审核、教师稿件 4 级审核的节点与分支规则，审核时限支持后台配置', audits()) +
             sec('status', 'tag', '状态体系', '流转、线索处置、统计归档三套状态分开记录，统一配色', status_html()) +
             sec('pages', 'list', '页面目录', '按“终端 · 角色”分类存放，每行两个页面入口', directory()) +
             '<footer class="foot">中南大学团委 · 团学组织新闻投稿平台 · 高保真交互原型 · 图片素材来自 Unsplash · 模拟数据仅供演示<br>'

@@ -484,6 +484,29 @@ a.t-title:hover{color:var(--primary)}
 .gallery figure{border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#fff}
 .gallery img{width:100%;height:120px;object-fit:cover;display:block}
 .gallery figcaption{padding:6px 8px;font-size:12px;color:var(--text-3)}
+.kv.c1{grid-template-columns:1fr}
+.kv.c1 dt{width:108px;font-size:14px}.kv.c1 dd{font-size:14px}.kv.c1>div{min-height:46px}
+.kv dd .hint{margin-left:4px}
+.att-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.att{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.att-ic{width:38px;height:38px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;flex:none}
+.att-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.att-main b{font-weight:500;color:var(--text);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att-main span{font-size:12px;color:var(--text-3)}
+.att-empty{padding:14px;border:1px dashed var(--line);border-radius:8px;color:var(--text-3);font-size:13px;text-align:center}
+.type-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;color:var(--primary)}
+.type-head b{font-size:20px;color:var(--text)}
+.cover{border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#fff;margin:0}
+.cover img{width:100%;height:190px;object-fit:cover;display:block}
+.cover figcaption{padding:8px 10px;font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:4px}
+.intro-box{border:1px solid #C7E1F0;border-radius:8px;padding:14px 16px;background:#F7FBFE}
+.intro-box b{font-size:15px;color:var(--text)}
+.intro-box p{margin-top:6px;line-height:1.9;color:#434A55;font-size:14px}
+.photo-gallery{grid-template-columns:repeat(2,1fr)}
+.photo-gallery img{height:200px}
+.photo-gallery figcaption{display:flex;flex-direction:column;gap:2px;padding:8px 10px}
+.photo-gallery figcaption b{color:var(--text);font-weight:500;font-size:13px}
+.photo-gallery figcaption em{font-style:normal;color:var(--text-2)}
 .sticky-actions{position:sticky;top:100px}
 .action-card{padding:18px 20px;display:flex;flex-direction:column;gap:10px}
 .action-card .btn{width:100%;height:42px}
@@ -789,6 +812,19 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .m-article h2{font-size:19px;line-height:1.5;margin-bottom:8px}
 .m-article p{font-size:15px;line-height:1.9;text-indent:2em;margin-bottom:10px;color:#434A55}
 .m-article img{width:100%;border-radius:8px;margin:6px 0 10px;height:180px;object-fit:cover}
+.m-sub-t{font-size:13px;font-weight:600;color:var(--text);margin:12px 0 6px}
+.m-att{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.m-att:last-child{border-bottom:none}
+.m-att .att-ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;flex:none}
+.m-att .att-main{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13px}
+.m-att .att-main b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-att .att-main span{font-size:12px;color:var(--text-3)}
+.m-cover{width:100%;height:170px;object-fit:cover;border-radius:8px;margin:8px 0}
+.m-photo{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.m-photo img{width:96px;height:72px;object-fit:cover;border-radius:6px;flex:none}
+.m-photo div{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--text-3);min-width:0}
+.m-photo b{font-size:13px;color:var(--text);font-weight:500}
+.m-photo em{font-style:normal;color:var(--text-2)}
 .m-list-link{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #E3F1F9;color:#303133;font-size:14px}
 .m-card:has(> .m-list-link){border-radius:20px;background:linear-gradient(180deg,#E2F3FF -9%,#fff 11%);border:1px solid #fff;padding:4px 16px 8px}
 button.m-list-link{width:100%;background:none;border:0;border-bottom:1px solid #E3F1F9;font:inherit;font-size:14px;text-align:left;cursor:pointer}

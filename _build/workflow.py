@@ -1,7 +1,7 @@
 # 统一待办：对齐智慧学工“我的待办”模块（待办 / 已办 / 催办抄送 / 批量审批 / 办理页 / 详情页）
 from datetime import datetime, timedelta
 from lib import icon, tag, remain, btn, a_btn, filter_select, filter_bar, table
-from data import TYPE_NAME
+from data import TYPE_NAME, typed, deputy_of
 
 NAMES = ['陈雨桐', '黄思远', '孙铭泽', '郭晓彤', '林嘉懿', '周子墨', '许若彤', '唐诗涵', '高子轩', '梁思雨', '韩博文', '宋可欣']
 TIMING = {'over': '已超时', 'warn': '即将超时', 'ok': '正常'}
@@ -15,6 +15,10 @@ def flow_name(t, title):
     return f'{TYPE_NAME[t]}审核：《{title}》'
 
 
+def flow_type(flow):
+    return next((t for t, n in TYPE_NAME.items() if flow.startswith(n)), '新闻')
+
+
 def norm(rows, kind):
     """统一待办行：sid, title, t, col, ident, author, start, arrive, rem, lv"""
     out = []
@@ -22,10 +26,14 @@ def norm(rows, kind):
         if kind == 'teacher':
             sid, title, t, author, time, rem, lv = r
             out.append(dict(sid=sid, title=title, t=t, col='计算机学院', ident='学生', author=author, start=time, arrive=time, rem=rem, lv=lv))
+        elif kind == 'deputy':
+            sid, title, t, author, ident, time, rem, lv = r
+            start = shift(time, 3 + 46 / 60) if ident == '学生' else time
+            out.append(dict(sid=sid, title=title, t=t, col='计算机学院', ident=ident, author=author, start=start, arrive=time, rem=rem, lv=lv))
         else:
             sid, title, t, col, ident, time, rem, lv = r
             author = '陈雨桐' if sid == 'TG2026092801' else NAMES[(i * 5 + len(title)) % len(NAMES)]
-            back = {'r1': 6, 'r2': 26, 'r3': 49}[kind]
+            back = {'r1': 9, 'r2': 29, 'r3': 52}[kind]
             out.append(dict(sid=sid, title=title, t=t, col=col, ident=ident, author=author, start=shift(time, back), arrive=time, rem=rem, lv=lv))
     order = {'over': 0, 'warn': 1, 'ok': 2}
     return sorted(out, key=lambda d: (order[d['lv']], d['arrive']))
@@ -54,11 +62,12 @@ def todo_body(tid, rows, node, handle_href):
     for i, d in enumerate(rows):
         over = ' class="overdue"' if d['lv'] == 'over' else ''
         fn = flow_name(d['t'], d['title'])
+        h = typed(handle_href, d['t'])
         trs += (f'<tr{over} data-row-id="{d["sid"]}" data-level="{d["lv"]}" data-timing="{TIMING[d["lv"]]}" data-type="{d["t"]}" data-college="{d["col"]}" '
                 f'data-flow="{fn} {d["sid"]}" data-starter="{d["author"]} {d["col"]}">'
-                f'<td class="seq">{i + 1}</td><td><a class="t-title" href="{handle_href}">{fn}</a><div class="t-sub">{d["sid"]}</div></td>'
+                f'<td class="seq">{i + 1}</td><td><a class="t-title" href="{h}">{fn}</a><div class="t-sub">{d["sid"]}</div></td>'
                 f'<td>{node}</td><td>{starter(d)}</td><td>{d["start"]}</td><td>{d["arrive"]}</td><td data-value="{d["lv"]}">{remain(d["rem"], d["lv"])}</td>'
-                f'<td><div class="ops"><a class="link" href="{handle_href}">办理</a></div></td></tr>')
+                f'<td><div class="ops"><a class="link" href="{h}">办理</a></div></td></tr>')
     ctrls = (text_filter(tid, 'flow', '流程名称', '请输入') + text_filter(tid, 'starter', '发起人', '请输入姓名') +
              filter_select(tid, 'timing', '全部时效', ['已超时', '即将超时', '正常']))
     head = [seq_head(), '流程名称', '当前节点', '发起人', ('发起时间', 'data-sort'), ('到达时间', 'data-sort'), '剩余时限', ('操作', 'class="no-export"')]
@@ -70,19 +79,20 @@ def todo_body(tid, rows, node, handle_href):
 def done_body(tid, rows, node, detail_href, statuses, new_row=None, export_name='已办记录'):
     """rows: (sid, title, t, author, col, status, opinion, time, cost, timing)"""
     trs = ''
-    if new_row:
-        sid, title, t, author, col, time = new_row
+    for nr in (new_row if isinstance(new_row, list) else [new_row] if new_row else []):
+        sid, title, t, author, col, time = nr
         fn = flow_name(t, title)
         trs += (f'<tr class="hidden" data-when-param="new={sid}" data-highlight data-flow="{fn}" data-starter="{author} {col}">'
-                f'<td class="seq">1</td><td><a class="t-title" href="{detail_href}">{fn}</a><div class="t-sub">{sid}</div></td><td>{node}</td><td>{author}<div class="t-sub">{col}</div></td>'
+                f'<td class="seq">1</td><td><a class="t-title" href="{typed(detail_href, t)}">{fn}</a><div class="t-sub">{sid}</div></td><td>{node}</td><td>{author}<div class="t-sub">{col}</div></td>'
                 f'<td class="tc"><span data-when-param="act=pass">{tag(statuses[0])}</span><span data-when-param="act=reject">{tag(statuses[1])}</span></td>'
-                f'<td class="c-muted">刚刚提交的审核意见</td><td>{time}</td><td>{tag("及时")}</td><td><div class="ops"><a class="link" href="{detail_href}">详情</a></div></td></tr>')
+                f'<td class="c-muted">刚刚提交的审核意见</td><td>{time}</td><td>{tag("及时")}</td><td><div class="ops"><a class="link" href="{typed(detail_href, t)}">详情</a></div></td></tr>')
     for i, (sid, title, t, author, col, st, op, time, cost, ok) in enumerate(rows):
         fn = flow_name(t, title)
+        h = typed(detail_href, t)
         trs += (f'<tr data-status="{st}" data-ok="{ok}" data-type="{t}" data-flow="{fn} {sid}" data-starter="{author} {col}">'
-                f'<td class="seq">{i + 1}</td><td><a class="t-title" href="{detail_href}">{fn}</a><div class="t-sub">{sid}</div></td><td>{node}</td>'
+                f'<td class="seq">{i + 1}</td><td><a class="t-title" href="{h}">{fn}</a><div class="t-sub">{sid}</div></td><td>{node}</td>'
                 f'<td>{author}<div class="t-sub">{col}</div></td><td class="tc">{tag(st)}</td><td class="wf-op" title="{op}">{op}</td><td>{time}</td>'
-                f'<td>{tag(ok)}<div class="t-sub">用时 {cost}</div></td><td><div class="ops"><a class="link" href="{detail_href}">详情</a></div></td></tr>')
+                f'<td>{tag(ok)}<div class="t-sub">用时 {cost}</div></td><td><div class="ops"><a class="link" href="{h}">详情</a></div></td></tr>')
     ctrls = (text_filter(tid, 'flow', '流程名称', '请输入') + text_filter(tid, 'starter', '发起人', '请输入姓名') +
              filter_select(tid, 'status', '全部流程状态', list(statuses)))
     head = [seq_head(), '流程名称', '节点', '发起人', ('流程状态', 'class="tc"'), '意见', ('处理时间', 'data-sort'), '时效', ('操作', 'class="no-export"')]
@@ -96,10 +106,12 @@ def done_body(tid, rows, node, detail_href, statuses, new_row=None, export_name=
 # ---------- 催办 / 抄送 ----------
 def cc_body(urges, copies, handle_href, detail_href):
     """urges: (flow, task, who, created, urged)；copies: (flow, task, who, time, read)"""
-    u = ''.join(f'<tr data-flow="{f}" data-task="{tk}" data-who="{w}"><td class="seq">{i + 1}</td><td><a class="t-title" href="{handle_href}">{f}</a></td><td>{tk}</td><td>{w}</td><td>{c}</td><td>{ur}</td>'
-                f'<td><div class="ops"><a class="link" href="{handle_href}">办理</a></div></td></tr>' for i, (f, tk, w, c, ur) in enumerate(urges))
-    c = ''.join(f'<tr data-flow="{f}" data-task="{tk}" data-who="{w}"><td class="seq">{i + 1}</td><td><a class="t-title" href="{detail_href}">{f}</a></td><td>{tk}</td><td>{w}</td><td>{t}</td>'
-                f'<td class="tc">{tag(rd)}</td><td><div class="ops"><a class="link" href="{detail_href}">查看</a></div></td></tr>' for i, (f, tk, w, t, rd) in enumerate(copies))
+    hh = lambda f: typed(handle_href, flow_type(f))
+    dh = lambda f: typed(detail_href, flow_type(f))
+    u = ''.join(f'<tr data-flow="{f}" data-task="{tk}" data-who="{w}"><td class="seq">{i + 1}</td><td><a class="t-title" href="{hh(f)}">{f}</a></td><td>{tk}</td><td>{w}</td><td>{c}</td><td>{ur}</td>'
+                f'<td><div class="ops"><a class="link" href="{hh(f)}">办理</a></div></td></tr>' for i, (f, tk, w, c, ur) in enumerate(urges))
+    c = ''.join(f'<tr data-flow="{f}" data-task="{tk}" data-who="{w}"><td class="seq">{i + 1}</td><td><a class="t-title" href="{dh(f)}">{f}</a></td><td>{tk}</td><td>{w}</td><td>{t}</td>'
+                f'<td class="tc">{tag(rd)}</td><td><div class="ops"><a class="link" href="{dh(f)}">查看</a></div></td></tr>' for i, (f, tk, w, t, rd) in enumerate(copies))
     uc = text_filter('urgeTable', 'flow', '流程名称', '流程名称') + text_filter('urgeTable', 'task', '任务名称', '任务名称') + text_filter('urgeTable', 'who', '催办人', '催办人')
     cc = text_filter('copyTable', 'flow', '流程名称', '流程名称') + text_filter('copyTable', 'task', '任务名称', '任务名称') + text_filter('copyTable', 'who', '抄送人', '抄送人')
     return f'''<div class="card wf-sheet" data-tabs-scope>
@@ -117,8 +129,8 @@ def batch_body(rows, node, handle_href, tpl='review'):
         fn = flow_name(d['t'], d['title'])
         trs += (f'<tr data-row-id="{d["sid"]}" data-type="{d["t"]}" data-flow="{fn} {d["sid"]}" data-college="{d["col"]}" data-starter="{d["author"]}">'
                 f'<td><input type="checkbox" class="row-check" aria-label="选择"></td><td class="seq">{i + 1}</td>'
-                f'<td><a class="t-title" href="{handle_href}">{fn}</a></td><td>{d["col"]}</td><td>{node}</td><td>{d["author"]}</td><td>{d["start"]}</td>'
-                f'<td>{remain(d["rem"], d["lv"])}</td><td><div class="ops"><a class="link" href="{handle_href}">办理</a></div></td></tr>')
+                f'<td><a class="t-title" href="{typed(handle_href, d["t"])}">{fn}</a></td><td>{d["col"]}</td><td>{node}</td><td>{d["author"]}</td><td>{d["start"]}</td>'
+                f'<td>{remain(d["rem"], d["lv"])}</td><td><div class="ops"><a class="link" href="{typed(handle_href, d["t"])}">办理</a></div></td></tr>')
     cats = [('全部待办', ''), ('新闻投稿审核', '新闻'), ('视频投稿审核', '视频'), ('照片投稿审核', '照片'), ('新闻线索审核', '线索')]
     cat_html = ''.join(f'<button class="wf-cat{" on" if i == 0 else ""}" data-tab="c{i}" data-filter-table="#{tid}" data-filter-key="type" data-filter-value="{v}">'
                        f'<span>{n}</span><em>{sum(1 for d in rows if not v or d["t"] == v)}</em></button>' for i, (n, v) in enumerate(cats))
@@ -137,7 +149,8 @@ def batch_body(rows, node, handle_href, tpl='review'):
 
 # ---------- 节点流程图 ----------
 def node_chart(identity='学生', cur=1, back_at=None, end='采用归档'):
-    names = ['开始', '指导老师审核', '一审', '二审', '三审终审', end] if identity == '学生' else ['开始', '一审', '二审', '三审终审', end]
+    names = (['开始', '指导老师审核', '副书记审核', '一审', '二审', '三审终审', end] if identity == '学生'
+             else ['开始', '副书记审核', '一审', '二审', '三审终审', end])
     out = []
     for i, n in enumerate(names):
         if back_at is not None and i == back_at:
@@ -157,8 +170,9 @@ def bd_grid(cells):
 
 
 def base_cells(sub, start, arrive):
-    return [('稿件编号', sub['id']), ('稿件类型', TYPE_NAME[sub['type']]), ('投稿人', sub['author']), ('投稿身份', sub['identity']),
-            ('所属学院', sub['college']), ('指导老师', sub.get('teacher', '—') if sub['identity'] == '学生' else '—'), ('流程发起时间', start), ('到达本节点时间', arrive)]
+    return [('稿件编号', sub['id']), ('稿件类型', TYPE_NAME[sub['type']]), ('投稿人', f'{sub["author"]}（{sub["identity"]}）'), ('所属学院', sub['college']),
+            ('指导老师', sub.get('teacher', '—') if sub['identity'] == '学生' else '—（教师投稿无需指定）'),
+            ('副书记', f'{deputy_of(sub["college"])} · 学工系统'), ('流程发起时间', start), ('到达本节点时间', arrive)]
 
 
 def sec(title, body, extra=''):

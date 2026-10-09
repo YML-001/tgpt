@@ -1,12 +1,13 @@
 # 移动端（H5 / 小程序，手机框展示）：全部角色
 from lib import icon, tag, type_tag, btn, a_btn, options, field, m_page, write, teacher_picker, m_editor
-from data import MY_SUBS, RANKING, FEATURED, ADOPTED, IMG, R1_TODO, R2_TODO, R3_TODO, TEACHER_TODO, TYPE_ICON
-from common import RETURNED, RETURN_OPINIONS, returned_timeline, featured_flow_timeline, msg_item, m_college_detail_modal
+from data import MY_SUBS, RANKING, FEATURED, ADOPTED, IMG, R1_TODO, R2_TODO, R3_TODO, TEACHER_TODO, DEPUTY_TODO, TYPE_ICON, VIDEO, PHOTO, CLUE, typed
+from detail import m_content, m_base, flow_records, sample_for
+from common import RETURNED, RETURN_OPINIONS, returned_timeline, msg_item, m_college_detail_modal
 from review import q
 from pages_corr import type_switch
 
 SID = FEATURED['id']
-GROUP = {'草稿': '草稿', '待指导老师审核': '审核中', '待一审': '审核中', '待二审': '审核中', '待三审': '审核中',
+GROUP = {'草稿': '草稿', '待指导老师审核': '审核中', '待副书记审核': '审核中', '待一审': '审核中', '待二审': '审核中', '待三审': '审核中',
          '已退回': '已退回', '已终审采用': '已采用', '已发布': '已采用', '已终审不采用': '未采用'}
 DURATION_INPUT = r'<input class="input" name="duration" required placeholder="如 03:25" data-pattern="^\d{1,3}:\d{2}$" data-pattern-msg="请按“分:秒”格式填写">'
 PHONE_INPUT = r'<input class="input" name="phone" type="tel" inputmode="tel" required placeholder="11 位手机号" data-pattern="^1[3-9]\d{9}$" data-pattern-msg="请填写正确的 11 位手机号">'
@@ -22,18 +23,6 @@ def seg(items, target, key='group'):
     return '<div class="m-seg" data-tabs>' + ''.join(
         f'<button class="{"on" if i == 0 else ""}" data-tab="s{i}" data-filter-items="{target}" data-filter-key="{key}" data-filter-value="{v}">{n}</button>'
         for i, (n, v) in enumerate(items)) + '</div>'
-
-
-def m_article(sub):
-    body = ''
-    for i, p in enumerate(sub['paras']):
-        body += f'<p>{p}</p>'
-        if i == 0:
-            body += f'<img src="{sub["images"][0]}" alt="{sub["captions"][0]}">'
-    return (f'<div class="m-card m-article"><h2>{sub["title"]}</h2><div class="m-item-meta" style="margin:0 0 10px">'
-            f'<span>撰稿：{sub["writer"]}</span><span>{sub["college"]}</span><span>拍摄：{sub["shoot"]}</span></div>'
-            f'<div class="notice notice-info" style="margin-bottom:10px">{icon("info", 14)}<div>{sub["intro"]}</div></div>{body}'
-            f'<div class="files" style="margin-top:6px">' + ''.join(f'<div class="file-item"><img src="{s}" alt="{c}"><div class="fi-meta"><span class="fi-name">{c}</span></div></div>' for s, c in zip(sub['images'], sub['captions'])) + '</div></div>')
 
 
 def m_kv(rows):
@@ -55,8 +44,8 @@ def identity_block(identity='学生', teacher='王海峰（计算机学院）'):
     return f'''<div class="m-form-title">投稿人信息</div><div class="m-form">
 <div class="field"><label class="lbl">投稿人</label><div>陈雨桐 · 计算机学院</div></div>
 <div class="field"><label class="lbl req">投稿人身份</label><div class="radio-group"><label class="radio-card"><input type="radio" name="identity" value="学生"{s} required>学生</label><label class="radio-card"><input type="radio" name="identity" value="教师"{t}>教师</label></div></div>
-<div class="field" data-show-when="identity=学生"><label class="lbl req">指导老师</label>{teacher_picker(teacher)}<div class="hint">默认预填上次选择的指导老师，可搜索其他学院；学生稿件先由指导老师审核</div></div>
-<div class="field hidden" data-show-when="identity=教师"><div class="notice notice-info">{icon('info', 14)}<div>教师投稿无需指导老师，提交后直接进入校团委一审</div></div></div>
+<div class="field" data-show-when="identity=学生"><label class="lbl req">指导老师</label>{teacher_picker(teacher)}<div class="hint">默认预填上次选择的指导老师，可搜索其他学院；学生稿件先由指导老师审核，再由学院副书记审核</div></div>
+<div class="field hidden" data-show-when="identity=教师"><div class="notice notice-info">{icon('info', 14)}<div>教师投稿无需指导老师，提交后先由本院副书记审核，再进入校团委一审</div></div></div>
 </div>'''
 
 
@@ -73,6 +62,16 @@ def m_upload(label, remark=False, req=True, hint='支持 JPG / PNG，原图上�
     return (f'<div class="field"><label class="lbl{" req" if req else ""}">{label}</label><div class="upload-field"><label class="upload">{icon("camera", 22)}<span>拍照或从相册选择</span><span class="hint">{hint}</span>'
             f'<input type="file" multiple accept="image/*" data-upload="img" data-max-mb="30"{r}{rq} data-label="{label}"></label><div class="files">{items}</div>'
             f'<div class="hint mt8">已上传 <b data-file-count>{len(files or [])}</b> 张</div></div></div>')
+
+
+ATTACH_ACCEPT = '.doc,.docx,.pdf,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.jpg,.jpeg,.png'
+
+
+def m_attach():
+    return (f'<div class="m-form-title">附件（选填，可多个）</div><div class="m-form"><div class="field"><label class="lbl">附件</label><div class="upload-field">'
+            f'<label class="upload">{icon("upload", 22)}<span>选择文件</span><span class="hint">Word / PDF / Excel / PPT / ZIP / 图片，单个不超过 50MB</span>'
+            f'<input type="file" multiple accept="{ATTACH_ACCEPT}" data-upload="doc" data-max-mb="50" data-label="附件"></label><div class="files"></div>'
+            f'<div class="hint mt8">已上传 <b data-file-count>0</b> 个文件</div></div></div></div>')
 
 
 def c_home():
@@ -103,10 +102,10 @@ def c_forms():
 {field('新闻标题', '<input class="input" id="mTitle" name="title" required maxlength="50" placeholder="建议 30 字以内">', req=True)}
 {field('撰稿人', '<input class="input" name="writer" required placeholder="多人用顿号分隔">', req=True)}
 {field('拍摄时间', '<input type="date" class="input" name="shoot" required>', req=True)}
-{field('活动简介', '<textarea class="textarea" id="mIntro" name="intro" required placeholder="一句话概括活动"></textarea>', req=True)}
+{field('活动简介', '<textarea class="textarea" id="mIntro" name="intro" placeholder="选填，一句话概括活动"></textarea>', hint='选填')}
 <div class="field"><label class="lbl req">新闻正文</label>{m_editor('mEditor')}</div>
 </div>
-<div class="m-form-title">新闻配图</div><div class="m-form">{m_upload('新闻配图')}</div></form>'''
+<div class="m-form-title">新闻配图（选填）</div><div class="m-form">{m_upload('新闻配图', req=False, hint='选填，支持 JPG / PNG，原图上传')}</div>{m_attach()}</form>'''
     cw('submit-news.html', '新闻投稿', news, back='home.html', foot=submit_foot('#mTitle,#mIntro,#mEditor', '新闻'), pc_link='../../pc/correspondent/submit-news.html')
 
     usage = options(['新闻报道素材', '宣传片素材', '活动纪实存档', '短视频平台发布', '其他'], '请选择')
@@ -120,7 +119,7 @@ def c_forms():
 </div>
 <div class="m-form-title">永久云盘链接</div>
 <div class="notice notice-warn" style="margin-bottom:10px">{icon('alert', 14)}<div>请提供<b>永久有效</b>的云盘链接，不支持 7 天等临时分享链接；链接失效将被退回。</div></div>
-<div class="m-form">{field('云盘链接', '<input class="input" name="link" required placeholder="https://pan.baidu.com/s/……" data-pattern="^https?://" data-pattern-msg="请填写完整链接">', req=True)}{field('提取码', '<input class="input" name="code" placeholder="选填">')}</div></form>'''
+<div class="m-form">{field('云盘链接', '<input class="input" name="link" required placeholder="https://pan.baidu.com/s/……" data-pattern="^https?://" data-pattern-msg="请填写完整链接">', req=True)}{field('提取码', '<input class="input" name="code" placeholder="选填">')}</div>{m_attach()}</form>'''
     cw('submit-video.html', '视频投稿', video, back='home.html', foot=submit_foot('#mTitle,#mIntro', '视频'), pc_link='../../pc/correspondent/submit-video.html')
 
     photo = type_switch('submit-photo.html') + f'''<form id="mForm" data-autosave novalidate>{secret}{identity_block()}
@@ -139,6 +138,8 @@ def c_forms():
 <div class="m-form-title">线索内容</div><div class="m-form">
 {field('线索标题', '<input class="input" id="mTitle" name="title" required placeholder="一句话概括线索">', req=True)}
 {field('详细描述', '<textarea class="textarea" id="mIntro" name="desc" required placeholder="人物 / 事件情况与新闻价值"></textarea>', req=True)}
+{field('线索类型', f'<select class="select" name="clueType">{options(["人物事迹", "活动预告", "成果荣誉", "突发事件", "其他"], "选填")}</select>')}
+{field('事件时间地点', '<input class="input" name="whenWhere" placeholder="选填，如 10月10日 · 图书馆报告厅">')}
 {field('线索来源', f'<select class="select" name="source" required>{src}</select>', req=True)}
 <div class="field"><label class="lbl req">是否接受采访</label><div class="radio-group"><label class="radio-card"><input type="radio" name="interview" value="是" checked required>接受</label><label class="radio-card"><input type="radio" name="interview" value="否">不接受</label></div></div>
 <div class="field" data-show-when="interview=是"><label class="lbl req">可采访时间段</label><input class="input" name="interviewTime" required placeholder="如：工作日 14:00—17:00"></div>
@@ -151,8 +152,8 @@ def c_success():
     def steps(names, cur):
         return '<div class="m-steps">' + ''.join(f'<div class="{"done" if i < cur else "cur" if i == cur else ""}"><i></i>{n}</div>' for i, n in enumerate(names)) + '</div>'
     body = f'''<div class="m-result"><div class="big-ic">{icon('check', 38)}</div><h2>投稿提交成功</h2><p>稿件编号 TG2026093005 · <span data-param-text="type">新闻</span>投稿</p></div>
-<div class="m-card" data-when-param-hide="identity=教师"><b>已进入【待指导老师审核】</b><div class="msg-desc">指导老师王海峰将在 3 个工作日内处理</div>{steps(['提交', '指导老师', '一审', '二审', '终审'], 1)}</div>
-<div class="m-card hidden" data-when-param="identity=教师"><b>已进入【待一审】</b><div class="msg-desc">教师投稿无需指导老师审核，校团委一审员将在 3 个工作日内处理</div>{steps(['提交', '一审', '二审', '终审'], 1)}</div>
+<div class="m-card" data-when-param-hide="identity=教师"><b>已进入【待指导老师审核】</b><div class="msg-desc">指导老师王海峰将在 3 个工作日内处理，通过后由学院副书记审核</div>{steps(['提交', '指导老师', '副书记', '一审', '二审', '终审'], 1)}</div>
+<div class="m-card hidden" data-when-param="identity=教师"><b>已进入【待副书记审核】</b><div class="msg-desc">教师投稿无需指导老师审核，由本院副书记在 3 个工作日内处理，通过后进入校团委一审</div>{steps(['提交', '副书记', '一审', '二审', '终审'], 1)}</div>
 <a class="btn btn-primary btn-block" href="my-submissions.html?new=TG2026093005">查看我的投稿</a>
 <a class="btn btn-block mt12" href="submit-news.html">继续投稿</a>
 <a class="btn btn-block mt12" href="home.html">返回首页</a>'''
@@ -163,7 +164,7 @@ def c_my():
     items = (f'<a class="m-item hidden" href="detail.html" data-when-param="new=TG2026093005" data-highlight data-group="审核中"><div class="m-item-top"><div class="m-item-title">【新提交】你刚刚提交的稿件</div></div>'
              f'<div class="m-item-foot"><span class="c-muted">TG2026093005 · 刚刚</span>{tag("待指导老师审核")}</div></a>')
     for sid, title, t, ident, teacher, time, st in MY_SUBS:
-        href = 'resubmit.html' if st == '已退回' else ('submit-news.html' if st == '草稿' else 'detail.html')
+        href = 'resubmit.html' if st == '已退回' else ('submit-news.html' if st == '草稿' else typed('detail.html', t))
         status = tag(st)
         if sid == 'TG2026092203':
             status = f'<span data-when-param-hide="re=1">{tag(st)}</span><span class="hidden" data-when-param="re=1">{tag("待指导老师审核")}</span>'
@@ -182,11 +183,20 @@ def c_detail():
 <div class="notice notice-danger mt12">{icon('undo', 14)}<div><b>{op[0]} · {op[1]}</b><br>{op[4]}<div class="hint">{op[2]}</div></div></div></div>
 <div class="m-tabs" data-tabs><button class="on" data-tab="c">稿件内容</button><button data-tab="f">流转记录</button><button data-tab="i">投稿信息</button></div>
 <div data-tabs-scope style="margin-top:-12px;padding-top:12px">
-<div class="tab-panel on" data-panel="c">{m_article(s)}</div>
+<div class="tab-panel on" data-panel="c">{m_content(s)}</div>
 <div class="tab-panel" data-panel="f"><div class="m-card">{returned_timeline()}</div></div>
-<div class="tab-panel" data-panel="i"><div class="m-card">{m_kv([('稿件编号', s['id']), ('类型', '新闻投稿'), ('所属学院', s['college']), ('投稿人', '陈雨桐（学生）'), ('指导老师', s['teacher']), ('当前版本', 'v2（共 2 个版本）'), ('投稿时间', s['time'])])}</div></div>
+<div class="tab-panel" data-panel="i"><div class="m-card">{m_kv([('稿件编号', s['id']), ('类型', '新闻投稿'), ('所属学院', s['college']), ('投稿人', '陈雨桐（学生）'), ('指导老师', s['teacher']), ('副书记', '杨振华（计算机学院副书记）'), ('当前版本', 'v2（共 2 个版本）'), ('投稿时间', s['time'])])}</div></div>
 </div>'''
     cw('detail.html', '稿件档案', body, back='my-submissions.html', foot=a_btn('按意见修改并重新提交', 'resubmit.html', 'btn-primary', 'edit'), pc_link='../../pc/correspondent/submission-detail.html')
+    for sub, stage, status in ((VIDEO, 'adopted', '已终审采用'), (PHOTO, 'adopted', '已终审采用'), (CLUE, 'r3', '待三审')):
+        body = f'''<div class="m-card"><div class="m-item-top"><div class="m-item-title">{sub["title"]}</div>{tag(status)}</div><div class="hint mt8">{sub["id"]} · {sub["type"]} · {sub["time"]}</div></div>
+<div class="m-tabs" data-tabs><button class="on" data-tab="c">稿件内容</button><button data-tab="f">流转记录</button><button data-tab="i">投稿信息</button></div>
+<div data-tabs-scope style="margin-top:-12px;padding-top:12px">
+<div class="tab-panel on" data-panel="c">{m_content(sub)}</div>
+<div class="tab-panel" data-panel="f"><div class="m-card">{flow_records(sub, stage)}</div></div>
+<div class="tab-panel" data-panel="i"><div class="m-card">{m_base(sub, status)}</div></div>
+</div>'''
+        cw(typed('detail.html', sub['type']), '稿件档案', body, back='my-submissions.html', pc_link='../../pc/correspondent/' + typed('submission-detail.html', sub['type']))
 
 
 def c_resubmit():
@@ -198,11 +208,11 @@ def c_resubmit():
 <form id="mForm" data-autosave novalidate>{identity_block('学生', '李晓琳（计算机学院）')}
 <div class="m-form-title">修改稿件（将生成 v3）</div><div class="m-form">
 {field('新闻标题', f'<input class="input" id="mTitle" name="title" required value="{s["title"]}">', req=True)}
-{field('活动简介', f'<textarea class="textarea" id="mIntro" name="intro" required>{s["intro"]}</textarea>', req=True)}
+{field('活动简介', f'<textarea class="textarea" id="mIntro" name="intro" placeholder="选填">{s["intro"]}</textarea>', hint='选填')}
 <div class="field"><label class="lbl req">新闻正文</label>{m_editor('mEditor', content)}</div>
-{m_upload('新闻配图', files=files)}
+{m_upload('新闻配图', files=files, req=False, hint='选填，支持 JPG / PNG，原图上传')}
 {field('修改说明', '<textarea class="textarea" name="note" required placeholder="说明针对退回意见做了哪些修改"></textarea>', req=True)}
-</div></form>'''
+</div>{m_attach()}</form>'''
     foot = btn('存草稿', 'w-auto', 'save', 'data-action="save-draft"') + btn('重新提交', 'btn-primary', 'send', 'data-action="submit" data-form="#mForm" data-sensitive="#mTitle,#mIntro,#mEditor" data-confirm="重新提交后生成 v3 版本，并重新进入指导老师审核。确认提交吗？" data-msg="已重新提交" data-next="my-submissions.html?re=1&msg=已重新提交，生成 v3 版本并重新进入审核"')
     cw('resubmit.html', '修改重提', body + '<span class="hidden" data-draft-status></span>', back='detail.html', foot=foot, pc_link='../../pc/correspondent/resubmit.html')
 
@@ -231,8 +241,8 @@ def c_ranking():
 
 def c_messages():
     items = [msg_item('undo', 'red', '稿件被退回', '《“青春志愿行”社区服务周纪实》被二审退回，点击查看意见并修改', '1 小时前', 'resubmit.html', True),
-             msg_item('check-circle', 'green', '稿件终审采用', '《红色经典诵读活动》已终审采用，计入本院采用统计', '昨天', 'detail.html', True),
-             msg_item('check', 'blue', '指导老师审核通过', '《“算法之星”编程挑战赛精彩瞬间》已进入校团委一审', '09-28', 'my-submissions.html'),
+             msg_item('check-circle', 'green', '稿件终审采用', '《“智能+”暑期社会实践成果展示》已终审采用，计入本院采用统计', '昨天', 'detail-video.html', True),
+             msg_item('check', 'blue', '指导老师审核通过', '《“网络安全宣传周”系列活动》已进入学院副书记审核', '09-29', 'my-submissions.html'),
              msg_item('trophy', 'blue', '排行榜已更新', '计算机学院以 52 篇采用量位列第 1', '09-30', 'ranking.html')]
     right = '<button class="link" data-action="read-all">全部已读</button>'
     cw('messages.html', '消息', ''.join(items), tab='messages.html', right=right, pc_link='../../pc/correspondent/messages.html')
@@ -252,7 +262,7 @@ def c_profile():
 </div>
 <a class="btn btn-block btn-danger-o" href="../../index.html" data-confirm="确认退出登录？演示环境将返回原型导航页。">退出登录</a>'''
     rules = f'''<div class="modal" id="ruleSheet"><div class="modal-box"><div class="modal-head"><span>投稿须知</span><button class="modal-x" data-close aria-label="关闭">{icon('x', 18)}</button></div>
-<div class="modal-body" style="font-size:14px;line-height:1.9;color:var(--text-2)">1. 涉密信息请勿上网。<br>2. 学生投稿必须指定指导老师，先由指导老师审核；教师投稿直接进入一审。<br>3. 稿件依次经过一审、二审、三审终审，每个环节 3 个工作日内处理。<br>4. 被退回的稿件可修改后重新提交，历史版本与意见永久保留。<br>5. 视频请提供永久有效的云盘链接。</div>
+<div class="modal-body" style="font-size:14px;line-height:1.9;color:var(--text-2)">1. 涉密信息请勿上网。<br>2. 学生投稿必须指定指导老师：指导老师审核 → 学院副书记审核 → 一审；教师投稿先由学院副书记审核，再进入一审。<br>3. 之后依次经过二审、三审终审，每个环节 3 个工作日内处理。<br>4. 被退回的稿件可修改后重新提交，历史版本与意见永久保留。<br>5. 视频请提供永久有效的云盘链接。</div>
 <div class="modal-foot"><button class="btn btn-primary" data-close>我知道了</button></div></div></div>'''
     cw('profile.html', '我的', body, tab='profile.html', modals=rules, pc_link='../../pc/correspondent/my-submissions.html')
 
@@ -262,22 +272,25 @@ def review_list(rows, href='review.html'):
     out = ''
     for sid, title, t, col, ident, time, rem, lv in rows:
         ov = ' overdue' if lv == 'over' else ''
-        out += (f'<a class="m-item{ov}" href="{href}" data-row-id="{sid}" data-level="{lv}"><div class="m-item-top"><div class="m-item-title">{title}</div></div>'
+        out += (f'<a class="m-item{ov}" href="{typed(href, t)}" data-row-id="{sid}" data-level="{lv}"><div class="m-item-top"><div class="m-item-title">{title}</div></div>'
                 f'<div class="m-item-meta"><span>{icon(TYPE_ICON[t], 12)} {t}</span><span>{col}</span><span>{ident}投稿</span></div>'
                 f'<div class="m-item-foot"><span class="c-muted">到达 {time[5:]}</span>{remain_m(rem, lv)}</div></a>')
     return out
 
 
-def review_page(role, folder, node, status, upto, timer, pass_next, reject_next, tpl, pass_text, reject_text, back, pc_link, todo_count=None, reject_title='退回稿件', reject_label='退回意见', file='review.html'):
+def review_page(role, folder, node, status, upto, timer, pass_next, reject_next, tpl, pass_text, reject_text, back, pc_link, todo_count=None, reject_title='退回稿件', reject_label='退回意见', file='review.html', sub=None):
+    sub = sub or FEATURED
+    sens = ('<b class="c-warn">' + icon('shield', 14) + ' 敏感词检测：低危 1 处</b><div class="hint">第 2 段“最牛”，建议改为客观表述（不拦截）</div>') if sub['type'] == '新闻' else \
+        ('<b class="c-success">' + icon('shield', 14) + ' 敏感词检测：未命中</b><div class="hint">高危词 0 个 · 低危词 0 个</div>')
     lv_cls = ' danger' if timer[1] == 'over' else ''
     body = f'''<div class="m-timer{lv_cls}">{icon('clock', 20)}<div>当前节点：{node} · 时限 3 个工作日<br><b>{timer[0]}</b></div></div>
 <div class="m-tabs" data-tabs><button class="on" data-tab="c">稿件内容</button><button data-tab="f">流转记录</button><button data-tab="i">投稿信息</button></div>
 <div data-tabs-scope style="margin-top:-12px;padding-top:12px">
 <div class="tab-panel on" data-panel="c">
-<div class="sens-card" style="margin-bottom:12px"><b class="c-warn">{icon('shield', 14)} 敏感词检测：低危 1 处</b><div class="hint">第 2 段“最牛”，建议改为客观表述（不拦截）</div></div>
-{m_article(FEATURED)}</div>
-<div class="tab-panel" data-panel="f"><div class="m-card">{featured_flow_timeline(upto)}</div></div>
-<div class="tab-panel" data-panel="i"><div class="m-card">{m_kv([('稿件编号', SID), ('类型', '新闻投稿'), ('学院', '计算机学院'), ('投稿人', '陈雨桐（学生）'), ('指导老师', FEATURED['teacher']), ('投稿时间', FEATURED['time']), ('当前状态', tag(status))])}</div></div>
+<div class="sens-card" style="margin-bottom:12px">{sens}</div>
+{m_content(sub)}</div>
+<div class="tab-panel" data-panel="f"><div class="m-card">{flow_records(sub, upto)}</div></div>
+<div class="tab-panel" data-panel="i"><div class="m-card">{m_base(sub, status)}</div></div>
 </div>'''
     foot = (btn(reject_text, 'btn-danger-o', 'undo', f'data-action="reject" data-tpl="{tpl}" data-title="{reject_title}" data-label="{reject_label}" data-ok="确认" data-next="{reject_next}"') +
             btn(pass_text, 'btn-success', 'check', f'data-action="pass" data-opinion="optional" data-tpl="{tpl}" data-title="{pass_text}" data-ok="确认" data-next="{pass_next}"'))
@@ -304,6 +317,21 @@ def messages_page(role, folder, items, pc_link, todo_count=None):
     write(f'mobile/{folder}/messages.html', m_page(role, '消息', ''.join(msg_item(*i[:6], unread=len(i) > 6 and i[6]) for i in items), tab='messages.html', right=right, pc_link=pc_link, todo_count=todo_count))
 
 
+def typed_reviews(role, folder, rows, node, status, stage, todo_file, ledger_file, tpl, pass_text, pc, n=None,
+                  reject_text='退回', reject_title='退回稿件', reject_label='退回意见', handle='review.html', pass_msg=None):
+    """视频 / 照片 / 线索：按列表中该类型第一篇稿件生成审核页"""
+    for t in ('视频', '照片', '线索'):
+        r = next((x for x in rows if x[2] == t), None)
+        sub = sample_for(t, dict(id=r[0], title=r[1], college=r[3] if r[3].endswith('学院') else '计算机学院', identity=r[4], time=r[5]) if r else None)
+        sid = sub['id']
+        ok_next = q(todo_file, done=sid, msg=pass_msg or f'{pass_text}，已流转至下一环节', link=q(ledger_file, new=sid, act='pass'), linkText='审核记录') if ledger_file else \
+            q(todo_file, done=sid, msg=pass_msg or pass_text)
+        no_next = q(todo_file, done=sid, type='warn', msg='已退回，已通知投稿人', link=q(ledger_file, new=sid, act='reject'), linkText='审核记录') if ledger_file else \
+            q(todo_file, done=sid, type='warn', msg=f'已{reject_text}，已通知投稿人')
+        review_page(role, folder, node, status, stage, (r[6], r[7]) if r else ('剩余 3 个工作日', 'ok'), ok_next, no_next, tpl, pass_text, reject_text,
+                    todo_file, pc + typed(handle, t), n, reject_title=reject_title, reject_label=reject_label, file=typed(handle, t), sub=sub)
+
+
 def todo_page(role, folder, title, rows, pc_link, desc, todo_count=None, file='todo.html', review='review.html'):
     n_over = sum(1 for r in rows if r[7] == 'over')
     n_warn = sum(1 for r in rows if r[7] == 'warn')
@@ -323,16 +351,40 @@ def sort_rows(rows):
 def teacher():
     rows = sort_rows([(sid, title, t, '计算机学院', author, time, rem, lv) for sid, title, t, author, time, rem, lv in TEACHER_TODO])
     rows = [(r[0], r[1], r[2], r[4], '学生', r[5], r[6], r[7]) for r in rows]
-    todo_page('teacher', 'teacher', '待审稿件', rows, '../../pc/teacher/dashboard.html', '仅显示指定您为指导老师的学生稿件，审核通过后进入校团委一审')
+    todo_page('teacher', 'teacher', '待审稿件', rows, '../../pc/teacher/dashboard.html', '仅显示指定您为指导老师的学生稿件，审核通过后提交学院副书记审核')
     review_page('teacher', 'teacher', '指导老师审核', '待指导老师审核', 'teacher', ('剩余 0.5 个工作日', 'warn'),
-                q('todo.html', done=SID, msg='已通过，稿件已报送校团委一审', link=q('history.html', new=SID, act='pass'), linkText='审核记录'),
+                q('todo.html', done=SID, msg='已通过，稿件已提交学院副书记审核', link=q('history.html', new=SID, act='pass'), linkText='审核记录'),
                 q('todo.html', done=SID, type='warn', msg='已退回，已通知投稿学生', link=q('history.html', new=SID, act='reject'), linkText='审核记录'),
-                'teacher', '通过，报送一审', '退回', 'todo.html', '../../pc/teacher/review.html')
+                'teacher', '通过，提交副书记', '退回', 'todo.html', '../../pc/teacher/review.html')
+    typed_reviews('teacher', 'teacher', rows, '指导老师审核', '待指导老师审核', 'teacher', 'todo.html', 'history.html', 'teacher', '通过，提交副书记',
+                  '../../pc/teacher/', pass_msg='已通过，稿件已提交学院副书记审核')
     ledger_page('teacher', 'teacher', '审核记录', LEDGER_ROWS[:3] + [('“挑战杯”校赛备赛动员会', '09-18 17:40', '通过', '3.5 天', '超时')], '../../pc/teacher/history.html', 'history.html')
     messages_page('teacher', 'teacher', [
         ('inbox', 'blue', '新的待审稿件', f'陈雨桐提交了《{FEATURED["title"]}》', '10 分钟前', 'review.html', True),
         ('alert', 'red', '审核超时提醒', '《“代码为桥”乡村小学编程支教纪实》已超时 1.5 个工作日', '今天 09:00', 'todo.html', True),
         ('check-circle', 'green', '您审核的稿件已终审采用', '《红色经典诵读活动》已终审采用', '09-19', 'history.html')], '../../pc/teacher/messages.html')
+
+
+# =============== 副书记（学工系统固定角色） ===============
+def deputy():
+    pc = '../../pc/deputy/'
+    rows = sort_rows([(sid, title, t, '计算机学院', ident, time, rem, lv) for sid, title, t, author, ident, time, rem, lv in DEPUTY_TODO])
+    n = len(rows)
+    todo_page('deputy', 'deputy', '待审稿件', rows, pc + 'todo.html', '本院稿件：学生稿件经指导老师通过后到达，教师稿件提交后直接到达；副书记取自学工系统，无需配置', n)
+    review_page('deputy', 'deputy', '副书记审核', '待副书记审核', 'deputy', ('剩余 1.5 个工作日', 'ok'),
+                q('todo.html', done=SID, msg='副书记审核通过，稿件已报送校团委一审', link=q('history.html', new=SID, act='pass'), linkText='审核记录'),
+                q('todo.html', done=SID, type='warn', msg='已退回，已通知投稿学生', link=q('history.html', new=SID, act='reject'), linkText='审核记录'),
+                'deputy', '通过，报送一审', '退回', 'todo.html', pc + 'review.html', n)
+    typed_reviews('deputy', 'deputy', rows, '副书记审核', '待副书记审核', 'deputy', 'todo.html', 'history.html', 'deputy', '通过，报送一审', pc, n,
+                  pass_msg='副书记审核通过，稿件已报送校团委一审')
+    ledger_page('deputy', 'deputy', '审核记录', [('学院“算法之星”编程挑战赛精彩瞬间', '09-27 15:02', '通过', '0.3 天', '及时'),
+                                                 ('计算机学院学生会换届大会', '09-26 16:20', '退回', '1.1 天', '及时'),
+                                                 ('新生军训风采纪实短片《淬炼》', '09-25 15:30', '通过', '0.2 天', '及时'),
+                                                 ('学院开学典礼现场图集', '09-12 16:30', '通过', '3.2 天', '超时')], pc + 'history.html', 'history.html', n)
+    messages_page('deputy', 'deputy', [
+        ('inbox', 'blue', '新的待审稿件', '《计算机学院“网络安全宣传周”系列活动》已通过指导老师审核', '20 分钟前', 'review.html', True),
+        ('inbox', 'blue', '教师投稿待审', '《计算机学院教工党支部“书香润初心”读书会》', '1 小时前', 'review-photo.html', True),
+        ('alert', 'red', '审核超时提醒', '《计算机学院“程序设计月”闭幕式》已超时 0.5 个工作日', '今天 09:00', 'todo.html')], pc + 'messages.html', n)
 
 
 # =============== 一审员 / 二审员 ===============
@@ -346,6 +398,7 @@ def reviewers():
                     q('todo.html', done=SID, msg=f'{node}通过，已流转至{nxt}', link=q('ledger.html', new=SID, act='pass'), linkText='审核台账'),
                     q('todo.html', done=SID, type='warn', msg='已退回，已通知投稿人', link=q('ledger.html', new=SID, act='reject'), linkText='审核台账'),
                     'review', f'{node}通过', '退回', 'todo.html', pc + 'review.html', n)
+        typed_reviews(role, role, allrows, node, status, upto, 'todo.html', 'ledger.html', 'review', f'{node}通过', pc, n, pass_msg=f'{node}通过，已流转至{nxt}')
         ledger_page(role, role, '审核台账', LEDGER_ROWS, pc + 'my-ledger.html', 'ledger.html', n)
         messages_page(role, role, [
             ('inbox', 'blue', f'新的待{node}稿件', f'《{FEATURED["title"]}》已到达{node}环节', '30 分钟前', 'review.html', True),
@@ -373,6 +426,8 @@ def admin():
                 q('final-list.html', done=SID, msg='已终审采用，计入学院采用统计'),
                 q('final-list.html', done=SID, type='warn', msg='已终审不采用，不计入采用统计'),
                 'final', '终审采用', '不采用', 'final-list.html', pc + 'final-review.html', reject_title='终审不采用', reject_label='终审意见', file='final-review.html')
+    typed_reviews('admin', 'admin', rows, '三审终审', '待三审', 'r3', 'final-list.html', None, 'final', '终审采用', pc, reject_text='不采用',
+                  reject_title='终审不采用', reject_label='终审意见', handle='final-review.html', pass_msg='已终审采用，计入学院采用统计')
     messages_page('admin', 'admin', [
         ('inbox', 'blue', '新的待三审稿件', f'《{FEATURED["title"]}》已通过二审', '15 分钟前', 'final-review.html', True),
         ('alert', 'red', '审核超时预警', '当前有 5 篇稿件超时未处理', '今天 09:00', 'final-list.html', True),
@@ -381,4 +436,4 @@ def admin():
 
 def build():
     c_home(); c_forms(); c_success(); c_my(); c_detail(); c_resubmit(); c_ranking(); c_messages(); c_profile()
-    teacher(); reviewers(); admin()
+    teacher(); deputy(); reviewers(); admin()

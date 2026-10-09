@@ -349,6 +349,19 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .m-article h2{font-size:19px;line-height:1.5;margin-bottom:8px}
 .m-article p{font-size:15px;line-height:1.9;text-indent:2em;margin-bottom:10px;color:#434A55}
 .m-article img{width:100%;border-radius:8px;margin:6px 0 10px;height:180px;object-fit:cover}
+.m-sub-t{font-size:13px;font-weight:600;color:var(--text);margin:12px 0 6px}
+.m-att{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.m-att:last-child{border-bottom:none}
+.m-att .att-ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;flex:none}
+.m-att .att-main{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13px}
+.m-att .att-main b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-att .att-main span{font-size:12px;color:var(--text-3)}
+.m-cover{width:100%;height:170px;object-fit:cover;border-radius:8px;margin:8px 0}
+.m-photo{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.m-photo img{width:96px;height:72px;object-fit:cover;border-radius:6px;flex:none}
+.m-photo div{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--text-3);min-width:0}
+.m-photo b{font-size:13px;color:var(--text);font-weight:500}
+.m-photo em{font-style:normal;color:var(--text-2)}
 .m-list-link{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #E3F1F9;color:#303133;font-size:14px}
 .m-card:has(> .m-list-link){border-radius:20px;background:linear-gradient(180deg,#E2F3FF -9%,#fff 11%);border:1px solid #fff;padding:4px 16px 8px}
 button.m-list-link{width:100%;background:none;border:0;border-bottom:1px solid #E3F1F9;font:inherit;font-size:14px;text-align:left;cursor:pointer}
@@ -439,12 +452,14 @@ button.m-list-link{width:100%;background:none;border:0;border-bottom:1px solid #
 <div class="type-switch"><span class="ts-lbl">投稿类型</span><div class="radio-group"><label class="radio-card"><input type="radio" name="submitType" value="submit-news.html" data-nav-radio>新闻投稿</label><label class="radio-card"><input type="radio" name="submitType" value="submit-video.html" data-nav-radio>视频投稿</label><label class="radio-card"><input type="radio" name="submitType" value="submit-photo.html" data-nav-radio>照片投稿</label><label class="radio-card"><input type="radio" name="submitType" value="submit-clue.html" data-nav-radio checked>新闻线索</label></div></div><form id="mForm" data-autosave novalidate><div class="m-form-title">投稿人信息</div><div class="m-form">
 <div class="field"><label class="lbl">投稿人</label><div>陈雨桐 · 计算机学院</div></div>
 <div class="field"><label class="lbl req">投稿人身份</label><div class="radio-group"><label class="radio-card"><input type="radio" name="identity" value="学生" checked required>学生</label><label class="radio-card"><input type="radio" name="identity" value="教师">教师</label></div></div>
-<div class="field" data-show-when="identity=学生"><label class="lbl req">指导老师</label><div class="teacher-picker"><input class="input" name="teacher" value="王海峰（计算机学院）" data-required data-in-list data-label="指导老师" placeholder="输入姓名 / 工号 / 学院搜索" autocomplete="off"><div class="picker-list"></div></div><div class="hint">默认预填上次选择的指导老师，可搜索其他学院；学生稿件先由指导老师审核</div></div>
-<div class="field hidden" data-show-when="identity=教师"><div class="notice notice-info"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>教师投稿无需指导老师，提交后直接进入校团委一审</div></div></div>
+<div class="field" data-show-when="identity=学生"><label class="lbl req">指导老师</label><div class="teacher-picker"><input class="input" name="teacher" value="王海峰（计算机学院）" data-required data-in-list data-label="指导老师" placeholder="输入姓名 / 工号 / 学院搜索" autocomplete="off"><div class="picker-list"></div></div><div class="hint">默认预填上次选择的指导老师，可搜索其他学院；学生稿件先由指导老师审核，再由学院副书记审核</div></div>
+<div class="field hidden" data-show-when="identity=教师"><div class="notice notice-info"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>教师投稿无需指导老师，提交后先由本院副书记审核，再进入校团委一审</div></div></div>
 </div>
 <div class="m-form-title">线索内容</div><div class="m-form">
 <div class="field "><label class="lbl req">线索标题</label><input class="input" id="mTitle" name="title" required placeholder="一句话概括线索"></div>
 <div class="field "><label class="lbl req">详细描述</label><textarea class="textarea" id="mIntro" name="desc" required placeholder="人物 / 事件情况与新闻价值"></textarea></div>
+<div class="field "><label class="lbl">线索类型</label><select class="select" name="clueType"><option value="">选填</option><option value="人物事迹">人物事迹</option><option value="活动预告">活动预告</option><option value="成果荣誉">成果荣誉</option><option value="突发事件">突发事件</option><option value="其他">其他</option></select></div>
+<div class="field "><label class="lbl">事件时间地点</label><input class="input" name="whenWhere" placeholder="选填，如 10月10日 · 图书馆报告厅"></div>
 <div class="field "><label class="lbl req">线索来源</label><select class="select" name="source" required><option value="">请选择</option><option value="本人亲历">本人亲历</option><option value="他人提供">他人提供</option><option value="媒体报道">媒体报道</option><option value="网络信息">网络信息</option><option value="其他">其他</option></select></div>
 <div class="field"><label class="lbl req">是否接受采访</label><div class="radio-group"><label class="radio-card"><input type="radio" name="interview" value="是" checked required>接受</label><label class="radio-card"><input type="radio" name="interview" value="否">不接受</label></div></div>
 <div class="field" data-show-when="interview=是"><label class="lbl req">可采访时间段</label><input class="input" name="interviewTime" required placeholder="如：工作日 14:00—17:00"></div>
@@ -456,7 +471,7 @@ button.m-list-link{width:100%;background:none;border:0;border-bottom:1px solid #
 
 </div>
 <aside class="notes">
-  <div class="card"><div class="n-role">投稿人（全校师生） · 移动端</div><h3>新闻线索</h3><div class="n-path">mobile/correspondent/submit-clue.html</div><ul><li>选择学生身份时必须指定指导老师，默认预填上次选择的指导老师，可搜索其他学院</li><li>选择教师身份无需指导老师，提交后直接进入校团委一审</li><li>线索无需上传图片，重点描述人物、事件与新闻价值</li><li>接受采访时需填写可采访时间段</li></ul></div><div class="card flow"><b>业务链路 · 下一步</b><a href="submit-success.html?type=线索&identity=学生"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>提交后：提交成功页</a><a href="home.html"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>返回首页</a></div>
+  <div class="card"><div class="n-role">投稿人（全校师生） · 移动端</div><h3>新闻线索</h3><div class="n-path">mobile/correspondent/submit-clue.html</div><ul><li>选择学生身份时必须指定指导老师，默认预填上次选择的指导老师，可搜索其他学院</li><li>选择教师身份无需指导老师，提交后先由本院副书记审核（取自学工系统），再进入校团委一审</li><li>线索无需上传图片，重点描述人物、事件与新闻价值</li><li>接受采访时需填写可采访时间段</li></ul></div><div class="card flow"><b>业务链路 · 下一步</b><a href="submit-success.html?type=线索&identity=学生"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>提交后：提交成功页</a><a href="home.html"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>返回首页</a></div>
   <a class="btn" href="../../pc/correspondent/submit-clue.html"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>查看对应 PC 端页面</a>
   <a class="btn" href="../../index.html"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>返回原型导航</a>
 </aside>
