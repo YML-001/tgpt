@@ -1,7 +1,8 @@
 # PC 端 · 指导老师
 from lib import icon, tag, type_tag, remain, stat, card, page_head, btn, a_btn, filter_select, search_box, \
     filter_bar, table, pc_page, write
-from data import TEACHER_TODO, FEATURED
+from data import TEACHER_TODO, TEACHER_REVIEWED, FEATURED
+from query import query_pages
 from common import featured_flow_timeline, messages_page_body
 from detail import sub_content
 from workflow import norm, todo_body, done_body, cc_body, batch_body, detail_body, node_chart, flow_name
@@ -50,11 +51,11 @@ def typed_pages():
 
 def history():
     base = [
-        ('TG2026092702', '学院“算法之星”编程挑战赛精彩瞬间', '照片', '陈雨桐', '2026-09-28 16:35', '已通过', '0.8 个工作日', '及时', '内容基本符合要求，同意报送校团委。'),
+        ('TG2026092702', '学院“算法之星”编程挑战赛精彩瞬间', '照片', '陈雨桐', '2026-09-27 11:20', '已通过', '0.8 个工作日', '及时', '内容基本符合要求，同意报送校团委。'),
         ('TG2026092601', '计算机学院“程序设计月”启动仪式', '新闻', '周子墨', '2026-09-27 10:20', '已退回', '1.2 个工作日', '及时', '活动时间、地点等要素缺失，请补全新闻五要素。'),
         ('TG2026092004', '校友返校讲述“北斗”研发故事', '线索', '陈雨桐', '2026-09-21 09:00', '已通过', '0.5 个工作日', '及时', '线索价值较高，建议校团委安排采访。'),
-        ('TG2026091805', '学生党支部开展“红色经典诵读”活动', '新闻', '陈雨桐', '2026-09-19 14:30', '已通过', '1 个工作日', '及时', '同意报送。'),
-        ('TG2026091502', '“挑战杯”校赛备赛动员会', '新闻', '林嘉懿', '2026-09-18 17:40', '已通过', '3.5 个工作日', '超时', '同意报送。'),
+        ('TG2026091805', '学生党支部开展“红色经典诵读”活动', '新闻', '陈雨桐', '2026-09-18 20:10', '已通过', '1 个工作日', '及时', '同意报送。'),
+        ('TG2026091510', '“挑战杯”校赛备赛动员会', '新闻', '林嘉懿', '2026-09-18 17:40', '已通过', '3.5 个工作日', '超时', '同意报送。'),
         ('TG2026090807', '新学期“书香计院”读书分享会', '新闻', '陈雨桐', '2026-09-09 11:10', '已通过', '0.6 个工作日', '及时', '同意报送。'),
         ('TG2026090508', '“智能+”暑期社会实践成果展示', '视频', '陈雨桐', '2026-09-06 15:20', '已通过', '0.9 个工作日', '及时', '视频链接已确认为永久有效。'),
     ]
@@ -93,4 +94,6 @@ def messages():
 
 
 def build():
-    dashboard(); review(); review(True); typed_pages(); history(); cc(); batch(); done_detail(); messages()
+    dashboard(); review(); review(True); typed_pages(); history()
+    query_pages(page, '指导老师审核', TEACHER_REVIEWED, '只显示指定您为指导老师、且您已审核过的学生稿件（含跨学院选择您的学生）；')
+    cc(); batch(); done_detail(); messages()

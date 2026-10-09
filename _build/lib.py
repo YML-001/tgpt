@@ -259,10 +259,12 @@ MENUS = {
     'teacher': [
         ('我的待办', [('inbox', '待办', 'dashboard.html', 5), ('file-check', '已办', 'history.html'),
                   ('bell', '催办/抄送', 'cc.html'), ('layers', '批量审批', 'batch.html')]),
+        ('稿件查询', [('archive', '稿件查询', 'submissions.html')]),
     ],
     'deputy': [
         ('我的待办', [('inbox', '待办', 'todo.html', '{todo}'), ('file-check', '已办', 'history.html'),
                   ('bell', '催办/抄送', 'cc.html'), ('layers', '批量审批', 'batch.html')]),
+        ('稿件查询', [('archive', '稿件查询', 'submissions.html')]),
     ],
     'reviewer': [
         ('我的待办', [('inbox', '待办', 'todo.html', '{todo}'), ('file-check', '已办', 'my-ledger.html'),

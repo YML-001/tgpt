@@ -33,6 +33,8 @@ PC_PAGES = {
         ('done-detail', '已办详情', 'file', '基础信息、稿件内容、节点流程图与操作日志'),
         ('cc', '催办 / 抄送', 'bell', '超时自动催办与终审结果抄送'),
         ('batch', '批量审批', 'layers', '按流程分类勾选，批量通过 / 批量不通过（意见必填）'),
+        ('submissions', '稿件查询', 'search', '本人审核过的学生稿件（通过 / 退回），按学院、类型、状态、审核结果、时间筛选'),
+        ('submission-detail-video', '稿件档案 · 视频', 'video', '从稿件查询进入，按类型展示完整字段'),
         ('messages', '消息通知', 'bell', '新待审稿件、超时提醒'),
     ],
     'deputy': [
@@ -44,6 +46,8 @@ PC_PAGES = {
         ('done-detail', '已办详情', 'file', '稿件内容、节点流程图与审批记录'),
         ('cc', '催办 / 抄送', 'bell', '超时自动催办与审核结果抄送'),
         ('batch', '批量审批', 'layers', '批量通过 / 批量不通过（意见必填）'),
+        ('submissions', '稿件查询', 'search', '本院、本人审核过的稿件（通过 / 退回），按类型、状态、审核结果、身份、时间筛选'),
+        ('submission-detail-clue', '稿件档案 · 线索', 'bulb', '从稿件查询进入，按类型展示完整字段'),
         ('messages', '消息通知', 'bell', '新待审稿件、教师投稿到达、超时提醒'),
     ],
     'reviewer': [
@@ -143,7 +147,7 @@ MATRIX = [
         ('查看敏感词检测结果', 'NNYYYYY'),
     ]),
     ('查询与统计', [
-        ('稿件查询与档案', 'CCSCYYY'),
+        ('稿件查询与档案', 'CCSSYYY'),
         ('本院统计', 'CCNCNNY'),
         ('全校学院排行榜', 'YYNNNNY'),
         ('我的待办 · 已办（本人处理记录）', 'NNSSSSN'),
@@ -263,9 +267,9 @@ def entries():
          [('新闻投稿', 'pc/correspondent/submit-news.html'), ('稿件档案', 'pc/correspondent/submission-detail.html'), ('视频详情', 'pc/correspondent/submission-detail-video.html'), ('退回修改', 'pc/correspondent/resubmit.html'),
           ('本院统计', 'pc/correspondent/college-stats.html'), ('全校排行榜', 'pc/correspondent/ranking.html')]),
         ('PC 端 · 指导老师', '计算机学院 王海峰：审核指定本人为指导老师的学生稿件', 'user', '#F29100', 'pc/teacher/dashboard.html', 1440,
-         [('办理', 'pc/teacher/review.html'), ('已办', 'pc/teacher/history.html'), ('催办/抄送', 'pc/teacher/cc.html'), ('批量审批', 'pc/teacher/batch.html')]),
+         [('办理', 'pc/teacher/review.html'), ('已办', 'pc/teacher/history.html'), ('批量审批', 'pc/teacher/batch.html'), ('稿件查询', 'pc/teacher/submissions.html')]),
         ('PC 端 · 副书记', '计算机学院 杨振华：学工系统固定角色，审核本院学生稿件（指导老师通过后）与教师稿件，无需配置', 'flag', '#D9480F', 'pc/deputy/todo.html', 1440,
-         [('办理', 'pc/deputy/review.html'), ('办理 · 教师照片稿', 'pc/deputy/review-photo.html'), ('已办', 'pc/deputy/history.html'), ('批量审批', 'pc/deputy/batch.html')]),
+         [('办理', 'pc/deputy/review.html'), ('办理 · 教师照片稿', 'pc/deputy/review-photo.html'), ('已办', 'pc/deputy/history.html'), ('稿件查询', 'pc/deputy/submissions.html')]),
         ('PC 端 · 一审员', '校团委宣传部 刘子涵：我的待办（待办 / 已办 / 催办抄送 / 批量审批）、稿件查询', 'file-check', '#1BB975', 'pc/reviewer1/todo.html', 1440,
          [('办理', 'pc/reviewer1/review.html'), ('已办', 'pc/reviewer1/my-ledger.html'), ('批量审批', 'pc/reviewer1/batch.html'), ('稿件查询', 'pc/reviewer1/submissions.html')]),
         ('PC 端 · 二审员', '校团委宣传部 周明轩：待二审稿件、升华网正文复制与素材导出', 'shield', '#6B5BD2', 'pc/reviewer2/todo.html', 1440,
@@ -309,10 +313,12 @@ SCENARIOS = [
         ('投稿人', '照片详情', 'pc/correspondent/submission-detail-photo.html'), ('投稿人', '线索详情', 'pc/correspondent/submission-detail-clue.html')]),
     ('user', '指导老师审核', '只看到指定本人为指导老师的学生稿件；通过后提交学院副书记审核，退回意见必填并可一键插入模板。', [
         ('指导老师', '我的待办 · 待办', 'pc/teacher/dashboard.html'), ('指导老师', '办理', 'pc/teacher/review.html'),
-        ('指导老师', '退回 · 意见必填', 'pc/teacher/review-reject.html'), ('指导老师', '已办', 'pc/teacher/history.html')]),
+        ('指导老师', '退回 · 意见必填', 'pc/teacher/review-reject.html'), ('指导老师', '已办', 'pc/teacher/history.html'),
+        ('指导老师', '稿件查询 · 审核过的稿件', 'pc/teacher/submissions.html')]),
     ('flag', '副书记审核', '副书记为投稿人所在学院副书记，取自学工系统、无需配置；学生稿件在指导老师通过后到达，教师稿件提交后直接到达；通过报送一审，退回意见必填。', [
         ('副书记', '我的待办 · 待办', 'pc/deputy/todo.html'), ('副书记', '办理 · 通过报送一审', 'pc/deputy/review.html'),
-        ('副书记', '退回 · 意见必填', 'pc/deputy/review-reject.html'), ('副书记', '已办', 'pc/deputy/history.html')]),
+        ('副书记', '退回 · 意见必填', 'pc/deputy/review-reject.html'), ('副书记', '已办', 'pc/deputy/history.html'),
+        ('副书记', '稿件查询 · 审核过的稿件', 'pc/deputy/submissions.html')]),
     ('file-check', '一审、二审', '统一待办按超时优先排序、超时标红；办理页显示敏感词检测结果；处理后稿件从待办消失并出现在“已办”。', [
         ('一审员', '一审待办', 'pc/reviewer1/todo.html'), ('一审员', '一审办理', 'pc/reviewer1/review.html'), ('一审员', '已办', 'pc/reviewer1/my-ledger.html'),
         ('二审员', '二审待办', 'pc/reviewer2/todo.html'), ('二审员', '二审办理', 'pc/reviewer2/review.html'), ('一审员', '批量审批', 'pc/reviewer1/batch.html')]),
@@ -375,8 +381,8 @@ def roles():
     pc_t, m_t = '<span class="tag tag-primary">PC</span>', '<span class="tag tag-success">移动</span>'
     rows = [('投稿人（学生）', '全校学生，统一身份认证登录', '本院稿件与本院统计；全校排行榜', '无审核权；投稿、存草稿、修改重提'),
             ('投稿人（教师）', '全校教职工，统一身份认证登录', '同上', '无审核权；投稿不经过指导老师，先由本院副书记审核'),
-            ('指导老师', '学生投稿时指定的老师，可跨学院', '指定本人为指导老师的学生稿件', '学生稿件第一道审核：通过提交副书记审核 / 退回'),
-            ('副书记', '投稿人所在学院的副书记，<b>取自学工系统，无需配置</b>', '本院稿件（副书记审核环节）', '学生稿件第二道、教师稿件第一道审核：通过报送一审 / 退回'),
+            ('指导老师', '学生投稿时指定的老师，可跨学院', '指定本人为指导老师的学生稿件；稿件查询（本人审核过的）', '学生稿件第一道审核：通过提交副书记审核 / 退回'),
+            ('副书记', '投稿人所在学院的副书记，<b>取自学工系统，无需配置</b>', '本院稿件（副书记审核环节）；稿件查询（本人审核过的）', '学生稿件第二道、教师稿件第一道审核：通过报送一审 / 退回'),
             ('一审员', '校团委宣传部学生干部', '分配给本人的待一审稿件；全校稿件查询', '一审：通过流转二审 / 退回'),
             ('二审员', '校团委宣传部高年级学生干部', '分配给本人的待二审稿件；全校稿件查询', '二审：通过流转三审 / 退回；升华网素材导出'),
             ('校团委管理员', '校团委宣传部老师', '全校全部稿件、统计与配置', '三审终审：采用 / 不采用；系统配置')]

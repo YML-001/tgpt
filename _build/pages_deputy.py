@@ -1,6 +1,7 @@
 # PC 端 · 副书记（学院副书记，学工系统固定角色，按投稿人所在学院自动路由，无需配置）
 from lib import card, btn, a_btn, pc_page, write
-from data import DEPUTY_TODO, FEATURED
+from data import DEPUTY_TODO, DEPUTY_REVIEWED, FEATURED
+from query import query_pages
 from common import featured_flow_timeline, messages_page_body
 from workflow import norm, todo_body, done_body, cc_body, batch_body, detail_body, node_chart, flow_name
 from review import review_body, reject_modal, q, type_review_pages, type_done_pages
@@ -52,11 +53,11 @@ def typed_pages():
 def history():
     base = [
         ('TG2026092702', '学院“算法之星”编程挑战赛精彩瞬间', '照片', '陈雨桐', '学生', '2026-09-27 15:02', '已通过', '0.3 个工作日', '及时', '同意报送校团委一审。'),
-        ('TG2026092606', '计算机学院教工“三全育人”工作坊', '新闻', '李晓琳', '教师', '2026-09-27 10:40', '已通过', '0.6 个工作日', '及时', '内容导向正确，同意报送。'),
+        ('TG2026092615', '计算机学院教工“三全育人”工作坊', '新闻', '李晓琳', '教师', '2026-09-27 10:40', '已通过', '0.6 个工作日', '及时', '内容导向正确，同意报送。'),
         ('TG2026092504', '计算机学院学生会换届大会', '新闻', '周子墨', '学生', '2026-09-26 16:20', '已退回', '1.1 个工作日', '及时', '活动信息需与学院官方发布保持一致，请补充核实来源。'),
         ('TG2026092503', '新生军训风采纪实短片《淬炼》', '视频', '李晓琳', '教师', '2026-09-25 15:30', '已通过', '0.2 个工作日', '及时', '同意报送。'),
         ('TG2026092004', '校友返校讲述“北斗”研发故事', '线索', '陈雨桐', '学生', '2026-09-21 15:10', '已通过', '0.4 个工作日', '及时', '线索价值较高，同意报送。'),
-        ('TG2026091805', '计算机学院学生党支部开展“红色经典诵读”活动', '新闻', '陈雨桐', '学生', '2026-09-19 17:00', '已通过', '0.5 个工作日', '及时', '同意报送。'),
+        ('TG2026091805', '计算机学院学生党支部开展“红色经典诵读”活动', '新闻', '陈雨桐', '学生', '2026-09-19 09:30', '已通过', '0.5 个工作日', '及时', '同意报送。'),
         ('TG2026091206', '学院开学典礼现场图集', '照片', '李晓琳', '教师', '2026-09-12 16:30', '已通过', '3.2 个工作日', '超时', '同意报送。'),
     ]
     rows = [(sid, title, t, author, '计算机学院', st, op, time, cost, ok) for sid, title, t, author, ident, time, st, cost, ok, op in base]
@@ -94,4 +95,6 @@ def messages():
 
 
 def build():
-    todo(); review(); review(True); typed_pages(); history(); cc(); batch(); done_detail(); messages()
+    todo(); review(); review(True); typed_pages(); history()
+    query_pages(page, '副书记审核', DEPUTY_REVIEWED, '只显示计算机学院、您在副书记审核环节已处理过的稿件（学生稿件与教师稿件）；')
+    cc(); batch(); done_detail(); messages()

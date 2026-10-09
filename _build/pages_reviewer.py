@@ -71,7 +71,7 @@ def build_for(role):
     ctrls = filter_select('subTable', 'college', '全部学院', COLLEGES) + filter_select('subTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索']) + \
         filter_select('subTable', 'status', '全部状态', ['待指导老师审核', '待副书记审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']) + date_range('subTable') + search_box('subTable')
     body = f'''{page_head('稿件查询', '可浏览全校全部稿件档案，按学院、类型、时间范围、状态组合筛选', btn('导出查询结果', '', 'download', 'data-action="export-csv" data-table="#subTable" data-filename="稿件查询结果"'))}
-<div class="card">{filter_bar('subTable', ctrls)}{table('subTable', ['稿件', '类型', '投稿学院', '投稿人', ('投稿日期', 'data-sort'), '流转状态', '升华网素材', ('操作', 'class="no-export"')], [trs])}</div>'''
+<div class="card">{filter_bar('subTable', ctrls)}{table('subTable', ['稿件', '类型', '投稿学院', '投稿人', ('投稿日期', 'data-sort'), '流转状态', '升华网素材', ('操作', 'class="no-export"')], [trs], page_size=15)}</div>'''
     page('submissions.html', '稿件查询', body)
 
     # ---------- 稿件档案（已终审采用的新闻稿） ----------
