@@ -1,6 +1,6 @@
 # 多个角色共用的业务区块：稿件正文、投稿信息、流转记录、消息、排行榜等
 from lib import icon, tag, type_tag, timeline, card, table, modal, filter_select
-from data import FEATURED, ADOPTED, IMG, RANKING, ARCHIVE, deputy_of
+from data import FEATURED, ADOPTED, IMG, RANKING, ARCHIVE, deputy_of, vice_of
 
 RETURNED = dict(
     id='TG2026092203', title='“青春志愿行”社区服务周纪实', type='新闻', college='计算机学院',
@@ -46,6 +46,10 @@ def gallery(sub):
 
 
 def info_kv(sub, extra=None):
+    if sub['identity'] == '职能部门老师':
+        rows = [('稿件编号', sub['id']), ('稿件类型', type_tag(sub['type'])), ('所属部门', sub['college']), ('投稿人', sub['author']),
+                ('投稿人身份', '职能部门老师'), ('副职领导', vice_of(sub['college'])), ('投稿时间', sub['time']), ('撰稿人', sub.get('writer', '—'))]
+        return '<dl class="kv c2">' + ''.join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in rows + (extra or [])) + '</dl>'
     rows = [('稿件编号', sub['id']), ('稿件类型', type_tag(sub['type'])), ('所属学院', sub['college']),
             ('投稿人', sub['author']), ('投稿人身份', sub['identity']),
             ('指导老师', sub['teacher'] if sub['identity'] == '学生' else '—（教师投稿无需指定）'),

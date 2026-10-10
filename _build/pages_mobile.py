@@ -1,13 +1,13 @@
 # 移动端（H5 / 小程序，手机框展示）：全部角色
 from lib import icon, tag, type_tag, btn, a_btn, options, field, m_page, write, teacher_picker, m_editor
-from data import MY_SUBS, RANKING, FEATURED, ADOPTED, IMG, R1_TODO, R2_TODO, R3_TODO, TEACHER_TODO, DEPUTY_TODO, TYPE_ICON, VIDEO, PHOTO, CLUE, typed
+from data import MY_SUBS, RANKING, FEATURED, ADOPTED, IMG, R1_TODO, R2_TODO, R3_TODO, TEACHER_TODO, DEPUTY_TODO, VICE_TODO, VICE_NEWS, VICE_DEPTS, TYPE_ICON, VIDEO, PHOTO, CLUE, typed
 from detail import m_content, m_base, flow_records, sample_for
 from common import RETURNED, RETURN_OPINIONS, returned_timeline, msg_item, m_college_detail_modal
 from review import q
 from pages_corr import type_switch
 
 SID = FEATURED['id']
-GROUP = {'草稿': '草稿', '待指导老师审核': '审核中', '待副书记审核': '审核中', '待一审': '审核中', '待二审': '审核中', '待三审': '审核中',
+GROUP = {'草稿': '草稿', '待指导老师审核': '审核中', '待副书记审核': '审核中', '待副职领导审核': '审核中', '待一审': '审核中', '待二审': '审核中', '待三审': '审核中',
          '已退回': '已退回', '已终审采用': '已采用', '已发布': '已采用', '已终审不采用': '未采用'}
 DURATION_INPUT = r'<input class="input" name="duration" required placeholder="如 03:25" data-pattern="^\d{1,3}:\d{2}$" data-pattern-msg="请按“分:秒”格式填写">'
 PHONE_INPUT = r'<input class="input" name="phone" type="tel" inputmode="tel" required placeholder="11 位手机号" data-pattern="^1[3-9]\d{9}$" data-pattern-msg="请填写正确的 11 位手机号">'
@@ -37,9 +37,12 @@ def identity_block(identity='学生', teacher='王海峰（计算机学院）'):
     t = ' checked' if identity == '教师' else ''
     return f'''<div class="m-form-title">投稿人信息</div><div class="m-form">
 <div class="field"><label class="lbl">投稿人</label><div>陈雨桐 · 计算机学院</div></div>
-<div class="field"><label class="lbl req">投稿人身份</label><div class="radio-group"><label class="radio-card"><input type="radio" name="identity" value="学生"{s} required>学生</label><label class="radio-card"><input type="radio" name="identity" value="教师"{t}>教师</label></div></div>
-<div class="field" data-show-when="identity=学生"><label class="lbl req">指导老师</label>{teacher_picker(teacher)}<div class="hint">默认预填上次选择的指导老师，可搜索其他学院；学生稿件先由指导老师审核，再由学院副书记审核</div></div>
-<div class="field hidden" data-show-when="identity=教师"><div class="notice notice-info">{icon('info', 14)}<div>教师投稿无需指导老师，提交后先由本院副书记审核，再进入校团委一审</div></div></div>
+<div class="field"><label class="lbl req">投稿人身份</label><div class="radio-group"><label class="radio-card"><input type="radio" name="identity" value="学生"{s} required>学生</label><label class="radio-card"><input type="radio" name="identity" value="教师"{t}>教师</label><label class="radio-card"><input type="radio" name="identity" value="职能部门老师">职能部门老师</label></div></div>
+<div class="field" data-show-when="identity=学生"><label class="lbl req">指导老师</label>{teacher_picker(teacher)}<div class="hint">默认只列本院已配置的指导老师。其他老师请输入工号查找后再选定，查无此工号不能手填姓名</div></div>
+<div class="field hidden" data-show-when="identity=教师"><div class="notice notice-info">{icon('info', 14)}<div>教师投稿无需指导老师，也不选择副书记。提交后先由本院副书记审核，再进入校团委一审</div></div></div>
+<div class="field hidden" data-show-when="identity=职能部门老师"><label class="lbl req">所属部门</label><select class="select" name="dept" required data-label="所属部门">{options(VICE_DEPTS, '请选择', '党委宣传部')}</select>
+<div class="hint">更换部门后，负责领导下拉改为该部门已配置的副职领导</div></div>
+<div class="field hidden" data-show-when="identity=职能部门老师"><label class="lbl req">负责领导</label>{teacher_picker('秦志远（党委宣传部）', 'leader', 'vice')}<div class="hint">默认只列本部门在任副职领导。其他人员请输入工号查找；同部门多人时任一人审核即可</div></div>
 </div>'''
 
 
@@ -146,8 +149,9 @@ def c_success():
     def steps(names, cur):
         return '<div class="m-steps">' + ''.join(f'<div class="{"done" if i < cur else "cur" if i == cur else ""}"><i></i>{n}</div>' for i, n in enumerate(names)) + '</div>'
     body = f'''<div class="m-result"><div class="big-ic">{icon('check', 38)}</div><h2>投稿提交成功</h2><p>稿件编号 TG2026093005 · <span data-param-text="type">新闻</span>投稿</p></div>
-<div class="m-card" data-when-param-hide="identity=教师"><b>已进入【待指导老师审核】</b><div class="msg-desc">指导老师王海峰将在 3 个工作日内处理，通过后由学院副书记审核</div>{steps(['提交', '指导老师', '副书记', '一审', '二审', '终审'], 1)}</div>
+<div class="m-card" data-when-param-hide="identity=教师|职能部门老师"><b>已进入【待指导老师审核】</b><div class="msg-desc">指导老师王海峰将在 3 个工作日内处理，通过后由学院副书记审核</div>{steps(['提交', '指导老师', '副书记', '一审', '二审', '终审'], 1)}</div>
 <div class="m-card hidden" data-when-param="identity=教师"><b>已进入【待副书记审核】</b><div class="msg-desc">教师投稿无需指导老师审核，由本院副书记在 3 个工作日内处理，通过后进入校团委一审</div>{steps(['提交', '副书记', '一审', '二审', '终审'], 1)}</div>
+<div class="m-card hidden" data-when-param="identity=职能部门老师"><b>已进入【待副职领导审核】</b><div class="msg-desc">由所属部门的副职领导在 3 个工作日内处理，通过后进入校团委学生一审</div>{steps(['提交', '副职领导', '学生一审', '学生二审', '终审'], 1)}</div>
 <a class="btn btn-primary btn-block" href="my-submissions.html?new=TG2026093005">查看我的投稿</a>
 <a class="btn btn-block mt12" href="submit-news.html">继续投稿</a>
 <a class="btn btn-block mt12" href="home.html">返回首页</a>'''
@@ -256,7 +260,7 @@ def c_profile():
 </div>
 <a class="btn btn-block btn-danger-o" href="../../index.html" data-confirm="确认退出登录？演示环境将返回原型导航页。">退出登录</a>'''
     rules = f'''<div class="modal" id="ruleSheet"><div class="modal-box"><div class="modal-head"><span>投稿须知</span><button class="modal-x" data-close aria-label="关闭">{icon('x', 18)}</button></div>
-<div class="modal-body" style="font-size:14px;line-height:1.9;color:var(--text-2)">1. 涉密信息请勿上网。<br>2. 学生投稿必须指定指导老师：指导老师审核 → 学院副书记审核 → 一审；教师投稿先由学院副书记审核，再进入一审。<br>3. 之后依次经过二审、三审终审，每个环节 3 个工作日内处理。<br>4. 被退回的稿件可修改后重新提交，历史版本与意见永久保留。<br>5. 视频请提供永久有效的云盘链接。</div>
+<div class="modal-body" style="font-size:14px;line-height:1.9;color:var(--text-2)">1. 涉密信息请勿上网。<br>2. 学生投稿指定本院指导老师（也可按工号查找）：指导老师审核 → 学院副书记审核 → 一审；教师投稿先由学院副书记审核，再进入一审；职能部门老师指定本部门负责领导，先由副职领导审核，再进入学生一审、学生二审。<br>3. 之后依次经过后续审核，每个环节 3 个工作日内处理。<br>4. 被退回的稿件可修改后重新提交，历史版本与意见永久保留。<br>5. 视频请提供永久有效的云盘链接。</div>
 <div class="modal-foot"><button class="btn btn-primary" data-close>我知道了</button></div></div></div>'''
     cw('profile.html', '我的', body, tab='profile.html', modals=rules, pc_link='../../pc/correspondent/my-submissions.html')
 
@@ -316,7 +320,7 @@ def typed_reviews(role, folder, rows, node, status, stage, todo_file, ledger_fil
     """视频 / 照片 / 线索：按列表中该类型第一篇稿件生成审核页"""
     for t in ('视频', '照片', '线索'):
         r = next((x for x in rows if x[2] == t), None)
-        sub = sample_for(t, dict(id=r[0], title=r[1], college=r[3] if r[3].endswith('学院') else '计算机学院', identity=r[4], time=r[5]) if r else None)
+        sub = sample_for(t, dict(id=r[0], title=r[1], college=r[3] if (r[3].endswith('学院') or r[4] == '职能部门老师') else '计算机学院', identity=r[4], time=r[5]) if r else None)
         sid = sub['id']
         ok_next = q(todo_file, done=sid, msg=pass_msg or f'{pass_text}，已流转至下一环节', link=q(ledger_file, new=sid, act='pass'), linkText='审核记录') if ledger_file else \
             q(todo_file, done=sid, msg=pass_msg or pass_text)
@@ -381,6 +385,27 @@ def deputy():
         ('alert', 'red', '审核超时提醒', '《计算机学院“程序设计月”闭幕式》已超时 0.5 个工作日', '今天 09:00', 'todo.html')], pc + 'messages.html', n)
 
 
+# =============== 副职领导（按职能部门配置） ===============
+def vice():
+    pc = '../../pc/vice/'
+    rows = sort_rows([(sid, title, t, dept, '职能部门老师', time, rem, lv) for sid, title, t, author, dept, time, rem, lv in VICE_TODO])
+    n = len(rows)
+    sid = VICE_NEWS['id']
+    todo_page('vice', 'vice', '待审稿件', rows, pc + 'todo.html', '本部门（党委宣传部）职能部门老师的稿件，提交后直接到达；同部门多名副职领导时任一人审核即可', n)
+    review_page('vice', 'vice', '副职领导审核', '待副职领导审核', 'vice', ('剩余 2 个工作日', 'ok'),
+                q('todo.html', done=sid, msg='副职领导审核通过，稿件已报送校团委学生一审', link=q('history.html', new=sid, act='pass'), linkText='审核记录'),
+                q('todo.html', done=sid, type='warn', msg='已退回，已通知投稿人', link=q('history.html', new=sid, act='reject'), linkText='审核记录'),
+                'vice', '通过，报送学生一审', '退回', 'todo.html', pc + 'review.html', n, sub=VICE_NEWS)
+    typed_reviews('vice', 'vice', rows, '副职领导审核', '待副职领导审核', 'vice', 'todo.html', 'history.html', 'vice', '通过，报送学生一审', pc, n,
+                  pass_msg='副职领导审核通过，稿件已报送校团委学生一审')
+    ledger_page('vice', 'vice', '审核记录', [('学校“教师节”表彰大会纪实', '09-25 15:40', '通过', '0.2 天', '及时'),
+                                             ('“学习强国”校园号运营经验交流会', '09-24 17:10', '退回', '0.6 天', '及时'),
+                                             ('迎新季校园宣传片', '09-23 14:05', '通过', '0.3 天', '及时')], pc + 'history.html', 'history.html', n)
+    messages_page('vice', 'vice', [
+        ('inbox', 'blue', '新的待审稿件', f'党委宣传部{VICE_NEWS["author"]}提交了《{VICE_NEWS["title"]}》', '20 分钟前', 'review.html', True),
+        ('alert', 'red', '审核超时提醒', '《校园秋景摄影征集精选》已超时 1 个工作日', '今天 09:00', 'todo.html', True)], pc + 'messages.html', n)
+
+
 # =============== 一审员 / 二审员 ===============
 def reviewers():
     for role, rows, node, status, upto, nxt in [('reviewer1', R1_TODO, '一审', '待一审', 'r1', '二审'), ('reviewer2', R2_TODO, '二审', '待二审', 'r2', '三审终审')]:
@@ -430,4 +455,4 @@ def admin():
 
 def build():
     c_home(); c_forms(); c_success(); c_my(); c_detail(); c_resubmit(); c_ranking(); c_messages(); c_profile()
-    teacher(); deputy(); reviewers(); admin()
+    teacher(); deputy(); vice(); reviewers(); admin()

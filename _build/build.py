@@ -4,7 +4,7 @@ import importlib
 import sys
 import lib
 
-MODULES = ['pages_corr', 'pages_teacher', 'pages_deputy', 'pages_reviewer', 'pages_admin', 'pages_mobile', 'page_index']
+MODULES = ['pages_corr', 'pages_teacher', 'pages_deputy', 'pages_vice', 'pages_reviewer', 'pages_admin', 'pages_mobile', 'page_index']
 
 
 def main():

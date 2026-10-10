@@ -1,7 +1,7 @@
 # PC 端 · 校团委管理员（三审终审 + 后台管理）
 from lib import icon, tag, type_tag, remain, stat, card, page_head, btn, a_btn, options, filter_select, search_box, \
     date_range, filter_bar, table, field, modal, pc_page, write
-from data import R3_TODO, FEATURED, ADOPTED, ARCHIVE, RANKING, TIMEOUTS, COLLEGES, typed, type_of, TYPE_NAME
+from data import R3_TODO, FEATURED, ADOPTED, ARCHIVE, RANKING, TIMEOUTS, COLLEGES, typed, type_of, TYPE_NAME, VICE_LEADERS, DEPTS
 from common import featured_flow_timeline, adopted_timeline, messages_page_body, article, gallery, info_kv, \
     op_log_table, rank_rows, donut, bars, hbars, college_detail_modal
 from review import review_body, reject_modal, q, type_review_pages, SAMPLE_STAGE
@@ -46,8 +46,8 @@ def term_range(start, end, name='term'):
 STAFF_CSV_HEAD = '姓名,工号,所在学院,职务,任期开始,任期结束'
 
 
-def staff_fields(college_lbl, duty_key, duty_ph, no_ph, term):
-    tip = '输入工号自动回显姓名、学院、职务，也可输入姓名检索'
+def staff_fields(college_lbl, duty_key, duty_ph, no_ph, term, units=None):
+    tip = f'输入工号自动回显姓名、{college_lbl[-2:]}、职务，也可输入姓名检索'
     lookup = (f'<div class="staff-picker"><input class="input" name="no" required data-staff-lookup data-label="工号" placeholder="请输入工号，如 {no_ph}" autocomplete="off">'
               f'<div class="picker-list"></div></div>'
               f'<div class="staff-tip"><span data-staff-msg data-default-msg="{tip}">{tip}</span>'
@@ -55,7 +55,7 @@ def staff_fields(college_lbl, duty_key, duty_ph, no_ph, term):
     more = 'js-staff-more'
     return (field('工号', lookup, req=True, full=True) +
             field('姓名', '<input class="input" name="name" required placeholder="请输入姓名">', req=True, cls=more) +
-            field(college_lbl, f'<select class="select" name="college" required>{options(COLLEGES, "请选择")}</select>', req=True, cls=more) +
+            field(college_lbl, f'<select class="select" name="college" required>{options(units or COLLEGES, "请选择")}</select>', req=True, cls=more) +
             field('职务', f'<input class="input" name="{duty_key}" required placeholder="{duty_ph}">', req=True, cls=more) +
             field('任期', term_range(*term), req=True, full=True, cls=more))
 
@@ -63,6 +63,7 @@ def staff_fields(college_lbl, duty_key, duty_ph, no_ph, term):
 # 角色规则为产品固定规则，不提供在线配置；在人员名单页静态说明
 ROLE_RULES = (f'<div class="notice notice-warn mb16">{icon("users", 15)}<div><b>角色规则（固定，不在后台配置）：</b>'
               '投稿人（全校师生）通过统一身份认证登录即可投稿，无需单独开通账号；副书记为投稿人所在学院的副书记，取自学工系统，按学院自动确定，无需配置；'
+              '副职领导按职能部门在“副职领导名单”中配置，审核本部门职能部门老师的稿件；'
               '一审员、二审员为学生干部，不能操作三审；三审终审仅限校团委管理员（宣传部老师），可查看全部稿件。</div></div>')
 
 
@@ -74,7 +75,7 @@ def switch(on=True, name=''):
 def dashboard():
     month = [('3月', [48, 30]), ('4月', [62, 35]), ('5月', [58, 40]), ('6月', [41, 22]), ('7月', [26, 12]), ('8月', [33, 17]), ('9月', [96, 58])]
     colleges = [(c, a, s) for c, s, a, b in RANKING[:10]]
-    nodes = [('指导老师审核', 0.8, 3.1, 96.9), ('副书记审核', 0.6, 2.4, 97.6), ('一审', 1.1, 5.4, 94.6), ('二审', 0.9, 4.2, 95.8), ('三审终审', 1.3, 6.0, 94.0)]
+    nodes = [('指导老师审核', 0.8, 3.1, 96.9), ('副书记审核', 0.6, 2.4, 97.6), ('副职领导审核', 0.7, 3.0, 97.0), ('一审', 1.1, 5.4, 94.6), ('二审', 0.9, 4.2, 95.8), ('三审终审', 1.3, 6.0, 94.0)]
     node_html = ''.join(f'<div class="hbar"><span class="hb-name">{n}</span><div class="hb-track"><i style="width:{ok}%;background:#1BB975"></i><i style="width:{100 - ok}%;background:#F6BCBE"></i></div><span class="hb-val">{ok}%</span></div>'
                         f'<div class="hint" style="margin:-8px 0 12px 120px">平均处理 {avg} 个工作日 · 超时率 {over}%</div>' for n, avg, over, ok in nodes)
     kpi = lambda total, news, video, photo, clue, adopt, rej, back, rate: f'''<div class="grid g5">
@@ -173,8 +174,8 @@ def archive():
                 f'<td><div class="ops"><a class="link" href="{typed("archive-detail.html", t)}">档案</a>{pub}</div></td></tr>')
     ctrls = (search_box('archTable', '标题 / 编号 / 投稿人') + filter_select('archTable', 'college', '全部学院', COLLEGES) +
              filter_select('archTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索']) +
-             filter_select('archTable', 'status', '审核流转状态', ['待指导老师审核', '待副书记审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']) +
-             filter_select('archTable', 'adopt', '是否终审采用', ['计入采用', '不计入采用']) + filter_select('archTable', 'identity', '投稿身份', ['学生', '教师']) + date_range('archTable'))
+             filter_select('archTable', 'status', '审核流转状态', ['待指导老师审核', '待副书记审核', '待副职领导审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']) +
+             filter_select('archTable', 'adopt', '是否终审采用', ['计入采用', '不计入采用']) + filter_select('archTable', 'identity', '投稿身份', ['学生', '教师', '职能部门老师']) + date_range('archTable'))
     body = f'''{page_head('稿件档案库', '全校所有稿件永久存档，支持跨学年历史查询与多条件组合检索', btn('导出', '', 'download', 'data-open="exportModal"'))}
 <div class="grid g5 mb16">{stat('archive', 'blue', 1024, '本学年档案')}{stat('file', 'blue', 532, '新闻')}{stat('video', 'orange', 146, '视频')}{stat('image', 'green', 248, '照片')}{stat('bulb', 'orange', 98, '线索')}</div>
 <div class="card">{filter_bar('archTable', ctrls)}
@@ -295,16 +296,16 @@ def timeout_ledger():
         op = f'<button class="link" data-toast="已向 {who} 发送催办提醒（站内消息 + 移动端推送）" data-toast-type="success">催办</button>' if st == '处理中' else '<span class="c-muted">—</span>'
         trs += (f'<tr data-node="{nd}" data-who="{who}" data-status="{st}"><td><a class="t-title" href="{typed("archive-detail.html", type_of(sid, title))}">{title}</a><div class="t-sub">{sid}</div></td>'
                 f'<td>{nd}</td><td>{who}</td><td>{arrive}</td><td>{done}</td><td class="overdue-txt">{over}</td><td>{tag(st)}</td><td>{op}</td></tr>')
-    nodes = [('指导老师审核', 12, 386), ('副书记审核', 5, 342), ('一审', 14, 259), ('二审', 8, 190), ('三审终审', 4, 67)]
+    nodes = [('指导老师审核', 12, 386), ('副书记审核', 5, 342), ('副职领导审核', 2, 64), ('一审', 14, 259), ('二审', 8, 190), ('三审终审', 4, 67)]
     nh = ''.join(f'<div class="hbar"><span class="hb-name">{n}</span><div class="hb-track"><i style="width:{o / t * 100 * 8:.0f}%;background:#DF2027"></i></div><span class="hb-val">{o / t * 100:.1f}%</span></div>' for n, o, t in nodes)
-    ctrls = filter_select('toTable', 'node', '全部节点', ['指导老师审核', '副书记审核', '一审', '二审', '三审']) + filter_select('toTable', 'who', '全部审核人', sorted(set(t[3] for t in TIMEOUTS))) + \
+    ctrls = filter_select('toTable', 'node', '全部节点', ['指导老师审核', '副书记审核', '副职领导审核', '一审', '二审', '三审']) + filter_select('toTable', 'who', '全部审核人', sorted(set(t[3] for t in TIMEOUTS))) + \
         filter_select('toTable', 'status', '全部状态', ['处理中', '已处理']) + search_box('toTable', '搜索稿件')
     body = f'''{page_head('审核超时台账', '稿件到达审核节点后超过 3 个工作日未处理即记为超时；时限可在“业务参数”中调整', btn('导出超时台账', 'btn-primary', 'download', 'data-action="export-csv" data-format="Excel" data-table="#toTable" data-filename="审核超时台账"'))}
 <div class="grid g5 mb16">{stat('alert', 'red', 38, '本学年超时次数')}{stat('clock', 'orange', 5, '当前超时未处理', '', None)}{stat('check', 'gray', 33, '超时后已处理')}{stat('check-circle', 'green', '94.8', '审核及时率', unit='%')}{stat('trend', 'red', '5.2', '审核超时率', unit='%')}</div>
 <div class="grid g-main">
   <div class="card">{filter_bar('toTable', ctrls)}{table('toTable', ['稿件', '超时节点', '审核人', ('到达节点时间', 'data-sort'), '处理时间', '超时时长', '状态', ('操作', 'class="no-export"')], [trs])}</div>
   <div class="grid" style="align-content:start">{card('各节点超时率', nh + '<div class="hint">超时率 = 超时次数 / 节点处理总数</div>', 'chart')}
-  {card('超时最多的审核人', ''.join(f'<div class="todo-item"><span class="rank-no{" r" + str(i + 1) if i < 3 else ""}">{i + 1}</span><div class="ti-main"><div class="ti-title">{n}</div><div class="ti-sub">{r}</div></div><b class="c-danger">{c} 次</b></div>' for i, (n, r, c) in enumerate([('刘子涵', '一审员', 6), ('王海峰', '指导老师', 4), ('周明轩', '二审员', 3), ('杨振华', '副书记', 2), ('陈思琪', '一审员', 2)])), 'users')}</div>
+  {card('超时最多的审核人', ''.join(f'<div class="todo-item"><span class="rank-no{" r" + str(i + 1) if i < 3 else ""}">{i + 1}</span><div class="ti-main"><div class="ti-title">{n}</div><div class="ti-sub">{r}</div></div><b class="c-danger">{c} 次</b></div>' for i, (n, r, c) in enumerate([('刘子涵', '一审员', 6), ('王海峰', '指导老师', 4), ('周明轩', '二审员', 3), ('杨振华', '副书记', 2), ('秦志远', '副职领导', 1)])), 'users')}</div>
 </div>'''
     page('timeout-ledger.html', '超时台账', body, ['审核管理', '超时台账'])
 
@@ -408,6 +409,44 @@ def reviewer_manage(level):
     page(f'reviewer{level}-manage.html', title, body, ['人员名单', title], modals)
 
 
+def vice_manage():
+    mid, tid, tpl = 'vModal', 'vTable', 'vTpl'
+    trs = ''
+    for name, no, dept, duty, term, cnt, on in VICE_LEADERS:
+        st = '在任' if on else '已离任'
+        trs += (f'<tr data-status="{st}" data-college="{dept}"><td><input type="checkbox" class="row-check" aria-label="选择"></td><td data-key="name" class="fw" style="color:var(--text)">{name}</td><td data-key="no">{no}</td><td data-key="college">{dept}</td>'
+                f'<td data-key="duty">{duty}</td><td data-key="term" class="nowrap">{term}</td><td class="num" data-key="count">{cnt}</td><td><span class="tag js-tag {"tag-success" if on else "tag-gray"}" data-on="在任" data-off="已离任">{st}</span></td>'
+                f'<td>{switch(on, name)}</td><td>{ops_edit(mid, "编辑副职领导")}</td></tr>')
+    tpl_row = (f'<template id="{tpl}"><tr data-status="在任" data-college="{{college}}"><td><input type="checkbox" class="row-check"></td><td data-key="name" class="fw" style="color:var(--text)">{{name}}</td><td data-key="no">{{no}}</td><td data-key="college">{{college}}</td>'
+               f'<td data-key="duty">{{duty}}</td><td data-key="term" class="nowrap">{{term}}</td><td class="num" data-key="count">0</td><td><span class="tag js-tag tag-success" data-on="在任" data-off="已离任">在任</span></td>'
+               f'<td>{switch(True)}</td><td>{ops_edit(mid, "编辑副职领导")}</td></tr></template>')
+    fields = staff_fields('所属部门', 'duty', '如：副部长 / 副处长', '201415', ('2026-09-01', '2028-08-31'), DEPTS)
+    modals = crud_modal(mid, fields, tid, tpl)
+    tmpl_csv = '姓名,工号,所属部门,职务,任期开始,任期结束\\n程雅静,201415,党委宣传部,副部长,2026-09-01,2028-08-31\\n马俊杰,200612,教务处,副处长,2026-09-01,2028-08-31'
+    modals += modal('vImport', '批量导入副职领导', f'''<div class="notice notice-info mb16">{icon('info', 15)}<div>请下载模板，按列填写 <b>姓名、工号、所属部门、职务、任期开始、任期结束</b>（日期格式 2026-09-01，UTF-8 编码 CSV）。同一部门可导入多人；已在名单中的工号、缺少字段的行会自动跳过。</div></div>
+<div class="flex gap8 mb16">{btn('下载导入模板', '', 'download', f'data-action="export-csv" data-csv="{tmpl_csv}" data-filename="副职领导导入模板" data-keep="1"')}</div>
+<label class="upload import-drop">{icon('upload', 26)}<b data-import-name>选择填写好的 CSV 文件</b><span class="hint">仅支持 .csv，选择后在下方预览校验结果</span><input type="file" accept=".csv,text/csv" data-import-file data-unit-label="所属部门" data-table="#{tid}"></label>
+<div class="import-preview mt16" data-import-preview></div>''',
+                    '<button class="btn" data-close>取消</button>' + btn('确认导入', 'btn-primary', 'check', f'data-action="staff-import" data-table="#{tid}" data-template="#{tpl}"'), 'modal-lg')
+    modals += modal('vTerm', '副职领导学年换届', f'''<div class="notice notice-warn mb16">{icon('alert', 15)}<div>勾选的人员<b>续任</b>：任期更新为新任期，保持在任；取消勾选的人员<b>离任</b>：标记“已离任”并停用账号，任期结束日改为新任期开始前一天。离任后若某部门已无在任副职领导，请及时补充，否则该部门稿件无人审核。</div></div>
+<form novalidate><div class="form-grid" style="grid-template-columns:1fr 1fr">{field('新任期', term_range('2027-09-01', '2029-08-31', 'newTerm'), req=True, full=True, hint='开始日期即换届生效日期，结束日期须晚于开始日期')}</div></form>
+<div class="term-head mt16"><label class="term-all"><input type="checkbox" data-term-all checked>全部续任</label><span class="hint" data-term-sum></span></div>
+<div class="term-list" data-term-list></div>''',
+                    '<button class="btn" data-close>取消</button>' + btn('确认换届', 'btn-primary', 'repeat', f'data-action="term-apply" data-table="#{tid}"'), 'modal-lg')
+    acts = (btn('导入', '', 'upload', 'data-action="staff-import-open" data-modal="vImport"') +
+            btn('导出', '', 'download', f'data-action="export-staff" data-table="#{tid}" data-unit-label="所属部门" data-filename="副职领导名单"') +
+            btn('学年换届', 'btn-outline', 'repeat', f'data-action="term-open" data-modal="vTerm" data-table="#{tid}"') +
+            btn('批量停用', 'btn-danger-o', 'x-circle', f'data-action="batch" data-table="#{tid}" data-value="已离任" data-danger="1" data-confirm="确认停用选中的 {{n}} 名副职领导吗？停用后将收回审核权限。" data-msg="已停用 {{n}} 名副职领导"') +
+            btn('新增副职领导', 'btn-primary', 'plus', f'data-action="crud-add" data-modal="{mid}" data-title="新增副职领导"'))
+    route = (f'<div class="notice notice-info mb16">{icon("flow", 15)}<div><b>审核路由（只读）：</b>职能部门老师投稿后，稿件进入投稿人<b>所属部门</b>在本名单中“在任”的副职领导待办；'
+             '同一部门配置多名副职领导时，稿件同时出现在每个人的待办中，任一人完成审核即可，其他人的待办自动移除。副职领导通过后进入校团委学生一审，退回则回到投稿人。</div></div>')
+    body = f'''{page_head('副职领导名单', '按职能部门配置副职领导，审核本部门职能部门老师的投稿；同一部门可配置多人', acts)}
+{route}{ROLE_RULES}
+<div class="card"><div class="filters">{filter_select(tid, 'college', '全部部门', DEPTS)}{filter_select(tid, 'status', '全部状态', ['在任', '已离任'])}{search_box(tid, '搜索姓名 / 工号 / 部门')}</div>
+{table(tid, [('<input type="checkbox" class="check-all" aria-label="全选">', 'class="no-export" style="width:36px"'), '姓名', '工号', '所属部门', '职务', '任期', ('累计审核', 'data-sort'), '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl_row}'''
+    page('vice-manage.html', '副职领导名单', body, ['人员名单', '副职领导名单'], modals)
+
+
 def teacher_manage():
     y1, y2 = '2026-09-01 至 2027-08-31', '2025-09-01 至 2027-08-31'
     teachers = [('王海峰', '200108', '计算机学院', '辅导员', 36, y2), ('李晓琳', '201532', '计算机学院', '辅导员', 21, y1), ('赵明哲', '199921', '商学院', '团委书记', 28, y2),
@@ -425,7 +464,7 @@ def teacher_manage():
 <div class="flex gap8 mb16">{btn('下载导入模板', '', 'download', f'data-action="export-csv" data-csv="{tmpl_csv}" data-filename="指导老师导入模板"')}</div>
 <form novalidate>{'<div class="upload-field"><label class="upload">' + icon('upload', 26) + '<b>上传填写好的模板</b><span class="hint">支持 .xlsx / .csv</span><input type="file" accept=".xlsx,.csv" data-upload="doc" data-required data-min-files="1" data-label="导入文件"></label><div class="files"></div></div>'}</form>''',
                                                                    '<button class="btn" data-close>取消</button><button class="btn btn-primary" data-action="save" data-msg="导入成功：新增 12 名、更新 3 名指导老师">开始导入</button>')
-    body = ROLE_RULES + f'''{page_head('指导老师名单', '学生投稿只能从该名单中选择指导老师；投稿时默认预填上次选择的指导老师，也可搜索其他学院老师', btn('批量导入', '', 'upload', 'data-open="importModal"') + btn('新增指导老师', 'btn-primary', 'plus', 'data-action="crud-add" data-modal="tModal" data-title="新增指导老师"'))}
+    body = ROLE_RULES + f'''{page_head('指导老师名单', '学生投稿时，下拉默认只列出与投稿人同一学院、且已在本名单中的指导老师；其他老师需在投稿页输入工号查找', btn('批量导入', '', 'upload', 'data-open="importModal"') + btn('新增指导老师', 'btn-primary', 'plus', 'data-action="crud-add" data-modal="tModal" data-title="新增指导老师"'))}
 <div class="card"><div class="filters">{filter_select('tTable', 'college', '全部学院', COLLEGES)}{search_box('tTable', '搜索姓名 / 工号')}</div>
 {table('tTable', ['姓名', '工号', '所属学院', '职务', '任期', ('指导稿件数', 'data-sort'), '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl}'''
     page('teacher-manage.html', '指导老师名单', body, ['人员名单', '指导老师名单'], modals)
@@ -441,7 +480,7 @@ def params():
     body = f'''{page_head('业务参数配置', '业务规则全部通过参数配置，修改后即时生效并记入操作日志', btn('保存全部参数', 'btn-primary', 'save', 'data-action="save" data-form="#paramForm" data-confirm="参数修改将影响后续所有稿件的审核计时与统计，确认保存吗？" data-msg="业务参数已保存并生效，已记入操作日志"'))}
 <form id="paramForm" novalidate class="grid">
 <div class="card"><div class="card-head"><div class="card-title">{icon('clock', 18)}审核时效</div><span class="hint">稿件到达节点开始计时，超时自动记入超时台账</span></div>
-<div class="card-body"><div class="form-grid" style="grid-template-columns:repeat(5,1fr)">{field('指导老师审核时限', num(3, 't0'), req=True)}{field('副书记审核时限', num(3, 'td'), req=True)}{field('一审时限', num(3, 't1'), req=True)}{field('二审时限', num(3, 't2'), req=True)}{field('三审时限', num(3, 't3'), req=True)}</div>
+<div class="card-body"><div class="form-grid" style="grid-template-columns:repeat(6,1fr)">{field('指导老师审核时限', num(3, 't0'), req=True)}{field('副书记审核时限', num(3, 'td'), req=True)}{field('副职领导审核时限', num(3, 'tv'), req=True)}{field('一审时限', num(3, 't1'), req=True)}{field('二审时限', num(3, 't2'), req=True)}{field('三审时限', num(3, 't3'), req=True)}</div>
 <div class="form-grid mt16">{field('超时预警提前量', '<div class="flex gap8"><input type="number" class="input" value="1" min="0" step="0.5" style="width:120px" required><span class="c-muted">个工作日（剩余时限低于该值时标记“即将超时”）</span></div>', req=True)}
 {field('节假日（不计入工作日）', f'<div class="chip-input"><div class="chips">{holidays}</div><div class="flex gap8"><input class="input" placeholder="如：2027-05-01 至 05-05 劳动节" style="flex:1"><button type="button" class="btn" data-action="add-chip">{icon("plus", 14)}添加</button></div></div>')}</div></div></div>
 <div class="grid g2">
@@ -461,15 +500,16 @@ def params():
 def opinion_templates():
     data = [('指导老师审核', '稿件导语不够精炼，请突出活动核心亮点后重新提交。', 42), ('指导老师审核', '配图数量不足或清晰度不够，请补充 3 张以上高清原图。', 37),
             ('指导老师审核', '活动时间、地点等要素缺失，请补全新闻五要素。', 29), ('副书记审核', '稿件政治导向需进一步把关，请修改相关表述后重新提交。', 9),
-            ('副书记审核', '活动信息需与学院官方发布保持一致，请补充核实来源。', 6), ('一审 / 二审', '标题过长，请控制在 30 字以内并突出新闻点。', 88),
+            ('副书记审核', '活动信息需与学院官方发布保持一致，请补充核实来源。', 6),
+            ('副职领导审核', '涉及部门工作的数据和表述需与部门正式发布口径一致，请核对后修改。', 3), ('一审 / 二审', '标题过长，请控制在 30 字以内并突出新闻点。', 88),
             ('一审 / 二审', '正文存在错别字和标点不规范问题，请仔细校对。', 64), ('一审 / 二审', '图片涉及人物肖像，请确认已取得本人同意。', 21),
             ('一审 / 二审', '云盘链接为临时分享链接，请更换为永久有效链接。', 18), ('三审终审', '稿件时效性已过，不予采用。', 15), ('三审终审', '同类题材近期已有报道，不予采用。', 12)]
     trs = ''.join(f'<tr data-scope="{s}"><td data-key="scope">{s}</td><td data-key="content" style="color:var(--text)">{c}</td><td class="num">{n}</td><td>{ops_edit("tplModal", "编辑意见模板")}</td></tr>' for s, c, n in data)
     tpl = f'<template id="tplTpl"><tr><td data-key="scope">{{scope}}</td><td data-key="content" style="color:var(--text)">{{content}}</td><td class="num">0</td><td>{ops_edit("tplModal", "编辑意见模板")}</td></tr></template>'
-    fields = (field('适用环节', '<select class="select" name="scope" required><option value="">请选择</option><option>指导老师审核</option><option>副书记审核</option><option>一审 / 二审</option><option>三审终审</option></select>', req=True, full=True) +
+    fields = (field('适用环节', '<select class="select" name="scope" required><option value="">请选择</option><option>指导老师审核</option><option>副书记审核</option><option>副职领导审核</option><option>一审 / 二审</option><option>三审终审</option></select>', req=True, full=True) +
               field('意见内容', '<textarea class="textarea" name="content" required maxlength="200" placeholder="请输入常用审核意见"></textarea>', req=True, full=True))
     body = f'''{page_head('审核意见模板', '维护常用审核意见，审核人员在退回 / 终审时可一键插入，提升审核效率', btn('新增模板', 'btn-primary', 'plus', 'data-action="crud-add" data-modal="tplModal" data-title="新增意见模板"'))}
-<div class="card"><div class="filters">{filter_select('tplTable', 'scope', '全部环节', ['指导老师审核', '副书记审核', '一审 / 二审', '三审终审'])}{search_box('tplTable', '搜索意见内容')}</div>
+<div class="card"><div class="filters">{filter_select('tplTable', 'scope', '全部环节', ['指导老师审核', '副书记审核', '副职领导审核', '一审 / 二审', '三审终审'])}{search_box('tplTable', '搜索意见内容')}</div>
 {table('tplTable', ['适用环节', '意见内容', ('使用次数', 'data-sort'), ('操作', 'class="no-export"')], [trs])}</div>{tpl}'''
     page('opinion-templates.html', '审核意见模板', body, ['系统配置', '审核意见模板'], crud_modal('tplModal', fields, 'tplTable', 'tplTpl'))
 
@@ -547,7 +587,7 @@ def operation_logs():
 def messages():
     items = [
         ('inbox', 'blue', '新的待三审稿件', f'《{FEATURED["title"]}》已通过二审，等待您终审', '15 分钟前', 'final-review.html', True),
-        ('alert', 'red', '审核超时预警', '当前有 6 篇稿件超时未处理，涉及指导老师、副书记、一审、二审、三审节点', '今天 09:00', 'timeout-ledger.html', True),
+        ('alert', 'red', '审核超时预警', '当前有 7 篇稿件超时未处理，涉及指导老师、副书记、副职领导、一审、二审、三审节点', '今天 09:00', 'timeout-ledger.html', True),
         ('clock', 'orange', '三审即将超时', '《校友返校讲述“北斗”研发故事》剩余 0.5 个工作日', '今天 09:00', 'final-list.html', True),
         ('globe', 'blue', '待发布升华网', '有 3 篇已采用新闻尚未标记为已发布', '昨天 17:00', 'publish-export.html', True),
         ('bell', 'blue', '系统通知', '通用敏感词库已更新至 v2026.09，新增 326 条', '09-01 08:00', 'sensitive-words.html'),
@@ -558,5 +598,5 @@ def messages():
 def build():
     dashboard(); final_list(); final_done(); final_cc(); final_batch(); final_review(); final_review(True); archive(); archive_detail(); publish_export()
     clue_tracking(); timeout_ledger(); ranking(); reviewer_manage(1); reviewer_manage(2)
-    teacher_manage(); params(); opinion_templates()
+    teacher_manage(); vice_manage(); params(); opinion_templates()
     sensitive_words(); operation_logs(); messages()

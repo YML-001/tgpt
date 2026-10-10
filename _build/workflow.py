@@ -1,7 +1,7 @@
 # 统一待办：对齐智慧学工“我的待办”模块（待办 / 已办 / 催办抄送 / 批量审批 / 办理页 / 详情页）
 from datetime import datetime, timedelta
 from lib import icon, tag, btn, a_btn, filter_select, filter_bar, table
-from data import TYPE_NAME, typed, deputy_of
+from data import TYPE_NAME, typed, deputy_of, vice_of
 
 NAMES = ['陈雨桐', '黄思远', '孙铭泽', '郭晓彤', '林嘉懿', '周子墨', '许若彤', '唐诗涵', '高子轩', '梁思雨', '韩博文', '宋可欣']
 TIMING = {'over': '已超时', 'warn': '即将超时', 'ok': '正常'}
@@ -15,6 +15,11 @@ def flow_name(t, title):
     return f'{TYPE_NAME[t]}审核：《{title}》'
 
 
+def node_label(node, ident):
+    """职能部门老师流程中，一审、二审显示为学生一审、学生二审"""
+    return {'一审': '学生一审', '二审': '学生二审'}.get(node, node) if ident == '职能部门老师' else node
+
+
 def flow_type(flow):
     return next((t for t, n in TYPE_NAME.items() if flow.startswith(n)), '新闻')
 
@@ -26,6 +31,9 @@ def norm(rows, kind):
         if kind == 'teacher':
             sid, title, t, author, time, rem, lv = r
             out.append(dict(sid=sid, title=title, t=t, col='计算机学院', ident='学生', author=author, start=time, arrive=time, rem=rem, lv=lv))
+        elif kind == 'vice':
+            sid, title, t, author, dept, time, rem, lv = r
+            out.append(dict(sid=sid, title=title, t=t, col=dept, ident='职能部门老师', author=author, start=time, arrive=time, rem=rem, lv=lv))
         elif kind == 'deputy':
             sid, title, t, author, ident, time, rem, lv = r
             start = shift(time, 3 + 46 / 60) if ident == '学生' else time
@@ -66,7 +74,7 @@ def todo_body(tid, rows, node, handle_href):
         trs += (f'<tr{over} data-row-id="{d["sid"]}" data-level="{d["lv"]}" data-timing="{TIMING[d["lv"]]}" data-type="{d["t"]}" data-college="{d["col"]}" '
                 f'data-flow="{fn} {d["sid"]}" data-starter="{d["author"]} {d["col"]}">'
                 f'<td class="seq">{i + 1}</td><td><a class="t-title" href="{h}">{fn}</a><div class="t-sub">{d["sid"]}</div></td>'
-                f'<td>{node}</td><td>{starter(d)}</td><td>{d["start"]}</td><td>{d["arrive"]}</td>'
+                f'<td>{node_label(node, d["ident"])}</td><td>{starter(d)}</td><td>{d["start"]}</td><td>{d["arrive"]}</td>'
                 f'<td><div class="ops"><a class="link" href="{h}">办理</a></div></td></tr>')
     ctrls = (text_filter(tid, 'flow', '流程名称', '请输入') + text_filter(tid, 'starter', '发起人', '请输入姓名') +
              filter_select(tid, 'timing', '全部时效', ['已超时', '即将超时', '正常']))
@@ -149,8 +157,9 @@ def batch_body(rows, node, handle_href, tpl='review'):
 
 # ---------- 节点流程图 ----------
 def node_chart(identity='学生', cur=1, back_at=None, end='采用归档'):
-    names = (['开始', '指导老师审核', '副书记审核', '一审', '二审', '三审终审', end] if identity == '学生'
-             else ['开始', '副书记审核', '一审', '二审', '三审终审', end])
+    names = {'学生': ['开始', '指导老师审核', '副书记审核', '一审', '二审', '三审终审', end],
+             '职能部门老师': ['开始', '副职领导审核', '学生一审', '学生二审', '三审终审', end]}.get(
+        identity, ['开始', '副书记审核', '一审', '二审', '三审终审', end])
     out = []
     for i, n in enumerate(names):
         if back_at is not None and i == back_at:
@@ -170,6 +179,9 @@ def bd_grid(cells):
 
 
 def base_cells(sub, start, arrive):
+    if sub['identity'] == '职能部门老师':
+        return [('稿件编号', sub['id']), ('稿件类型', TYPE_NAME[sub['type']]), ('投稿人', f'{sub["author"]}（职能部门老师）'), ('所属部门', sub['college']),
+                ('副职领导', vice_of(sub['college'])), ('审核路由', '按所属部门的副职领导名单'), ('流程发起时间', start), ('到达本节点时间', arrive)]
     return [('稿件编号', sub['id']), ('稿件类型', TYPE_NAME[sub['type']]), ('投稿人', f'{sub["author"]}（{sub["identity"]}）'), ('所属学院', sub['college']),
             ('指导老师', sub.get('teacher', '—') if sub['identity'] == '学生' else '—（教师投稿无需指定）'),
             ('副书记', f'{deputy_of(sub["college"])} · 学工系统'), ('流程发起时间', start), ('到达本节点时间', arrive)]

@@ -1,20 +1,35 @@
 # 稿件详情：审核流转记录、四类稿件的完整字段展示、PC / 移动端详情布局（各角色共用）
 from datetime import datetime, timedelta
 from lib import icon, tag, type_tag, timeline, card, flow_steps
-from data import TYPE_NAME, deputy_of
+from data import TYPE_NAME, deputy_of, vice_of
 from common import counted, op_log_table
 
-NODE = {'teacher': '指导老师审核', 'deputy': '副书记审核', 'r1': '一审', 'r2': '二审', 'r3': '三审终审'}
-STATUS = {'teacher': '待指导老师审核', 'deputy': '待副书记审核', 'r1': '待一审', 'r2': '待二审', 'r3': '待三审'}
+NODE = {'teacher': '指导老师审核', 'deputy': '副书记审核', 'vice': '副职领导审核', 'r1': '一审', 'r2': '二审', 'r3': '三审终审'}
+STATUS = {'teacher': '待指导老师审核', 'deputy': '待副书记审核', 'vice': '待副职领导审核', 'r1': '待一审', 'r2': '待二审', 'r3': '待三审'}
 REVIEWER = {'r1': '刘子涵（一审员）', 'r2': '周明轩（二审员）', 'r3': '张静（校团委管理员）'}
-PASS_OP = {'teacher': '内容基本符合要求，同意报送。', 'deputy': '内容导向正确，同意报送校团委一审。', 'r1': '要素齐全，同意流转二审。',
+PASS_OP = {'teacher': '内容基本符合要求，同意报送。', 'deputy': '内容导向正确，同意报送校团委一审。', 'vice': '已核对部门工作信息，同意报送校团委学生一审。',
+           'r1': '要素齐全，同意流转二审。',
            'r2': '内容扎实，同意报送终审。'}
-STEP_HOURS = {'teacher': 3.75, 'deputy': 2.4, 'r1': 18.75, 'r2': 6.3, 'r3': 20.5}
+STEP_HOURS = {'teacher': 3.75, 'deputy': 2.4, 'vice': 2.6, 'r1': 18.75, 'r2': 6.3, 'r3': 20.5}
+
+
+ROLE_USER_VICE = '秦志远'
+FLOW_HINT = {'学生': '学生稿件：指导老师 → 副书记 → 一审 → 二审 → 三审终审；副书记为投稿人所在学院副书记，取自学工系统。',
+             '教师': '教师稿件：副书记 → 一审 → 二审 → 三审终审；副书记为投稿人所在学院副书记，取自学工系统。',
+             '职能部门老师': '职能部门老师稿件：副职领导 → 学生一审 → 学生二审 → 三审终审；副职领导按投稿人所属部门从“副职领导名单”确定，同部门多人时任一人审核即可。'}
 
 
 def stages(identity):
-    """学生：指导老师 → 副书记 → 一审 → 二审 → 三审；教师：副书记 → 一审 → 二审 → 三审"""
+    """学生：指导老师 → 副书记 → 一审 → 二审 → 三审；教师：副书记 → 一审 → 二审 → 三审；职能部门老师：副职领导 → 学生一审 → 学生二审 → 三审"""
+    if identity == '职能部门老师':
+        return ['vice', 'r1', 'r2', 'r3']
     return (['teacher'] if identity == '学生' else []) + ['deputy', 'r1', 'r2', 'r3']
+
+
+def node_name(sub, st):
+    if sub['identity'] == '职能部门老师' and st in ('r1', 'r2'):
+        return {'r1': '学生一审', 'r2': '学生二审'}[st]
+    return NODE[st]
 
 
 def who(sub, st):
@@ -22,6 +37,8 @@ def who(sub, st):
         return f'{sub["teacher"].split("（")[0]}（指导老师）'
     if st == 'deputy':
         return deputy_of(sub['college'])
+    if st == 'vice':
+        return f'{ROLE_USER_VICE}（{sub["college"]}副职领导）'
     return REVIEWER[st]
 
 
@@ -53,9 +70,9 @@ def flow_records(sub, stage):
     elif stage == 'rejected':
         items.append(('', '三审终审：不采用', tag('已终审不采用'), f'{REVIEWER["r3"]} · {times["r3"]} · 不计入采用', '同类题材近期已有报道，不予采用。', ''))
     else:
-        items.append(('primary', f'到达{NODE[stage]}', tag(STATUS[stage]), f'{arrive_time(sub, stage)} · 系统 · 计时开始（3 个工作日）', '', ''))
+        items.append(('primary', f'到达{node_name(sub, stage)}', tag(STATUS[stage]), f'{arrive_time(sub, stage)} · 系统 · 计时开始（3 个工作日）', '', ''))
     for st in reversed([x for x in done if x != 'r3']):
-        items.append(('ok', f'{NODE[st]}通过', '', f'{who(sub, st)} · {times[st]}', PASS_OP[st], ''))
+        items.append(('ok', f'{node_name(sub, st)}通过', '', f'{who(sub, st)} · {times[st]}', PASS_OP[st], ''))
     items.append(('ok', '提交投稿（v1）', '', f'{sub["author"]}（{sub["identity"]} · {sub["college"]}）· {sub["time"]}', '', ''))
     return timeline(items)
 
@@ -78,9 +95,9 @@ def default_logs(sub, stage):
     rows = []
     if stage in ('adopted', 'rejected'):
         rows.append((times['r3'], REVIEWER['r3'], '三审终审：' + ('采用，统计归档改为“计入采用”' if stage == 'adopted' else '不采用'), '10.12.8.10'))
-    ips = {'teacher': '10.12.30.8', 'deputy': '10.12.30.2', 'r1': '10.12.8.51', 'r2': '10.12.8.66'}
+    ips = {'teacher': '10.12.30.8', 'deputy': '10.12.30.2', 'vice': '10.12.6.21', 'r1': '10.12.8.51', 'r2': '10.12.8.66'}
     for st in reversed([x for x in done if x != 'r3']):
-        rows.append((times[st], who(sub, st), f'{NODE[st]}通过', ips[st]))
+        rows.append((times[st], who(sub, st), f'{node_name(sub, st)}通过', ips[st]))
     rows.append((sub['time'], f'{sub["author"]}（投稿人）', '提交投稿，生成 v1', '10.12.34.21'))
     return rows
 
@@ -169,6 +186,10 @@ def sub_content(sub):
 
 
 def base_rows(sub, status):
+    if sub['identity'] == '职能部门老师':
+        return [('稿件编号', sub['id']), ('稿件类型', type_tag(sub['type'])), ('投稿人', sub['author']), ('投稿身份', '职能部门老师'),
+                ('所属部门', sub['college']), ('副职领导', f'{vice_of(sub["college"])}<span class="hint">任一人审核即可</span>'),
+                ('投稿时间', sub['time']), ('当前状态', tag(status)), ('是否计入采用', counted(status))]
     teacher = sub['teacher'] if sub['identity'] == '学生' else '—（教师投稿无需指定）'
     return [('稿件编号', sub['id']), ('稿件类型', type_tag(sub['type'])), ('投稿人', sub['author']), ('投稿身份', sub['identity']),
             ('所属学院', sub['college']), ('指导老师', teacher), ('副书记', f'{deputy_of(sub["college"])}<span class="hint">学工系统</span>'),
@@ -182,7 +203,7 @@ def full_detail(sub, status, stage, logs=None, versions=None, side='', head_extr
     from workflow import node_chart
     panels = (f'<div class="tab-panel on card-body" data-panel="content">{sub_content(sub)}</div>'
               f'<div class="tab-panel card-body" data-panel="chart"><div class="wf-flow-panel">{node_chart(sub["identity"], chart_cur(sub["identity"], stage))}</div>'
-              f'<div class="hint mt12">{"学生稿件：指导老师 → 副书记 → 一审 → 二审 → 三审终审" if sub["identity"] == "学生" else "教师稿件：副书记 → 一审 → 二审 → 三审终审"}；副书记为投稿人所在学院副书记，取自学工系统。</div></div>'
+              f'<div class="hint mt12">{FLOW_HINT[sub["identity"]]}</div></div>'
               f'<div class="tab-panel card-body" data-panel="flow">{flow_records(sub, stage)}</div>'
               + (f'<div class="tab-panel card-body" data-panel="ver">{versions}</div>' if versions else '')
               + f'<div class="tab-panel" data-panel="log">{op_log_table(logs or default_logs(sub, stage))}</div>')
@@ -240,6 +261,9 @@ def m_content(sub):
 
 
 def m_base(sub, status):
+    if sub['identity'] == '职能部门老师':
+        return m_kv([('稿件编号', sub['id']), ('类型', TYPE_NAME[sub['type']]), ('所属部门', sub['college']), ('投稿人', f'{sub["author"]}（职能部门老师）'),
+                     ('副职领导', vice_of(sub['college'])), ('投稿时间', sub['time']), ('当前状态', tag(status)), ('计入采用', counted(status))])
     teacher = sub['teacher'] if sub['identity'] == '学生' else '—（教师投稿无需指定）'
     return m_kv([('稿件编号', sub['id']), ('类型', TYPE_NAME[sub['type']]), ('学院', sub['college']), ('投稿人', f'{sub["author"]}（{sub["identity"]}）'),
                  ('指导老师', teacher), ('副书记', deputy_of(sub['college'])), ('投稿时间', sub['time']), ('当前状态', tag(status)), ('计入采用', counted(status))])
@@ -253,6 +277,6 @@ def sample_for(t, row=None):
     if row:
         base.update({k: v for k, v in row.items() if v})
         base.pop('times', None)
-        if base['identity'] == '教师':
+        if base['identity'] != '学生':
             base['teacher'] = '—'
     return base

@@ -2,7 +2,7 @@
 from lib import (icon, tag, type_tag, stat, card, page_head, btn, a_btn, options, filter_select, search_box,
                  date_range, filter_bar, table, field, modal, flow_steps, editor, upload_field, teacher_picker,
                  pc_page, write)
-from data import MY_SUBS, RANKING, IMG, ARCHIVE, TYPE_NAME, VIDEO, PHOTO, CLUE, typed
+from data import MY_SUBS, RANKING, IMG, ARCHIVE, TYPE_NAME, VIDEO, PHOTO, CLUE, typed, VICE_DEPTS
 from detail import sub_content, full_detail
 from common import (RETURNED, RETURN_OPINIONS, info_kv, returned_timeline, op_log_table,
                     messages_page_body, rank_rows, donut, bars, college_detail_modal)
@@ -10,7 +10,7 @@ from common import (RETURNED, RETURN_OPINIONS, info_kv, returned_timeline, op_lo
 R = 'correspondent'
 P = 'pc/correspondent/'
 
-GROUP = {'草稿': '草稿', '待指导老师审核': '审核中', '待副书记审核': '审核中', '待一审': '审核中', '待二审': '审核中', '待三审': '审核中',
+GROUP = {'草稿': '草稿', '待指导老师审核': '审核中', '待副书记审核': '审核中', '待副职领导审核': '审核中', '待一审': '审核中', '待二审': '审核中', '待三审': '审核中',
          '已退回': '已退回', '已终审采用': '已采用', '已发布': '已采用', '已终审不采用': '未采用'}
 
 
@@ -34,20 +34,28 @@ def identity_section(identity='学生', teacher='王海峰（计算机学院）'
     s_chk = ' checked' if identity == '学生' else ''
     t_chk = ' checked' if identity == '教师' else ''
     radios = (f'<div class="radio-group"><label class="radio-card"><input type="radio" name="identity" value="学生"{s_chk} required>学生</label>'
-              f'<label class="radio-card"><input type="radio" name="identity" value="教师"{t_chk}>教师</label></div>')
+              f'<label class="radio-card"><input type="radio" name="identity" value="教师"{t_chk}>教师</label>'
+              f'<label class="radio-card"><input type="radio" name="identity" value="职能部门老师">职能部门老师</label></div>')
+    dept = options(VICE_DEPTS, '请选择所属部门', '党委宣传部')
+    guide = teacher_picker(teacher)
+    leader = teacher_picker('秦志远（党委宣传部）', 'leader', 'vice')
     return f'''<div class="form-section"><div class="form-section-title">投稿人信息<span class="hint">所有稿件均记录投稿人、身份、学院与投稿时间</span></div>
 <div class="form-grid g3c">
 {field('投稿人姓名', '<input class="input" value="陈雨桐" disabled>', hint='取自统一身份认证，不可修改')}
 {field('所属学院', '<input class="input" value="计算机学院" disabled>', hint='所属学院取自统一身份认证，稿件计入本院统计')}
 {field('投稿人身份', radios, req=True)}
-<div class="field full" data-show-when="identity=学生"><label class="lbl req">指导老师</label>{teacher_picker(teacher)}
-<div class="hint">默认预填上次选择的指导老师；只能从指导老师名单中选择，可输入姓名 / 工号搜索其他学院老师。学生稿件依次经过指导老师审核、学院副书记审核，通过后进入校团委一审。</div></div>
-<div class="field full hidden" data-show-when="identity=教师"><div class="notice notice-info">{icon("info", 15)}<div>教师投稿无需指定指导老师，提交后先由<b>本院副书记</b>审核（副书记取自学工系统，按所在学院自动确定），通过后进入校团委一审。</div></div></div>
+<div class="field full" data-show-when="identity=学生"><label class="lbl req">指导老师</label>{guide}
+<div class="hint">默认只列出本院（计算机学院）已配置的指导老师，可点选，也可在框内按姓名筛选。名单之外的老师请输入工号查找，回显姓名、单位、职务后再点选或按回车选定；查无此工号时不能手填姓名。学生稿件依次经过指导老师审核、学院副书记审核，通过后进入校团委一审。</div></div>
+<div class="field full hidden" data-show-when="identity=教师"><div class="notice notice-info">{icon("info", 15)}<div>教师投稿无需指定指导老师，也无需选择副书记，提交后先由<b>本院副书记</b>审核（副书记取自学工系统，按所在学院自动确定），通过后进入校团委一审。</div></div></div>
+<div class="field hidden" data-show-when="identity=职能部门老师"><label class="lbl req">所属部门</label><select class="select" name="dept" required data-label="所属部门">{dept}</select>
+<div class="hint">只能选择已在“副职领导名单”中配置的职能部门</div></div>
+<div class="field full hidden" data-show-when="identity=职能部门老师"><label class="lbl req">负责领导</label>{leader}
+<div class="hint">默认只列出所选部门已配置且在任的副职领导，不显示指导老师。名单之外的人员请输入工号查找后再选定，查无此工号时不能手填姓名。稿件进入该部门全体在任副职领导的待办，任一人审核即可；通过后进入校团委学生一审、学生二审和终审。</div></div>
 </div></div>'''
 
 
 def form_foot(sensitive, type_name):
-    confirm = '提交后稿件将进入审核流程（学生投稿：指导老师 → 副书记 → 一审；教师投稿：副书记 → 一审），审核期间不可修改。确认提交吗？'
+    confirm = '提交后稿件将进入审核流程（学生投稿：指导老师 → 副书记 → 一审；教师投稿：副书记 → 一审；职能部门老师投稿：副职领导 → 学生一审），审核期间不可修改。确认提交吗？'
     return f'''<div class="form-foot">
 <span class="draft-status" data-draft-status>{icon("clock", 14)}&nbsp;每 30 秒自动保存草稿</span>
 {a_btn('取消', 'my-submissions.html', '', None, 'data-confirm="当前内容已自动保存为草稿，确认离开本页吗？"')}
@@ -69,7 +77,7 @@ DURATION_INPUT = r'<input class="input" name="duration" required placeholder="�
 PHONE_INPUT = r'<input class="input" name="phone" required placeholder="11 位手机号" data-pattern="^1[3-9]\d{9}$" data-pattern-msg="请填写正确的 11 位手机号">'
 
 SECRET = f'<div class="notice notice-danger mb16">{icon("lock", 15)}<div><b>重要提示：涉密信息请勿上网。</b>稿件提交后将生成永久档案，全部修改与审核记录可追溯。</div></div>'
-DEMO_TIP = f'<div class="notice notice-warn mb16">{icon("zap", 15)}<div>演示提示：在标题或正文中输入“翻墙”可体验高危敏感词拦截，输入“最牛”可体验低危词提示；切换“教师 / 学生”身份可查看指导老师字段的联动。</div></div>'
+DEMO_TIP = f'<div class="notice notice-warn mb16">{icon("zap", 15)}<div>演示提示：在标题或正文中输入“翻墙”可体验高危敏感词拦截，输入“最牛”可体验低危词提示；切换“学生 / 教师 / 职能部门老师”可查看指导老师、负责领导字段的联动。</div></div>'
 
 
 def news_form(prefill=None, sensitive='#newsTitle,#newsIntro,#newsEditor'):
@@ -168,7 +176,7 @@ def submit_clue():
 
 # ---------- 6 提交成功 ----------
 def submit_success():
-    stu = f'''<div data-when-param-hide="identity=教师">
+    stu = f'''<div data-when-param-hide="identity=教师|职能部门老师">
   <p class="page-desc" style="font-size:14px">稿件已进入 <b class="c-warn">待指导老师审核</b>，指导老师王海峰将在 3 个工作日内处理；通过后由学院副书记审核，再进入校团委一审。审核结果会通过消息通知你。</p>
   <div class="card mt20" style="padding:20px">{flow_steps('学生', 1)}</div>
   <div class="flex gap12 mt24" style="justify-content:center">{a_btn('查看我的投稿', 'my-submissions.html?new=TG2026093005&identity=学生', 'btn-primary btn-lg', 'inbox')}{a_btn('查看稿件档案', 'submission-detail.html', 'btn-lg', 'file')}{a_btn('继续投稿', 'submit-news.html', 'btn-lg', 'plus')}</div>
@@ -178,11 +186,16 @@ def submit_success():
   <div class="card mt20" style="padding:20px">{flow_steps('教师', 1)}</div>
   <div class="flex gap12 mt24" style="justify-content:center">{a_btn('查看我的投稿', 'my-submissions.html?new=TG2026093005&identity=教师', 'btn-primary btn-lg', 'inbox')}{a_btn('查看稿件档案', 'submission-detail.html', 'btn-lg', 'file')}{a_btn('继续投稿', 'submit-news.html', 'btn-lg', 'plus')}</div>
 </div>'''
+    vice = f'''<div class="hidden" data-when-param="identity=职能部门老师">
+  <p class="page-desc" style="font-size:14px">职能部门老师投稿无需指导老师和副书记审核，稿件已进入 <b class="c-warn">待副职领导审核</b>，由所属部门（党委宣传部）的副职领导在 3 个工作日内处理，通过后进入校团委学生一审、学生二审和终审。</p>
+  <div class="card mt20" style="padding:20px">{flow_steps('职能部门老师', 1)}</div>
+  <div class="flex gap12 mt24" style="justify-content:center">{a_btn('查看我的投稿', 'my-submissions.html?new=TG2026093005&identity=职能部门老师', 'btn-primary btn-lg', 'inbox')}{a_btn('查看稿件档案', 'submission-detail.html', 'btn-lg', 'file')}{a_btn('继续投稿', 'submit-news.html', 'btn-lg', 'plus')}</div>
+</div>'''
     body = f'''<div class="card success-box">
 <div class="big-ic">{icon('check', 40)}</div>
 <h1 class="page-title" style="justify-content:center">投稿提交成功</h1>
 <div class="flex gap12 mt12" style="justify-content:center"><span class="tag tag-primary">稿件编号 TG2026093005</span><span class="tag tag-gray"><span data-param-text="type">新闻</span>投稿</span><span class="tag tag-gray">提交时间 2026-09-30 16:20</span></div>
-<div class="mt16">{stu}{tea}</div>
+<div class="mt16">{stu}{tea}{vice}</div>
 </div>'''
     page('submit-success.html', '提交成功', body, ['我的投稿', '提交成功'])
 
@@ -193,7 +206,8 @@ def my_submissions():
     new_row = (f'<tr class="hidden" data-when-param="new=TG2026093005" data-highlight data-group="审核中" data-type="新闻" data-date="2026-09-30">'
                f'<td><a class="t-title" href="submission-detail.html">【新提交】你刚刚提交的稿件</a><div class="t-sub">TG2026093005</div></td>'
                f'<td>{type_tag("新闻")}</td><td><span data-param-text="identity">学生</span></td><td>—</td><td>2026-09-30 16:20</td>'
-               f'<td><span data-when-param-hide="identity=教师">{tag("待指导老师审核")}</span><span class="hidden" data-when-param="identity=教师">{tag("待副书记审核")}</span></td>'
+               f'<td><span data-when-param-hide="identity=教师|职能部门老师">{tag("待指导老师审核")}</span><span class="hidden" data-when-param="identity=教师">{tag("待副书记审核")}</span>'
+               f'<span class="hidden" data-when-param="identity=职能部门老师">{tag("待副职领导审核")}</span></td>'
                f'<td><div class="ops"><a class="link" href="submission-detail.html">查看进度</a></div></td></tr>')
     rows.append(new_row)
     for sid, title, t, ident, teacher, time, st in MY_SUBS:
@@ -350,7 +364,7 @@ def college_stats():
   {panel('y25', 214, 131, 38, 27, [('9月', [14, 8]), ('10月', [16, 10]), ('11月', [18, 9]), ('12月', [15, 8]), ('3月', [17, 9]), ('4月', [21, 10]), ('5月', [19, 12]), ('6月', [11, 7])])}
   {panel('s1', 86, 52, 12, 9, [('9月', [52, 34]), ('10月', [0, 0]), ('11月', [0, 0]), ('12月', [0, 0])])}
 </div>
-<div class="card mt16"><div class="card-head"><div class="card-title">{icon('list', 18)}本院稿件明细</div><div class="flex gap8">{filter_select('ownTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索'])}{filter_select('ownTable', 'status', '全部状态', ['待指导老师审核', '待副书记审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布'])}</div></div>
+<div class="card mt16"><div class="card-head"><div class="card-title">{icon('list', 18)}本院稿件明细</div><div class="flex gap8">{filter_select('ownTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索'])}{filter_select('ownTable', 'status', '全部状态', ['待指导老师审核', '待副书记审核', '待副职领导审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布'])}</div></div>
 {table('ownTable', ['稿件', '类型', '投稿人', '身份', ('投稿日期', 'data-sort'), '状态'], [rows])}</div>'''
     page('college-stats.html', '本院投稿统计', body)
 
