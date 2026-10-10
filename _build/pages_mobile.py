@@ -13,12 +13,6 @@ DURATION_INPUT = r'<input class="input" name="duration" required placeholder="�
 PHONE_INPUT = r'<input class="input" name="phone" type="tel" inputmode="tel" required placeholder="11 位手机号" data-pattern="^1[3-9]\d{9}$" data-pattern-msg="请填写正确的 11 位手机号">'
 
 
-def remain_m(text, lv):
-    c = {'over': 'c-danger', 'warn': 'c-warn', 'ok': 'c-success'}[lv]
-    i = icon('alert', 12) if lv == 'over' else icon('clock', 12)
-    return f'<span class="{c} flex" style="gap:3px">{i}{text}</span>'
-
-
 def seg(items, target, key='group'):
     return '<div class="m-seg" data-tabs>' + ''.join(
         f'<button class="{"on" if i == 0 else ""}" data-tab="s{i}" data-filter-items="{target}" data-filter-key="{key}" data-filter-value="{v}">{n}</button>'
@@ -274,7 +268,7 @@ def review_list(rows, href='review.html'):
         ov = ' overdue' if lv == 'over' else ''
         out += (f'<a class="m-item{ov}" href="{typed(href, t)}" data-row-id="{sid}" data-level="{lv}"><div class="m-item-top"><div class="m-item-title">{title}</div></div>'
                 f'<div class="m-item-meta"><span>{icon(TYPE_ICON[t], 12)} {t}</span><span>{col}</span><span>{ident}投稿</span></div>'
-                f'<div class="m-item-foot"><span class="c-muted">到达 {time[5:]}</span>{remain_m(rem, lv)}</div></a>')
+                f'<div class="m-item-foot"><span class="c-muted">到达 {time[5:]}</span></div></a>')
     return out
 
 

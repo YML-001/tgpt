@@ -1,6 +1,6 @@
 # 统一待办：对齐智慧学工“我的待办”模块（待办 / 已办 / 催办抄送 / 批量审批 / 办理页 / 详情页）
 from datetime import datetime, timedelta
-from lib import icon, tag, remain, btn, a_btn, filter_select, filter_bar, table
+from lib import icon, tag, btn, a_btn, filter_select, filter_bar, table
 from data import TYPE_NAME, typed, deputy_of
 
 NAMES = ['陈雨桐', '黄思远', '孙铭泽', '郭晓彤', '林嘉懿', '周子墨', '许若彤', '唐诗涵', '高子轩', '梁思雨', '韩博文', '宋可欣']
@@ -66,11 +66,11 @@ def todo_body(tid, rows, node, handle_href):
         trs += (f'<tr{over} data-row-id="{d["sid"]}" data-level="{d["lv"]}" data-timing="{TIMING[d["lv"]]}" data-type="{d["t"]}" data-college="{d["col"]}" '
                 f'data-flow="{fn} {d["sid"]}" data-starter="{d["author"]} {d["col"]}">'
                 f'<td class="seq">{i + 1}</td><td><a class="t-title" href="{h}">{fn}</a><div class="t-sub">{d["sid"]}</div></td>'
-                f'<td>{node}</td><td>{starter(d)}</td><td>{d["start"]}</td><td>{d["arrive"]}</td><td data-value="{d["lv"]}">{remain(d["rem"], d["lv"])}</td>'
+                f'<td>{node}</td><td>{starter(d)}</td><td>{d["start"]}</td><td>{d["arrive"]}</td>'
                 f'<td><div class="ops"><a class="link" href="{h}">办理</a></div></td></tr>')
     ctrls = (text_filter(tid, 'flow', '流程名称', '请输入') + text_filter(tid, 'starter', '发起人', '请输入姓名') +
              filter_select(tid, 'timing', '全部时效', ['已超时', '即将超时', '正常']))
-    head = [seq_head(), '流程名称', '当前节点', '发起人', ('发起时间', 'data-sort'), ('到达时间', 'data-sort'), '剩余时限', ('操作', 'class="no-export"')]
+    head = [seq_head(), '流程名称', '当前节点', '发起人', ('发起时间', 'data-sort'), ('到达时间', 'data-sort'), ('操作', 'class="no-export"')]
     return f'''{search_block(tid, ctrls)}
 <div class="card wf-table">{table(tid, head, [trs], page_size=15)}</div>'''
 
@@ -130,7 +130,7 @@ def batch_body(rows, node, handle_href, tpl='review'):
         trs += (f'<tr data-row-id="{d["sid"]}" data-type="{d["t"]}" data-flow="{fn} {d["sid"]}" data-college="{d["col"]}" data-starter="{d["author"]}">'
                 f'<td><input type="checkbox" class="row-check" aria-label="选择"></td><td class="seq">{i + 1}</td>'
                 f'<td><a class="t-title" href="{typed(handle_href, d["t"])}">{fn}</a></td><td>{d["col"]}</td><td>{node}</td><td>{d["author"]}</td><td>{d["start"]}</td>'
-                f'<td>{remain(d["rem"], d["lv"])}</td><td><div class="ops"><a class="link" href="{typed(handle_href, d["t"])}">办理</a></div></td></tr>')
+                f'<td><div class="ops"><a class="link" href="{typed(handle_href, d["t"])}">办理</a></div></td></tr>')
     cats = [('全部待办', ''), ('新闻投稿审核', '新闻'), ('视频投稿审核', '视频'), ('照片投稿审核', '照片'), ('新闻线索审核', '线索')]
     cat_html = ''.join(f'<button class="wf-cat{" on" if i == 0 else ""}" data-tab="c{i}" data-filter-table="#{tid}" data-filter-key="type" data-filter-value="{v}">'
                        f'<span>{n}</span><em>{sum(1 for d in rows if not v or d["t"] == v)}</em></button>' for i, (n, v) in enumerate(cats))
@@ -138,7 +138,7 @@ def batch_body(rows, node, handle_href, tpl='review'):
     ops = (btn('批量通过', 'btn-batch-ok', 'check', f'data-action="batch" data-table="#{tid}" data-title="批量通过" data-confirm="确认将选中的 {{n}} 条待办批量{node}通过吗？批量通过不填写意见，请确认已逐篇核对内容。" data-msg="已批量通过 {{n}} 条稿件，已流转至下一环节"') +
            btn('批量不通过', 'btn-batch-no', 'x-circle', f'data-action="batch-reject" data-table="#{tid}" data-tpl="{tpl}"'))
     head = [('<input type="checkbox" class="check-all" aria-label="全选">', 'class="no-export" style="width:50px"'), seq_head(), '流程名称', '学院名称', '当前任务', '发起人',
-            ('发起时间', 'data-sort'), '剩余时限', ('操作', 'class="no-export"')]
+            ('发起时间', 'data-sort'), ('操作', 'class="no-export"')]
     return f'''<div class="card wf-sheet">{filter_bar(tid, ctrls)}
 <div class="wf-batch">
   <div class="wf-cats" data-tabs><div class="wf-cats-title">流程分类<em>{len(cats) - 1}</em></div>{cat_html}</div>
