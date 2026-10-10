@@ -82,7 +82,6 @@ PC_PAGES = {
         ('reviewer1-manage', '一审员名单', 'users', '新增、编辑、启用 / 停用、批量操作'),
         ('reviewer2-manage', '二审员名单', 'users', '按学年换届，批量替换'),
         ('teacher-manage', '指导老师名单', 'user', '维护可选指导老师，支持导入'),
-        ('role-permission', '角色权限配置', 'shield', '功能权限矩阵勾选、数据范围'),
         ('params', '业务参数', 'sliders', '审核时限、节假日、统计周期、类型字典'),
         ('opinion-templates', '审核意见模板', 'message', '各节点常用意见的增删改'),
         ('sensitive-words', '敏感词库', 'alert', '三个词库；“检测设置”弹窗可切换模式并试测'),
@@ -161,7 +160,7 @@ MATRIX = [
     ]),
     ('系统配置', [
         ('人员名单与账号', 'NNNNNNY'),
-        ('角色权限、业务参数', 'NNNNNNY'),
+        ('业务参数', 'NNNNNNY'),
         ('意见模板、敏感词库', 'NNNNNNY'),
         ('操作日志（只读）', 'NNNNNNY'),
     ]),
@@ -276,7 +275,7 @@ def entries():
          [('办理', 'pc/reviewer2/review.html'), ('已办', 'pc/reviewer2/my-ledger.html'), ('稿件档案 · 升华网素材', 'pc/reviewer2/submission-detail.html')]),
         ('PC 端 · 校团委管理员', '校团委宣传部 张静：三审终审、统计驾驶舱、发布、名单与系统配置', 'settings', '#1F77AD', 'pc/admin/dashboard.html', 1440,
          [('我的待办', 'pc/admin/final-list.html'), ('已办', 'pc/admin/final-done.html'), ('稿件档案库', 'pc/admin/archive.html'), ('升华网发布素材', 'pc/admin/publish-export.html'),
-          ('线索跟进', 'pc/admin/clue-tracking.html'), ('超时台账', 'pc/admin/timeout-ledger.html'), ('角色权限配置', 'pc/admin/role-permission.html')]),
+          ('线索跟进', 'pc/admin/clue-tracking.html'), ('超时台账', 'pc/admin/timeout-ledger.html'), ('一审员名单', 'pc/admin/reviewer1-manage.html')]),
         ('移动端 · 投稿人（全校师生）', '陈雨桐：随时投稿、查看进度、收到退回后修改重提', 'mobile', '#2A8DC7', 'mobile/correspondent/home.html', 1100,
          [('新闻投稿', 'mobile/correspondent/submit-news.html'), ('我的投稿', 'mobile/correspondent/my-submissions.html'),
           ('修改重提', 'mobile/correspondent/resubmit.html'), ('消息', 'mobile/correspondent/messages.html')]),
@@ -337,8 +336,8 @@ SCENARIOS = [
     ('clock', '超时台账', '每个节点默认 3 个工作日，剩余不足 1 天标橙、超时标红并记入台账；管理员按节点和人员查看及时率并催办。', [
         ('一审员', '待办 · 超时标红', 'pc/reviewer1/todo.html'), ('管理员', '超时台账', 'pc/admin/timeout-ledger.html'),
         ('管理员', '统计驾驶舱', 'pc/admin/dashboard.html')]),
-    ('shield', '人员、权限与参数', '新增 / 停用审核员，二审员按学年换届批量替换；修改权限矩阵、审核时限后保存即生效并写入操作日志。', [
-        ('管理员', '二审员名单', 'pc/admin/reviewer2-manage.html'), ('管理员', '角色权限配置', 'pc/admin/role-permission.html'),
+    ('shield', '人员与参数', '新增 / 停用审核员，二审员按学年换届批量替换；修改审核时限后保存即生效并写入操作日志。角色权限为固定规则，不在后台配置。', [
+        ('管理员', '二审员名单', 'pc/admin/reviewer2-manage.html'), ('管理员', '指导老师名单', 'pc/admin/teacher-manage.html'),
         ('管理员', '业务参数', 'pc/admin/params.html'), ('管理员', '操作日志', 'pc/admin/operation-logs.html')]),
     ('alert', '敏感词', '在高危、低危、白名单中维护词条；“检测设置”弹窗可切换语义 / 精准匹配并现场试测；投稿与审核页同步展示命中结果。', [
         ('管理员', '敏感词库 · 检测设置', 'pc/admin/sensitive-words.html'), ('投稿人', '投稿时检测', 'pc/correspondent/submit-news.html'),
@@ -400,9 +399,9 @@ def roles():
   <div><div class="notice notice-warn">{icon("alert", 15)}<div><b>全校师生均可投稿，无需单独开通账号。</b>区别只在投稿身份：学生稿件必须指定指导老师，经指导老师、学院副书记审核后进入校团委一审；教师稿件先由学院副书记审核，再进入一审。</div></div>
   <div class="mt12 fs13 sub">指导老师不固定属于某个角色名单，任何被学生指定的老师都能在“我的待办 · 待办”中看到该稿件，审核范围仅限指定本人的稿件。
   <div class="flex gap8 mt8 wrap"><a class="btn btn-light btn-sm" href="pc/correspondent/submit-news.html">{icon("user", 14)}查看指导老师选择</a><a class="btn btn-light btn-sm" href="pc/admin/teacher-manage.html">{icon("users", 14)}指导老师名单</a></div></div></div>
-  <div><div class="bold mb8">可配置，不写死</div>
-  <ul class="dots"><li>副书记是学工系统的固定角色（投稿人所在学院副书记），按学院自动路由，<b>无需配置</b></li><li>各角色功能权限在“角色权限配置”中勾选，保存后即生效</li><li>一审员、二审员名单按学年换届，可批量替换</li><li>审核时限、节假日、统计周期在“业务参数”中调整</li><li>所有配置变更写入只读的操作日志（含操作 IP）</li></ul>
-  <div class="flex gap8 mt8 wrap"><a class="btn btn-light btn-sm" href="pc/admin/role-permission.html">{icon("shield", 14)}角色权限配置</a><a class="btn btn-light btn-sm" href="pc/admin/params.html">{icon("sliders", 14)}业务参数</a></div></div>
+  <div><div class="bold mb8">固定规则与可调参数</div>
+  <ul class="dots"><li>角色与数据范围为产品固定规则（见上方矩阵），不提供在线权限配置</li><li>副书记是学工系统的固定角色（投稿人所在学院副书记），按学院自动路由，<b>无需配置</b></li><li>一审员、二审员为学生干部，不能操作三审；三审终审仅限校团委管理员，可查看全部稿件</li><li>一审员、二审员名单按学年换届，可批量替换</li><li>审核时限、节假日、统计周期在“业务参数”中调整</li><li>所有配置变更写入只读的操作日志（含操作 IP）</li></ul>
+  <div class="flex gap8 mt8 wrap"><a class="btn btn-light btn-sm" href="pc/admin/reviewer1-manage.html">{icon("users", 14)}一审员名单</a><a class="btn btn-light btn-sm" href="pc/admin/params.html">{icon("sliders", 14)}业务参数</a></div></div>
 </div>''')
     return (box('用户角色及数据权限', role_tbl) + '<div class="mt16"></div>' +
             box(f'主要功能权限矩阵（{n_func} 项功能 × {len(MATRIX_COLS)} 类角色）', mtx) + '<div class="mt16"></div>' + design)
@@ -420,7 +419,7 @@ FEATURE_MODS = [
     ('dashboard', '统计驾驶舱', '全校投稿总量、类型分布、学院对比与审核时效', ['类型分布', '采用 / 退回', '学院对比', '审核时效'], 'pc/admin/dashboard.html'),
     ('trophy', '排行与本院统计', '全校学院排行榜，投稿人只看本院明细', ['学年 / 学期', '采用率', '本院统计', '数据隔离'], 'pc/correspondent/ranking.html'),
     ('clock', '超时台账', '按节点、人员查看超时记录与及时率', ['3 个工作日时限', '及时率', '催办', '导出'], 'pc/admin/timeout-ledger.html'),
-    ('users', '人员与权限', '审核员、指导老师名单与权限矩阵', ['一审员', '二审员换届', '指导老师', '权限矩阵'], 'pc/admin/role-permission.html'),
+    ('users', '人员名单', '一审员、二审员、指导老师名单；工号回显、导入导出、学年换届', ['一审员', '二审员换届', '指导老师', '导入导出'], 'pc/admin/reviewer1-manage.html'),
     ('sliders', '系统配置', '业务参数、意见模板、敏感词库与操作日志', ['业务参数', '意见模板', '敏感词库', '操作日志'], 'pc/admin/params.html'),
 ]
 

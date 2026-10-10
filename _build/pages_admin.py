@@ -60,6 +60,12 @@ def staff_fields(college_lbl, duty_key, duty_ph, no_ph, term):
             field('任期', term_range(*term), req=True, full=True, cls=more))
 
 
+# 角色规则为产品固定规则，不提供在线配置；在人员名单页静态说明
+ROLE_RULES = (f'<div class="notice notice-warn mb16">{icon("users", 15)}<div><b>角色规则（固定，不在后台配置）：</b>'
+              '投稿人（全校师生）通过统一身份认证登录即可投稿，无需单独开通账号；副书记为投稿人所在学院的副书记，取自学工系统，按学院自动确定，无需配置；'
+              '一审员、二审员为学生干部，不能操作三审；三审终审仅限校团委管理员（宣传部老师），可查看全部稿件。</div></div>')
+
+
 def switch(on=True, name=''):
     return f'<button class="switch{" on" if on else ""}" aria-label="启用开关" data-on-msg="{name}已启用" data-off-msg="{name}已停用" data-confirm-off="停用后该账号将无法登录并失去相应权限，确认停用吗？"></button>'
 
@@ -395,10 +401,11 @@ def reviewer_manage(level):
     title = '一审员名单' if is1 else '二审员名单'
     desc = '一审由校团委宣传部学生干部承担，人员经常更换，可随时增减并启用 / 停用' if is1 else '二审由高年级学生干部承担，一年一换，支持按学年批量换届'
     body = f'''{page_head(title, desc, extra_btn + btn('批量停用', 'btn-danger-o', 'x-circle', f'data-action="batch" data-table="#{tid}" data-value="已离任" data-danger="1" data-confirm="确认停用选中的 {{n}} 名审核人员吗？停用后将收回审核权限。" data-msg="已停用 {{n}} 名审核人员"') + btn('新增' + ("一审员" if is1 else "二审员"), 'btn-primary', 'plus', f'data-action="crud-add" data-modal="{mid}" data-title="新增{"一审员" if is1 else "二审员"}"'))}
-<div class="notice notice-info mb16">{icon('shield', 15)}<div>{"一审员仅可处理“待一审”稿件，不能操作二审和三审。" if is1 else "二审员仅可处理“待二审”稿件；三审终审仅限校团委管理员（宣传部老师）。"}审核权限可在“角色权限配置”中调整。</div></div>
+<div class="notice notice-info mb16">{icon('shield', 15)}<div>{"一审员仅可处理“待一审”稿件，不能操作二审和三审。" if is1 else "二审员仅可处理“待二审”稿件，不能操作三审。"}</div></div>
+{ROLE_RULES}
 <div class="card"><div class="filters">{filter_select(tid, 'status', '全部状态', ['在任', '已离任'])}{search_box(tid, '搜索姓名 / 工号 / 学院')}</div>
 {table(tid, [('<input type="checkbox" class="check-all" aria-label="全选">', 'class="no-export" style="width:36px"'), '姓名', '工号', '所在学院', '职务', '任期', ('累计审核', 'data-sort'), '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl_row}'''
-    page(f'reviewer{level}-manage.html', title, body, ['人员与权限', title], modals)
+    page(f'reviewer{level}-manage.html', title, body, ['人员名单', title], modals)
 
 
 def teacher_manage():
@@ -418,54 +425,10 @@ def teacher_manage():
 <div class="flex gap8 mb16">{btn('下载导入模板', '', 'download', f'data-action="export-csv" data-csv="{tmpl_csv}" data-filename="指导老师导入模板"')}</div>
 <form novalidate>{'<div class="upload-field"><label class="upload">' + icon('upload', 26) + '<b>上传填写好的模板</b><span class="hint">支持 .xlsx / .csv</span><input type="file" accept=".xlsx,.csv" data-upload="doc" data-required data-min-files="1" data-label="导入文件"></label><div class="files"></div></div>'}</form>''',
                                                                    '<button class="btn" data-close>取消</button><button class="btn btn-primary" data-action="save" data-msg="导入成功：新增 12 名、更新 3 名指导老师">开始导入</button>')
-    body = f'''{page_head('指导老师名单', '学生投稿只能从该名单中选择指导老师；投稿时默认预填上次选择的指导老师，也可搜索其他学院老师', btn('批量导入', '', 'upload', 'data-open="importModal"') + btn('新增指导老师', 'btn-primary', 'plus', 'data-action="crud-add" data-modal="tModal" data-title="新增指导老师"'))}
+    body = ROLE_RULES + f'''{page_head('指导老师名单', '学生投稿只能从该名单中选择指导老师；投稿时默认预填上次选择的指导老师，也可搜索其他学院老师', btn('批量导入', '', 'upload', 'data-open="importModal"') + btn('新增指导老师', 'btn-primary', 'plus', 'data-action="crud-add" data-modal="tModal" data-title="新增指导老师"'))}
 <div class="card"><div class="filters">{filter_select('tTable', 'college', '全部学院', COLLEGES)}{search_box('tTable', '搜索姓名 / 工号')}</div>
 {table('tTable', ['姓名', '工号', '所属学院', '职务', '任期', ('指导稿件数', 'data-sort'), '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl}'''
-    page('teacher-manage.html', '指导老师名单', body, ['人员与权限', '指导老师名单'], modals)
-
-
-# ---------- 16 角色权限配置 ----------
-PERM_ROLES = ['投稿人（全校师生）', '指导老师', '副书记（学工系统）', '一审员', '二审员', '校团委管理员']
-DEPUTY_COL = 2
-ADMIN_COL = 5
-PERMS = [
-    ('投稿', [('四类稿件投稿 / 草稿', [1, 0, 0, 0, 0, 0]), ('修改退回稿件并重提', [1, 0, 0, 0, 0, 0])]),
-    ('审核', [('指导老师审核（学生稿件）', [0, 1, 0, 0, 0, 0]), ('副书记审核（本院稿件）', [0, 0, 1, 0, 0, 0]), ('一审', [0, 0, 0, 1, 0, 0]), ('二审', [0, 0, 0, 0, 1, 0]),
-              ('三审终审', [0, 0, 0, 0, 0, 1]), ('填写 / 维护审核意见模板', [0, 0, 0, 0, 0, 1])]),
-    ('查看', [('查看本人稿件与审核意见', [1, 1, 1, 1, 1, 1]), ('稿件查询：本人审核过的稿件', [0, 1, 1, 1, 1, 1]), ('查看本院稿件明细与统计', [1, 1, 1, 0, 0, 1]), ('浏览全校稿件档案', [0, 0, 0, 1, 1, 1]), ('查看全校排行榜', [1, 1, 1, 1, 1, 1]), ('查看超时台账与操作日志', [0, 0, 0, 0, 0, 1])]),
-    ('导出', [('导出本院稿件数据', [1, 0, 0, 0, 0, 1]), ('导出全校稿件台账', [0, 0, 0, 0, 0, 1]), ('升华网素材复制 / 导出', [0, 0, 0, 1, 1, 1]), ('标记稿件已发布', [0, 0, 0, 0, 0, 1])]),
-    ('管理', [('人员名单与账号管理', [0, 0, 0, 0, 0, 1]), ('角色权限配置', [0, 0, 0, 0, 0, 1]), ('业务参数 / 敏感词配置', [0, 0, 0, 0, 0, 1])]),
-]
-
-
-def role_permission():
-    rows = ''
-    for group, items in PERMS:
-        rows += f'<tr><td colspan="{len(PERM_ROLES) + 1}" style="background:#FAFBFC;font-weight:600;color:var(--text)">{group}</td></tr>'
-        for name, flags in items:
-            cells = ''
-            for i, f in enumerate(flags):
-                lock = ' disabled title="核心权限，不可取消"' if i == ADMIN_COL and name in ('三审终审', '角色权限配置') else ''
-                if i == DEPUTY_COL:
-                    lock = ' disabled title="副书记取自学工系统，无需配置"'
-                cells += f'<td style="text-align:center"><input type="checkbox" aria-label="{PERM_ROLES[i]} - {name}"{" checked" if f else ""}{lock} data-toast-change="权限已修改，保存后生效"></td>'
-            rows += f'<tr><td style="color:var(--text)">{name}</td>{cells}</tr>'
-    scope = ''.join(f'<tr><td style="color:var(--text)">{r}</td><td><select class="select" data-toast-change="数据范围已修改，保存后生效">{options(s, selected=d)}</select></td><td class="c-muted">{h}</td></tr>'
-                    for r, s, d, h in [('投稿人（全校师生）', ['本人', '本院', '全校'], '本院', '只能看本院稿件明细，看不到其他学院稿件详情'),
-                                       ('指导老师', ['本人指导的稿件', '本院'], '本人指导的稿件', '仅审核指定自己为指导老师的学生稿件；“稿件查询”可查本人审核过的稿件'),
-                                       ('副书记（学工系统）', ['本院'], '本院', '待办只展示本院稿件的副书记审核环节，“稿件查询”可查本人审核过的稿件；取自学工系统，无需配置'),
-                                       ('一审员', ['分配给本人的环节', '全校'], '分配给本人的环节', '待办只展示一审环节稿件，可浏览全部稿件档案'),
-                                       ('二审员', ['分配给本人的环节', '全校'], '分配给本人的环节', '待办只展示二审环节稿件，可浏览全部稿件档案'),
-                                       ('校团委管理员', ['全校'], '全校', '全部稿件、审核记录与统计数据')])
-    heads = ''.join(f'<th style="text-align:center">{r}</th>' for r in PERM_ROLES)
-    body = f'''{page_head('角色权限配置', '所有审核与数据权限均在后台配置，不在代码中写死', btn('恢复默认', '', 'refresh', 'data-toast="已恢复为系统默认权限配置（尚未保存）"') + btn('保存配置', 'btn-primary', 'save', 'data-action="save" data-confirm="保存后权限立即生效，并记入操作日志。确认保存吗？" data-msg="权限配置已保存并生效，变更已记入操作日志"'))}
-<div class="notice notice-info mb16">{icon('users', 15)}<div><b>投稿人（全校师生）无需单独开通账号：</b>全校教职工和学生通过统一身份认证登录即可投稿，所属学院取自统一身份认证。</div></div>
-<div class="notice notice-info mb16">{icon('user', 15)}<div><b>副书记取自学工系统，无需配置：</b>副书记为投稿人所在学院的副书记，是学工系统的固定角色，本平台不维护名单、不分配人员；稿件按投稿人所在学院自动路由（学生稿件指导老师通过后、教师稿件提交后到达）。副书记的权限列已锁定。</div></div>
-<div class="notice notice-warn mb16">{icon('shield', 15)}<div>规则约束：学生干部（一审员、二审员）不能操作三审；三审终审仅限校团委管理员（宣传部老师）。带锁的核心权限不可取消。</div></div>
-<div class="card" data-tabs-scope><div class="tabs" data-tabs><button class="tab on" data-tab="func">功能权限</button><button class="tab" data-tab="data">数据范围</button></div>
-<div class="tab-panel on" data-panel="func"><div class="table-wrap"><table class="tbl"><thead><tr><th>权限项</th>{heads}</tr></thead><tbody>{rows}</tbody></table></div></div>
-<div class="tab-panel" data-panel="data"><div class="table-wrap"><table class="tbl"><thead><tr><th>角色</th><th style="width:220px">可查看数据范围</th><th>说明</th></tr></thead><tbody>{scope}</tbody></table></div></div></div>'''
-    page('role-permission.html', '角色权限配置', body, ['人员与权限', '角色权限配置'])
+    page('teacher-manage.html', '指导老师名单', body, ['人员名单', '指导老师名单'], modals)
 
 
 # ---------- 17 业务参数 ----------
@@ -560,7 +523,7 @@ def operation_logs():
         ('2026-09-30 15:40', '周明轩', '二审员', '导出升华网素材包', 'TG2026091502', '10.12.8.66', '—'),
         ('2026-09-30 15:38', '周明轩', '二审员', '复制升华网正文', 'TG2026091502', '10.12.8.66', '—'),
         ('2026-09-30 14:20', '刘子涵', '一审员', '一审通过', 'TG2026092702', '10.12.8.51', '待一审 → 待二审'),
-        ('2026-09-30 11:05', '张静', '管理员', '权限变更', '—', '10.12.8.10', '二审员：新增“升华网素材导出”'),
+        ('2026-09-30 11:05', '张静', '管理员', '名单变更', '—', '10.12.8.10', '二审员名单：新增李明远（8208220101）'),
         ('2026-09-30 10:24', '陈雨桐', '投稿人', '提交投稿', 'TG2026092801', '10.12.34.21', '草稿 → 待指导老师审核'),
         ('2026-09-30 09:12', '陈雨桐', '投稿人', '新建草稿', 'TG2026093001', '10.12.34.21', '—'),
         ('2026-09-29 17:40', '张静', '管理员', '三审终审：采用', 'TG2026091805', '10.12.8.10', '待三审 → 已终审采用；不计入采用 → 计入采用'),
@@ -575,7 +538,7 @@ def operation_logs():
     trs = ''.join(f'<tr data-act="{a}" data-date="{t[:10]}"><td>{t}</td><td style="color:var(--text)">{u}</td><td>{r}</td><td><span class="type-tag">{a}</span></td><td>{sid}</td><td>{ip}</td><td style="max-width:320px">{d}</td></tr>' for t, u, r, a, sid, ip, d in logs)
     acts = sorted(set(l[3] for l in logs))
     ctrls = filter_select('logsTable', 'act', '全部操作类型', acts) + date_range('logsTable') + search_box('logsTable', '搜索操作人 / 稿件编号')
-    body = f'''{page_head('操作日志', '记录稿件新建、提交、编辑、重提、各级审核、退回、权限变更、数据导出等全部行为；日志只读，不可删除', btn('导出日志', '', 'download', 'data-action="export-csv" data-table="#logsTable" data-filename="投稿平台操作日志"'))}
+    body = f'''{page_head('操作日志', '记录稿件新建、提交、编辑、重提、各级审核、退回、名单变更、数据导出等全部行为；日志只读，不可删除', btn('导出日志', '', 'download', 'data-action="export-csv" data-table="#logsTable" data-filename="投稿平台操作日志"'))}
 <div class="notice notice-info mb16">{icon('lock', 15)}<div>日志字段包含操作人账号、身份、操作时间、IP 地址、操作对象稿件编号与操作行为；修改类操作记录修改前后的关键信息。</div></div>
 <div class="card">{filter_bar('logsTable', ctrls)}{table('logsTable', [('操作时间', 'data-sort'), '操作人', '身份', '操作行为', '对象稿件', 'IP 地址', '修改前后 / 详情'], [trs])}</div>'''
     page('operation-logs.html', '操作日志', body, ['系统配置', '操作日志'])
@@ -595,5 +558,5 @@ def messages():
 def build():
     dashboard(); final_list(); final_done(); final_cc(); final_batch(); final_review(); final_review(True); archive(); archive_detail(); publish_export()
     clue_tracking(); timeout_ledger(); ranking(); reviewer_manage(1); reviewer_manage(2)
-    teacher_manage(); role_permission(); params(); opinion_templates()
+    teacher_manage(); params(); opinion_templates()
     sensitive_words(); operation_logs(); messages()
