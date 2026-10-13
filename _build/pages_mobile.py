@@ -149,9 +149,9 @@ def c_success():
     def steps(names, cur):
         return '<div class="m-steps">' + ''.join(f'<div class="{"done" if i < cur else "cur" if i == cur else ""}"><i></i>{n}</div>' for i, n in enumerate(names)) + '</div>'
     body = f'''<div class="m-result"><div class="big-ic">{icon('check', 38)}</div><h2>投稿提交成功</h2><p>稿件编号 TG2026093005 · <span data-param-text="type">新闻</span>投稿</p></div>
-<div class="m-card" data-when-param-hide="identity=教师|职能部门老师"><b>已进入【待指导老师审核】</b><div class="msg-desc">指导老师王海峰将在 3 个工作日内处理，通过后由学院副书记审核</div>{steps(['提交', '指导老师', '副书记', '一审', '二审', '终审'], 1)}</div>
-<div class="m-card hidden" data-when-param="identity=教师"><b>已进入【待副书记审核】</b><div class="msg-desc">教师投稿无需指导老师审核，由本院副书记在 3 个工作日内处理，通过后进入校团委一审</div>{steps(['提交', '副书记', '一审', '二审', '终审'], 1)}</div>
-<div class="m-card hidden" data-when-param="identity=职能部门老师"><b>已进入【待副职领导审核】</b><div class="msg-desc">由所属部门的副职领导在 3 个工作日内处理，通过后进入校团委学生一审</div>{steps(['提交', '副职领导', '学生一审', '学生二审', '终审'], 1)}</div>
+<div class="m-card" data-when-param-hide="identity=教师|职能部门老师"><b>已进入【待指导老师审核】</b><div class="msg-desc">指导老师王海峰将在 3 个工作日内处理，通过后由学院副书记审核</div>{steps(['提交', '指导老师', '副书记', '一审', '二审', '终审', '发布'], 1)}</div>
+<div class="m-card hidden" data-when-param="identity=教师"><b>已进入【待副书记审核】</b><div class="msg-desc">教师投稿无需指导老师审核，由本院副书记在 3 个工作日内处理，通过后进入校团委一审</div>{steps(['提交', '副书记', '一审', '二审', '终审', '发布'], 1)}</div>
+<div class="m-card hidden" data-when-param="identity=职能部门老师"><b>已进入【待副职领导审核】</b><div class="msg-desc">由所属部门的副职领导在 3 个工作日内处理，通过后进入校团委学生一审</div>{steps(['提交', '副职领导', '学生一审', '学生二审', '终审', '发布'], 1)}</div>
 <a class="btn btn-primary btn-block" href="my-submissions.html?new=TG2026093005">查看我的投稿</a>
 <a class="btn btn-block mt12" href="submit-news.html">继续投稿</a>
 <a class="btn btn-block mt12" href="home.html">返回首页</a>'''

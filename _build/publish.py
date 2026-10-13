@@ -34,11 +34,11 @@ def export_buttons(sub=ADOPTED, size=''):
 
 
 def publish_panel(sub=ADOPTED):
-    return f'''<div class="notice notice-info mb16">{icon('info', 15)}<div><b>仅【已终审采用】的新闻投稿显示本功能。</b>视频、照片、线索类稿件及未终审稿件不提供升华网素材导出。受浏览器限制，复制时图片无法随文字一起粘贴，请按占位提示单独上传原图。</div></div>
+    return f'''<div class="notice notice-info mb16">{icon('info', 15)}<div><b>清洗正文只针对当前这条已采用的新闻。</b>视频、照片、线索以及终审不采用的稿件不提供升华网素材。受浏览器限制，复制时图片无法随文字一起粘贴，请按占位提示单独上传原图。</div></div>
 <div class="grid g2">
   <div><div class="flex between mb16"><b>清洗后的正文预览</b><span class="hint">已去除本系统样式、自定义标签与多余换行</span></div><div class="clean-text" id="cleanText">{clean_text_html(sub)}</div></div>
   <div><div class="flex between mb16"><b>素材包目录结构</b><span class="hint">ZIP 格式</span></div>{zip_tree(sub)}
-    <div class="notice notice-warn mt16">{icon('flow', 15)}<div>发布步骤：① 复制正文粘贴到升华网编辑器 → ② 按占位提示上传 images 中的原图 → ③ 补全撰稿人等元信息并发布 → ④ 由管理员在本平台将稿件标记为【已发布】。</div></div>
+    <div class="notice notice-warn mt16">{icon('flow', 15)}<div>发布步骤：① 复制正文粘贴到升华网编辑器 → ② 按占位提示上传 images 中的原图 → ③ 补全撰稿人等元信息并发布 → ④ 由校团委管理员或升华网管理员在本平台将稿件标记为【已发布】。</div></div>
     <div class="flex gap8 mt16">{export_buttons(sub)}</div>
   </div>
 </div>'''

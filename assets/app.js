@@ -28,7 +28,7 @@
   const TAG_CLASS = {
     '草稿': 'tag-gray', '待指导老师审核': 'tag-warn', '待副书记审核': 'tag-warn', '待副职领导审核': 'tag-warn', '待一审': 'tag-warn', '待二审': 'tag-warn',
     '待三审': 'tag-warn', '已退回': 'tag-danger', '已终审采用': 'tag-success', '已终审不采用': 'tag-gray',
-    '已发布': 'tag-primary', '无需处理': 'tag-gray', '待跟进': 'tag-warn', '已跟进': 'tag-primary',
+    '待升华网发布': 'tag-warn', '已发布': 'tag-primary', '无需处理': 'tag-gray', '待跟进': 'tag-warn', '已跟进': 'tag-primary',
     '已转为正式新闻': 'tag-success', '计入采用': 'tag-success', '不计入采用': 'tag-gray',
     '启用': 'tag-success', '停用': 'tag-gray', '在任': 'tag-success', '已离任': 'tag-gray'
   };
@@ -253,7 +253,8 @@
     return rows.filter((r) => r.some((x) => x.trim()));
   }
 
-  const IMPORT_COLS = { name: ['姓名'], no: ['工号'], college: ['所在学院', '学院', '所属学院', '所属部门', '部门'], duty: ['职务'], from: ['任期开始', '任期开始日期'], to: ['任期结束', '任期结束日期'] };
+  const IMPORT_COLS = { name: ['姓名'], no: ['工号'], identity: ['身份', '人员身份'], college: ['所在学院', '学院', '所属学院', '所属部门', '部门', '所属单位'], duty: ['职务'], from: ['任期开始', '任期开始日期'], to: ['任期结束', '任期结束日期'] };
+  const OPTIONAL_COLS = ['identity'];
   const IMPORT_LBL = { name: '姓名', no: '工号', college: '所在学院', duty: '职务', from: '任期开始', to: '任期结束' };
   async function readImport(input) {
     const modal = input.closest('.modal');
@@ -270,7 +271,7 @@
     const idx = {};
     Object.entries(IMPORT_COLS).forEach(([k, names]) => { idx[k] = head.findIndex((h) => names.includes(h)); });
     const unit = input.dataset.unitLabel || '所在学院';
-    const missCols = Object.keys(idx).filter((k) => idx[k] < 0).map((k) => (k === 'college' ? unit : IMPORT_LBL[k]));
+    const missCols = Object.keys(idx).filter((k) => idx[k] < 0 && !OPTIONAL_COLS.includes(k)).map((k) => (k === 'college' ? unit : IMPORT_LBL[k]));
     if (missCols.length) { bad(`表头缺少：${esc(missCols.join('、'))}。请下载导入模板，按模板列填写`); return; }
     if (!rows.length) { bad('文件中没有数据行'); return; }
     const have = new Set(liveRows($(input.dataset.table)).map((r) => cellText(r, 'no')));
@@ -278,7 +279,8 @@
     const date = /^\d{4}-\d{2}-\d{2}$/;
     const items = rows.map((r, i) => {
       const v = {};
-      Object.keys(idx).forEach((k) => { v[k] = (r[idx[k]] || '').trim(); });
+      Object.keys(idx).forEach((k) => { v[k] = idx[k] < 0 ? '' : (r[idx[k]] || '').trim(); });
+      if (v.identity && !['学生', '教师'].includes(v.identity)) { v.identity = ''; }
       const miss = Object.keys(IMPORT_LBL).filter((k) => !v[k]);
       let st = 'ok', msg = '可导入';
       if (miss.length) { st = 'skip'; msg = `缺少${miss.map((k) => (k === 'college' ? unit : IMPORT_LBL[k])).join('、')}`; }
@@ -695,11 +697,16 @@
       const tbl = $(btn.dataset.table);
       const rows = liveRows(tbl).filter((r) => rowMatches(r, tbl));
       const q = (x) => `"${String(x).replace(/"/g, '""')}"`;
-      const lines = [`姓名,工号,${btn.dataset.unitLabel || '所在学院'},职务,任期开始,任期结束,状态,累计审核`];
+      const withIdent = btn.dataset.identLabel;
+      const lines = [withIdent
+        ? `姓名,工号,${withIdent},${btn.dataset.unitLabel || '所在学院'},职务,任期开始,任期结束,状态,累计审核`
+        : `姓名,工号,${btn.dataset.unitLabel || '所在学院'},职务,任期开始,任期结束,状态,累计审核`];
       rows.forEach((r) => {
         const [from, to] = cellText(r, 'term').split(' 至 ');
-        lines.push([cellText(r, 'name'), cellText(r, 'no'), cellText(r, 'college'), cellText(r, 'duty'), from || '', to || '',
-          ($('.js-tag', r) || {}).textContent || '', cellText(r, 'count')].map(q).join(','));
+        const base = [cellText(r, 'name'), cellText(r, 'no')];
+        if (withIdent) base.push(cellText(r, 'ident'));
+        base.push(cellText(r, 'college'), cellText(r, 'duty'), from || '', to || '', ($('.js-tag', r) || {}).textContent || '', cellText(r, 'count'));
+        lines.push(base.map(q).join(','));
       });
       download(`${btn.dataset.filename || '人员名单'}.csv`, new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
       toast(`已导出 ${rows.length} 名人员（按当前筛选条件），导出行为已记入操作日志`);
@@ -724,7 +731,7 @@
       const skip = items.length - ok.length;
       if (!ok.length) { toast(`没有可导入的数据，${skip} 行均已跳过`, 'warn'); return; }
       const tpl = $(btn.dataset.template);
-      ok.slice().reverse().forEach(({ v }) => addTemplateRow(tbl, tpl, { name: v.name, no: v.no, college: v.college, duty: v.duty, term: `${v.from} 至 ${v.to}` }));
+      ok.slice().reverse().forEach(({ v }) => addTemplateRow(tbl, tpl, { name: v.name, no: v.no, college: v.college, duty: v.duty, ident: v.identity || '教师', term: `${v.from} 至 ${v.to}` }));
       closeModal(modal);
       refreshTableOf($('tbody', tbl));
       toast(`导入完成：新增 ${ok.length} 人，跳过 ${skip} 行`);

@@ -29,6 +29,7 @@ AVATAR = {
     'admin': img('1438761681033-6461ffad8d80', 120),
     'deputy': img('1519085360753-af0119f7cbe7', 120),
     'vice': img('1506794778202-cad84cf45f1d', 120),
+    'pub': img('1539571696357-5a69c17a67c6', 120),
 }
 
 # 副职领导名单（管理员按职能部门配置，同一部门可配置多人）：姓名、工号、所属部门、职务、任期、累计审核、是否在任
@@ -78,7 +79,15 @@ ROLES = {
                       pc='pc/reviewer2/todo.html', mobile='mobile/reviewer2/todo.html'),
     'admin': dict(name='校团委管理员', user='张静', dept='校团委宣传部 · 老师', avatar=AVATAR['admin'],
                   pc='pc/admin/dashboard.html', mobile='mobile/admin/home.html'),
+    'publisher': dict(name='升华网管理员', user='沈予安', dept='计算机学院 · 学生干部', avatar=AVATAR['pub'],
+                      pc='pc/publisher/publish.html', mobile='mobile/publisher/publish.html'),
 }
+
+# 升华网管理员名单：学生或教师，在任人员可进入升华网发布素材
+PUBLISHERS = [
+    ('沈予安', '8210240991', '学生', '计算机学院', '宣传部干事', '2026-09-01 至 2027-08-31', True),
+    ('顾清和', '201628', '教师', '校团委宣传部', '干事', '2026-09-01 至 2028-08-31', True),
+]
 
 TYPE_ICON = {'新闻': 'file', '视频': 'video', '照片': 'image', '线索': 'bulb'}
 TYPE_NAME = {'新闻': '新闻投稿', '视频': '视频投稿', '照片': '照片投稿', '线索': '新闻线索'}

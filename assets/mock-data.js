@@ -59,7 +59,9 @@ window.TG_DATA = {
     { no: '201310', name: '苏晓婷', college: '研究生院', title: '副院长' },
     { no: '199905', name: '韩东升', college: '国际合作与交流处', title: '副处长' },
     { no: '201415', name: '程雅静', college: '党委宣传部', title: '副部长' },
-    { no: '200612', name: '马俊杰', college: '教务处', title: '副处长' }
+    { no: '200612', name: '马俊杰', college: '教务处', title: '副处长' },
+    { no: '8210240991', name: '沈予安', college: '计算机学院', title: '宣传部干事' },
+    { no: '201628', name: '顾清和', college: '校团委宣传部', title: '干事' }
   ],
 
   // 常用审核意见模板（管理员可在后台维护）

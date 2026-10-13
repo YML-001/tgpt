@@ -1,7 +1,8 @@
 # PC 端 · 校团委管理员（三审终审 + 后台管理）
 from lib import icon, tag, type_tag, remain, stat, card, page_head, btn, a_btn, options, filter_select, search_box, \
     date_range, filter_bar, table, field, modal, pc_page, write
-from data import R3_TODO, FEATURED, ADOPTED, ARCHIVE, RANKING, TIMEOUTS, COLLEGES, typed, type_of, TYPE_NAME, VICE_LEADERS, DEPTS
+from data import (R3_TODO, FEATURED, ADOPTED, ARCHIVE, RANKING, TIMEOUTS, COLLEGES, typed, type_of, TYPE_NAME,
+                    VICE_LEADERS, DEPTS, PUBLISHERS)
 from common import featured_flow_timeline, adopted_timeline, messages_page_body, article, gallery, info_kv, \
     op_log_table, rank_rows, donut, bars, hbars, college_detail_modal
 from review import review_body, reject_modal, q, type_review_pages, SAMPLE_STAGE
@@ -64,7 +65,8 @@ def staff_fields(college_lbl, duty_key, duty_ph, no_ph, term, units=None):
 ROLE_RULES = (f'<div class="notice notice-warn mb16">{icon("users", 15)}<div><b>角色规则（固定，不在后台配置）：</b>'
               '投稿人（全校师生）通过统一身份认证登录即可投稿，无需单独开通账号；副书记为投稿人所在学院的副书记，取自学工系统，按学院自动确定，无需配置；'
               '副职领导按职能部门在“副职领导名单”中配置，审核本部门职能部门老师的稿件；'
-              '一审员、二审员为学生干部，不能操作三审；三审终审仅限校团委管理员（宣传部老师），可查看全部稿件。</div></div>')
+              '一审员、二审员为学生干部，不能操作三审；三审终审仅限校团委管理员（宣传部老师），可查看全部稿件；'
+              '升华网管理员在“升华网管理员名单”中配置，可为学生或教师，只协助升华网发布。</div></div>')
 
 
 def switch(on=True, name=''):
@@ -151,7 +153,7 @@ def final_review(reject=False):
     reject_next = q('final-list.html', done=SID, type='warn', msg='已终审不采用，不计入采用统计，已通知投稿人')
     actions = (btn('终审采用', 'btn-success btn-lg', 'check', f'data-action="pass" data-opinion="optional" data-tpl="final" data-title="终审采用" data-label="终审意见" data-ok="确认采用" data-msg="已终审采用，计入学院采用统计" data-next="{adopt_next}"') +
                a_btn('终审不采用', 'final-reject.html', 'btn-danger-o btn-lg', 'x-circle'))
-    extra = card('终审规则', f'<div style="font-size:13px;line-height:1.9;color:var(--text-2)">· 采用：流转状态变为【已终审采用】，统计归档属性为【计入采用】，参与学院排行榜。<br>· 不采用：必须填写终审意见，状态为【已终审不采用】，不计入采用统计。<br>· 新闻类采用稿件可导出升华网发布素材。</div>', 'book')
+    extra = card('终审规则', f'<div style="font-size:13px;line-height:1.9;color:var(--text-2)">· 采用：流转状态变为【已终审采用】，统计归档属性为【计入采用】，参与学院排行榜；新闻稿随后进入【待升华网发布】。<br>· 不采用：必须填写终审意见，状态为【已终审不采用】，不计入采用统计，仍出现在升华网发布列表中备查，但不能复制。<br>· 三审结束后进入升华网发布。仅已采用的新闻可复制正文和素材包。</div>', 'book')
     body = review_body(FEATURED, '待三审', '三审终审', 5, ('剩余 3 个工作日', 'ok'), featured_flow_timeline('r3'), actions, 'final-list.html', extra_right=extra,
                        start=FEATURED['time'], arrive='2026-09-30 09:00')
     modals = reject_modal('rejectBox', '终审不采用', '终审意见', TPL_FINAL, reject_next, ok='确认不采用', cancel='final-review.html') if reject else ''
@@ -174,7 +176,7 @@ def archive():
                 f'<td><div class="ops"><a class="link" href="{typed("archive-detail.html", t)}">档案</a>{pub}</div></td></tr>')
     ctrls = (search_box('archTable', '标题 / 编号 / 投稿人') + filter_select('archTable', 'college', '全部学院', COLLEGES) +
              filter_select('archTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索']) +
-             filter_select('archTable', 'status', '审核流转状态', ['待指导老师审核', '待副书记审核', '待副职领导审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布']) +
+             filter_select('archTable', 'status', '审核流转状态', ['待指导老师审核', '待副书记审核', '待副职领导审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '待升华网发布', '已发布']) +
              filter_select('archTable', 'adopt', '是否终审采用', ['计入采用', '不计入采用']) + filter_select('archTable', 'identity', '投稿身份', ['学生', '教师', '职能部门老师']) + date_range('archTable'))
     body = f'''{page_head('稿件档案库', '全校所有稿件永久存档，支持跨学年历史查询与多条件组合检索', btn('导出', '', 'download', 'data-open="exportModal"'))}
 <div class="grid g5 mb16">{stat('archive', 'blue', 1024, '本学年档案')}{stat('file', 'blue', 532, '新闻')}{stat('video', 'orange', 146, '视频')}{stat('image', 'green', 248, '照片')}{stat('bulb', 'orange', 98, '线索')}</div>
@@ -227,31 +229,60 @@ def archive_detail():
         page(typed('archive-detail.html', t), '稿件档案详情', head + full_detail(sub, status, stage, side=side), ['稿件档案库', '稿件档案详情'], active='archive.html')
 
 
-# ---------- 7 升华网发布素材 ----------
-def publish_export():
-    pending = [
-        (ADOPTED['id'], ADOPTED['title'], '商学院', '2026-09-19', '未发布'),
-        ('TG2026091805', '计算机学院学生党支部开展“红色经典诵读”活动', '计算机学院', '2026-09-24', '未发布'),
-        ('TG2026090610', '土木学院教授获詹天佑奖', '土木工程学院', '2026-09-11', '未发布'),
-        ('TG2026090411', '冶金学院新生入学教育', '冶金与环境学院', '2026-09-08', '已发布'),
-        ('TG2026090113', '自动化学院暑期实践总结会', '自动化学院', '2026-09-05', '已发布'),
-    ]
+# ---------- 7 升华网发布素材（三审完毕的全部稿件；仅已采用新闻可复制） ----------
+PUBLISH_QUEUE = [
+    (ADOPTED['id'], ADOPTED['title'], '新闻', '商学院', '2026-09-19', '待升华网发布', True),
+    ('TG2026091805', '计算机学院学生党支部开展“红色经典诵读”活动', '新闻', '计算机学院', '2026-09-24', '待升华网发布', True),
+    ('TG2026090508', '“智能+”暑期社会实践成果展示', '视频', '计算机学院', '2026-09-06', '已终审采用', False),
+    ('TG2026091107', '法学院模拟法庭大赛', '新闻', '法学院', '2026-09-11', '已终审不采用', False),
+    ('TG2026090411', '冶金学院新生入学教育', '新闻', '冶金与环境学院', '2026-09-08', '已发布', True),
+    ('TG2026082715', '数学学院学霸宿舍专访（线索）', '线索', '数学与统计学院', '2026-08-27', '已终审不采用', False),
+]
+
+
+def publish_queue_body():
     trs = ''
-    for i, (sid, title, col, d, st) in enumerate(pending):
+    for i, (sid, title, t, col, d, st, copyable) in enumerate(PUBLISH_QUEUE):
         cur = ' style="background:#F2F9FE"' if i == 0 else ''
-        st_html = f'<span class="tag tag-primary">已发布</span>' if st == '已发布' else f'<span class="tag tag-warn {"js-row-pub" if i == 0 else ""}">待发布</span>'
-        op = '<span class="c-muted">当前选中</span>' if i == 0 else ('<a class="link" href="archive-detail.html">查看</a>' if st == '已发布' else '<a class="link" href="archive-detail.html">处理</a>')
-        trs += f'<tr{cur} data-status="{st}"><td><a class="t-title" href="archive-detail.html">{title}</a><div class="t-sub">{sid}</div></td><td>{col}</td><td>{d}</td><td>{st_html}</td><td>{op}</td></tr>'
-    logs = op_log_table([('2026-09-29 15:02', '周明轩（二审员）', '导出升华网素材包（TG2026090411）', '10.12.8.66'),
-                         ('2026-09-29 14:58', '周明轩（二审员）', '复制升华网可用正文（TG2026090411）', '10.12.8.66')])
-    body = f'''{page_head('升华网发布素材', '已终审采用的新闻稿件，可复制清洗后的正文或导出素材包，人工发布到升华网（博达站群）后标记为已发布')}
-<div class="card mb16"><div class="card-head"><div class="card-title">{icon('list', 18)}已采用新闻稿件</div>{filter_select('pubTable', 'status', '全部发布状态', ['未发布', '已发布'])}</div>
-{table('pubTable', ['稿件', '学院', '终审日期', '发布状态', '操作'], [trs], pager=False)}</div>
-<div class="card"><div class="card-head"><div class="card-title">{icon('globe', 18)}{ADOPTED["title"]}</div>
-{btn('标记为已发布', 'btn-success', 'check', 'id="markPub2" data-action="set-status" data-target=".js-row-pub" data-value="已发布" data-hide="#markPub2" data-title="标记为已发布" data-confirm="请确认已在升华网完成该新闻的发布。标记后稿件状态将变为【已发布】。" data-log="标记稿件为已发布（TG2026091502）"')}</div>
+        cls = 'js-row-pub' if i == 0 else ''
+        st_html = f'<span class="tag {TAG_PUB[st]} {cls}">{st}</span>'
+        if i == 0:
+            op = '<span class="c-muted">当前选中</span>'
+        elif copyable and st == '已发布':
+            op = btn('查看正文', 'btn-sm', 'file', 'data-toast="该新闻已发布，正文仍可在下方对照；如需再次复制请选中待发布的新闻稿" data-toast-type="info"')
+        elif copyable:
+            op = btn('待处理', 'btn-sm', 'edit', 'data-toast="请在下方处理当前选中的待升华网发布新闻稿" data-toast-type="info"')
+        else:
+            why = '终审不采用，只作备查' if st == '已终审不采用' else '视频、照片、线索不生成升华网正文'
+            op = btn('不可复制', 'btn-sm', 'info', f'data-toast="{why}，不能复制进升华网" data-toast-type="warn"')
+        trs += (f'<tr{cur} data-status="{st}" data-type="{t}"><td><span class="t-title">{title}</span><div class="t-sub">{sid}</div></td>'
+                f'<td>{type_tag(t)}</td><td>{col}</td><td>{d}</td><td>{st_html}</td><td>{"可复制" if copyable and st != "已终审不采用" else "不可复制"}</td><td>{op}</td></tr>')
+    know = btn('知道了', '', 'check', 'data-toast="已确认：该稿件只备查，不进入升华网" data-toast-type="info"')
+    mark = btn('标记为已发布', 'btn-success', 'check',
+               'id="markPub2" data-action="set-status" data-target=".js-row-pub" data-value="已发布" data-hide="#markPub2" '
+               'data-title="标记为已发布" data-confirm="请确认已在升华网完成该新闻的发布。标记后稿件状态将变为【已发布】。" '
+               'data-log="标记稿件为已发布（TG2026091502）"')
+    blocked = f'''<div class="notice notice-warn">{icon("alert", 15)}<div><b>这条稿件不能复制进升华网。</b>三审不采用的稿件，以及视频、照片、线索，都会出现在上面的列表里，方便确认三审已经结束；这里不提供清洗正文，也不提供素材包。</div></div>
+<div class="flex gap8 mt16">{know}</div>'''
+    logs = op_log_table([('2026-09-29 15:02', '沈予安（升华网管理员）', '导出升华网素材包（TG2026090411）', '10.12.8.21'),
+                         ('2026-09-29 14:58', '顾清和（升华网管理员）', '复制升华网可用正文（TG2026090411）', '10.12.8.22')])
+    return f'''{page_head('升华网发布素材', '三审完毕的稿件都在这里。已采用且未发布的新闻为【待升华网发布】，可复制正文或导出素材包；标记发布后变为【已发布】。终审不采用，以及视频、照片、线索，只显示状态，不能复制。')}
+<div class="notice notice-info mb16">{icon("flow", 15)}<div>三审采用的新闻进入本列表后即可复制到升华网。名单中的在任升华网管理员与校团委管理员都能操作。退回规则不变：三审之前的退回仍回到投稿人。</div></div>
+<div class="card mb16"><div class="card-head"><div class="card-title">{icon("list", 18)}三审完毕的稿件</div>{filter_select("pubTable", "status", "全部状态", ["待升华网发布", "已发布", "已终审采用", "已终审不采用"])}</div>
+{table("pubTable", ["稿件", "类型", "学院", "终审日期", "状态", "升华网", "操作"], [trs], pager=False)}</div>
+<div class="card"><div class="card-head"><div class="card-title">{icon("globe", 18)}{ADOPTED["title"]}</div>
+{mark}</div>
 <div class="card-body">{publish_panel()}</div></div>
-<div class="card mt16"><div class="card-head"><div class="card-title">{icon('terminal', 18)}素材复制 / 导出日志</div><span class="hint">复制、导出、标记发布行为实时记入日志</span></div>{logs}</div>'''
-    page('publish-export.html', '升华网发布素材', body, ['稿件与数据', '升华网发布素材'])
+<div class="card mt16"><div class="card-head"><div class="card-title">{icon("x-circle", 18)}法学院模拟法庭大赛</div><span class="tag tag-gray">已终审不采用</span></div>
+<div class="card-body">{blocked}</div></div>
+<div class="card mt16"><div class="card-head"><div class="card-title">{icon("terminal", 18)}素材复制 / 导出日志</div><span class="hint">复制、导出、标记发布行为实时记入日志</span></div>{logs}</div>'''
+
+
+TAG_PUB = {'待升华网发布': 'tag-warn', '已发布': 'tag-primary', '已终审采用': 'tag-success', '已终审不采用': 'tag-gray'}
+
+
+def publish_export():
+    page('publish-export.html', '升华网发布素材', publish_queue_body(), ['稿件与数据', '升华网发布素材'])
 
 
 # ---------- 8 线索跟进 ----------
@@ -595,8 +626,56 @@ def messages():
     page('messages.html', '消息通知', messages_page_body(items))
 
 
+def publisher_manage():
+    mid, tid, tpl = 'pModal', 'pTable', 'pTpl'
+    units = COLLEGES + [d for d in DEPTS if d not in COLLEGES] + ['校团委宣传部']
+    trs = ''
+    for name, no, ident, unit, duty, term, on in PUBLISHERS:
+        st = '在任' if on else '已离任'
+        trs += (f'<tr data-status="{st}" data-ident="{ident}" data-college="{unit}"><td><input type="checkbox" class="row-check" aria-label="选择"></td>'
+                f'<td data-key="name" class="fw" style="color:var(--text)">{name}</td><td data-key="no">{no}</td><td data-key="ident">{ident}</td><td data-key="college">{unit}</td>'
+                f'<td data-key="duty">{duty}</td><td data-key="term" class="nowrap">{term}</td><td><span class="tag js-tag {"tag-success" if on else "tag-gray"}" data-on="在任" data-off="已离任">{st}</span></td>'
+                f'<td>{switch(on, name)}</td><td>{ops_edit(mid, "编辑升华网管理员")}</td></tr>')
+    tpl_row = (f'<template id="{tpl}"><tr data-status="在任" data-ident="{{ident}}" data-college="{{college}}"><td><input type="checkbox" class="row-check"></td>'
+               f'<td data-key="name" class="fw" style="color:var(--text)">{{name}}</td><td data-key="no">{{no}}</td><td data-key="ident">{{ident}}</td><td data-key="college">{{college}}</td>'
+               f'<td data-key="duty">{{duty}}</td><td data-key="term" class="nowrap">{{term}}</td><td><span class="tag js-tag tag-success" data-on="在任" data-off="已离任">在任</span></td>'
+               f'<td>{switch(True)}</td><td>{ops_edit(mid, "编辑升华网管理员")}</td></tr></template>')
+    ident_sel = '<select class="select" name="ident" required><option value="">请选择</option><option>学生</option><option>教师</option></select>'
+    fields = (field('工号', '<div class="staff-picker"><input class="input" name="no" required data-staff-lookup data-label="工号" placeholder="请输入工号，如 8210240316" autocomplete="off"><div class="picker-list"></div></div>'
+                    '<div class="staff-tip"><span data-staff-msg data-default-msg="输入工号自动回显姓名、单位、职务，也可手动填写">输入工号自动回显姓名、单位、职务，也可手动填写</span>'
+                    '<button type="button" class="link" data-action="staff-manual">手动填写</button></div>', req=True, full=True) +
+              field('姓名', '<input class="input" name="name" required placeholder="请输入姓名">', req=True, cls='js-staff-more') +
+              field('身份', ident_sel, req=True, cls='js-staff-more') +
+              field('所属单位', f'<select class="select" name="college" required>{options(units, "请选择学院或部门")}</select>', req=True, cls='js-staff-more') +
+              field('职务', '<input class="input" name="duty" required placeholder="如：宣传部干事">', req=True, cls='js-staff-more') +
+              field('任期', term_range('2026-09-01', '2027-08-31'), req=True, full=True, cls='js-staff-more'))
+    modals = crud_modal(mid, fields, tid, tpl)
+    tmpl_csv = '姓名,工号,身份,所属单位,职务,任期开始,任期结束\\n唐可馨,8210240316,学生,交通运输工程学院,新媒体中心编辑,2026-09-01,2027-08-31\\n邓思远,202103,教师,物理学院,辅导员,2026-09-01,2027-08-31'
+    modals += modal('pImport', '批量导入升华网管理员', f'''<div class="notice notice-info mb16">{icon("info", 15)}<div>请下载模板，按列填写 <b>姓名、工号、身份（学生或教师）、所属单位、职务、任期开始、任期结束</b>。身份只能填学生或教师。已在名单中的工号会跳过。</div></div>
+<div class="flex gap8 mb16">{btn("下载导入模板", "", "download", f'data-action="export-csv" data-csv="{tmpl_csv}" data-filename="升华网管理员导入模板" data-keep="1"')}</div>
+<label class="upload import-drop">{icon("upload", 26)}<b data-import-name>选择填写好的 CSV 文件</b><span class="hint">仅支持 .csv</span><input type="file" accept=".csv,text/csv" data-import-file data-unit-label="所属单位" data-table="#{tid}"></label>
+<div class="import-preview mt16" data-import-preview></div>''',
+                    '<button class="btn" data-close>取消</button>' + btn('确认导入', 'btn-primary', 'check', f'data-action="staff-import" data-table="#{tid}" data-template="#{tpl}"'), 'modal-lg')
+    modals += modal('pTerm', '升华网管理员学年换届', f'''<div class="notice notice-warn mb16">{icon("alert", 15)}<div>勾选的人员<b>续任</b>，取消勾选的人员<b>离任</b>并停用。离任后不能再进入升华网发布素材。</div></div>
+<form novalidate><div class="form-grid" style="grid-template-columns:1fr 1fr">{field("新任期", term_range("2027-09-01", "2028-08-31", "newTerm"), req=True, full=True)}</div></form>
+<div class="term-head mt16"><label class="term-all"><input type="checkbox" data-term-all checked>全部续任</label><span class="hint" data-term-sum></span></div>
+<div class="term-list" data-term-list></div>''',
+                    '<button class="btn" data-close>取消</button>' + btn('确认换届', 'btn-primary', 'repeat', f'data-action="term-apply" data-table="#{tid}"'), 'modal-lg')
+    note = (f'<div class="notice notice-info mb16">{icon("globe", 15)}<div><b>发布权限（只读）：</b>名单中的在任人员可进入「升华网发布素材」，协助把三审完毕的稿件复制到升华网。'
+            '学生和教师都可以加入。他们看不到统计驾驶舱、审核名单和系统配置，也不能做三审。</div></div>')
+    acts = (btn('导入', '', 'upload', 'data-action="staff-import-open" data-modal="pImport"') +
+            btn('导出', '', 'download', f'data-action="export-staff" data-table="#{tid}" data-unit-label="所属单位" data-ident-label="身份" data-filename="升华网管理员名单"') +
+            btn('学年换届', 'btn-outline', 'repeat', f'data-action="term-open" data-modal="pTerm" data-table="#{tid}"') +
+            btn('新增升华网管理员', 'btn-primary', 'plus', f'data-action="crud-add" data-modal="{mid}" data-title="新增升华网管理员"'))
+    body = f'''{page_head('升华网管理员名单', '维护可以协助把三审稿件复制进升华网的学生和教师', acts)}
+{note}{ROLE_RULES}
+<div class="card"><div class="filters">{filter_select(tid, 'ident', '全部身份', ['学生', '教师'])}{filter_select(tid, 'status', '全部状态', ['在任', '已离任'])}{search_box(tid, '搜索姓名 / 工号 / 单位')}</div>
+{table(tid, [('<input type="checkbox" class="check-all" aria-label="全选">', 'class="no-export" style="width:36px"'), '姓名', '工号', '身份', '所属单位', '职务', '任期', '状态', '启用', ('操作', 'class="no-export"')], [trs])}</div>{tpl_row}'''
+    page('publisher-manage.html', '升华网管理员名单', body, ['人员名单', '升华网管理员名单'], modals)
+
+
 def build():
-    dashboard(); final_list(); final_done(); final_cc(); final_batch(); final_review(); final_review(True); archive(); archive_detail(); publish_export()
+    dashboard(); final_list(); final_done(); final_cc(); final_batch(); final_review(); final_review(True); archive(); archive_detail(); publish_export(); publisher_manage()
     clue_tracking(); timeout_ledger(); ranking(); reviewer_manage(1); reviewer_manage(2)
     teacher_manage(); vice_manage(); params(); opinion_templates()
     sensitive_words(); operation_logs(); messages()

@@ -12,7 +12,7 @@ WRITTEN = []
 
 TAG_CLASS = {
     '草稿': 'tag-gray', '待指导老师审核': 'tag-warn', '待副书记审核': 'tag-warn', '待副职领导审核': 'tag-warn', '待一审': 'tag-warn', '待二审': 'tag-warn', '待三审': 'tag-warn',
-    '已退回': 'tag-danger', '已终审采用': 'tag-success', '已终审不采用': 'tag-gray', '已发布': 'tag-primary',
+    '已退回': 'tag-danger', '已终审采用': 'tag-success', '已终审不采用': 'tag-gray', '待升华网发布': 'tag-warn', '已发布': 'tag-primary',
     '无需处理': 'tag-gray', '待跟进': 'tag-warn', '已跟进': 'tag-primary', '已转为正式新闻': 'tag-success',
     '计入采用': 'tag-success', '不计入采用': 'tag-gray', '启用': 'tag-success', '停用': 'tag-gray',
     '在任': 'tag-success', '已离任': 'tag-gray', '处理中': 'tag-danger', '已处理': 'tag-gray',
@@ -151,9 +151,9 @@ def timeline(items):
 
 def flow_steps(identity='学生', cur=1, back_at=None):
     """审核进度条：cur 为当前所在节点下标"""
-    names = {'学生': ['提交投稿', '指导老师审核', '副书记审核', '一审', '二审', '三审终审', '采用归档'],
-             '职能部门老师': ['提交投稿', '副职领导审核', '学生一审', '学生二审', '三审终审', '采用归档']}.get(
-        identity, ['提交投稿', '副书记审核', '一审', '二审', '三审终审', '采用归档'])
+    names = {'学生': ['提交投稿', '指导老师审核', '副书记审核', '一审', '二审', '三审终审', '升华网发布', '采用归档'],
+             '职能部门老师': ['提交投稿', '副职领导审核', '学生一审', '学生二审', '三审终审', '升华网发布', '采用归档']}.get(
+        identity, ['提交投稿', '副书记审核', '一审', '二审', '三审终审', '升华网发布', '采用归档'])
     out = ''
     for i, n in enumerate(names):
         cls = 'done' if i < cur else ('cur' if i == cur else '')
@@ -291,9 +291,13 @@ MENUS = {
         ('审核管理', [('bulb', '线索跟进', 'clue-tracking.html'), ('clock', '超时台账', 'timeout-ledger.html')]),
         ('稿件与数据', [('archive', '稿件档案库', 'archive.html'), ('globe', '升华网发布素材', 'publish-export.html')]),
         ('人员名单', [('users', '一审员名单', 'reviewer1-manage.html'), ('users', '二审员名单', 'reviewer2-manage.html'),
-                  ('user', '指导老师名单', 'teacher-manage.html'), ('user', '副职领导名单', 'vice-manage.html')]),
+                  ('user', '指导老师名单', 'teacher-manage.html'), ('user', '副职领导名单', 'vice-manage.html'),
+                  ('globe', '升华网管理员名单', 'publisher-manage.html')]),
         ('系统配置', [('sliders', '业务参数', 'params.html'), ('message', '审核意见模板', 'opinion-templates.html'),
                   ('alert', '敏感词库', 'sensitive-words.html'), ('terminal', '操作日志', 'operation-logs.html')]),
+    ],
+    'publisher': [
+        ('升华网发布', [('globe', '升华网发布素材', 'publish.html')]),
     ],
 }
 
@@ -320,8 +324,10 @@ MSG_PREVIEW = {
                  ('clock', 'orange', '即将超时提醒', '有 2 篇稿件剩余时限不足 1 个工作日', '今天 09:00', 'todo.html')],
     'admin': [('inbox', 'blue', '新的待三审稿件', '《科技启航主题团日活动》已通过二审', '15 分钟前', 'final-review.html'),
               ('alert', 'red', '审核超时预警', '当前有 5 篇稿件超时未处理', '今天 09:00', 'timeout-ledger.html'),
-              ('globe', 'blue', '待发布升华网', '有 3 篇已采用新闻尚未标记为已发布', '昨天', 'publish-export.html'),
+              ('globe', 'blue', '待升华网发布', '有 3 篇已采用新闻尚未标记为已发布', '昨天', 'publish-export.html'),
               ('bulb', 'orange', '新闻线索待跟进', '《校友返校讲述“北斗”研发故事》线索已终审采用', '昨天', 'clue-tracking.html')],
+    'publisher': [('globe', 'blue', '待升华网发布', '《挑战杯》新闻待复制进升华网', '20 分钟前', 'publish.html'),
+                  ('check-circle', 'green', '稿件已发布', '《冶金学院新生入学教育》已标记为已发布', '昨天', 'publish.html')],
 }
 MSG_COLORS = {'red': ('var(--danger-bg)', 'var(--danger)'), 'green': ('var(--success-bg)', 'var(--success)'),
               'blue': ('var(--primary-light)', 'var(--primary)'), 'orange': ('var(--warn-bg)', 'var(--warn)')}
@@ -376,7 +382,7 @@ def pc_page(role, active, title, body, crumbs=None, css='', modals='', todo_coun
     links = {it[1]: it[2] for _, items in groups for it in items}
     home_tab += ''.join(f'<a class="vt" href="{links[c]}">{c}</a>' for c in crumbs[:-1] if c in links and links[c] != home)
     close = f'<a class="vt-x" href="{home}" aria-label="关闭当前页签">{icon("x", 12)}</a>' if home_tab else ''
-    msg_count = {'correspondent': 2, 'teacher': 2, 'deputy': 2, 'vice': 2, 'reviewer1': 3, 'reviewer2': 3, 'admin': 4}[role]
+    msg_count = {'correspondent': 2, 'teacher': 2, 'deputy': 2, 'vice': 2, 'reviewer1': 3, 'reviewer2': 3, 'admin': 4, 'publisher': 1}[role]
     user_menu = (f'<div class="dropdown"><div class="user-chip" data-dropdown role="button" tabindex="0">'
                  f'<img class="avatar" src="{r["avatar"]}" alt="{r["user"]}"><span class="uc-main"><b>{r["user"]}</b><small>{r["name"]}</small></span>{icon("chev-d", 14)}</div>'
                  f'<div class="dropdown-menu"><div class="dm-title">{r["user"]} · {r["dept"]}</div>'
@@ -439,6 +445,7 @@ TABBARS = {
     'vice': [('inbox', '待办', 'todo.html', '{todo}'), ('history', '已办', 'history.html'), ('bell', '消息', 'messages.html', 2)],
     'reviewer': [('inbox', '待办', 'todo.html', '{todo}'), ('list', '台账', 'ledger.html'), ('bell', '消息', 'messages.html', 3)],
     'admin': [('dashboard', '看板', 'home.html'), ('inbox', '终审', 'final-list.html', 6), ('bell', '消息', 'messages.html', 4)],
+    'publisher': [('globe', '发布', 'publish.html'), ('bell', '消息', 'messages.html', 1)],
 }
 
 

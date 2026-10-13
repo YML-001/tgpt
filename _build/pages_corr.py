@@ -364,7 +364,7 @@ def college_stats():
   {panel('y25', 214, 131, 38, 27, [('9月', [14, 8]), ('10月', [16, 10]), ('11月', [18, 9]), ('12月', [15, 8]), ('3月', [17, 9]), ('4月', [21, 10]), ('5月', [19, 12]), ('6月', [11, 7])])}
   {panel('s1', 86, 52, 12, 9, [('9月', [52, 34]), ('10月', [0, 0]), ('11月', [0, 0]), ('12月', [0, 0])])}
 </div>
-<div class="card mt16"><div class="card-head"><div class="card-title">{icon('list', 18)}本院稿件明细</div><div class="flex gap8">{filter_select('ownTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索'])}{filter_select('ownTable', 'status', '全部状态', ['待指导老师审核', '待副书记审核', '待副职领导审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '已发布'])}</div></div>
+<div class="card mt16"><div class="card-head"><div class="card-title">{icon('list', 18)}本院稿件明细</div><div class="flex gap8">{filter_select('ownTable', 'type', '全部类型', ['新闻', '视频', '照片', '线索'])}{filter_select('ownTable', 'status', '全部状态', ['待指导老师审核', '待副书记审核', '待副职领导审核', '待一审', '待二审', '待三审', '已退回', '已终审采用', '已终审不采用', '待升华网发布', '已发布'])}</div></div>
 {table('ownTable', ['稿件', '类型', '投稿人', '身份', ('投稿日期', 'data-sort'), '状态'], [rows])}</div>'''
     page('college-stats.html', '本院投稿统计', body)
 

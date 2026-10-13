@@ -157,9 +157,9 @@ def batch_body(rows, node, handle_href, tpl='review'):
 
 # ---------- 节点流程图 ----------
 def node_chart(identity='学生', cur=1, back_at=None, end='采用归档'):
-    names = {'学生': ['开始', '指导老师审核', '副书记审核', '一审', '二审', '三审终审', end],
-             '职能部门老师': ['开始', '副职领导审核', '学生一审', '学生二审', '三审终审', end]}.get(
-        identity, ['开始', '副书记审核', '一审', '二审', '三审终审', end])
+    names = {'学生': ['开始', '指导老师审核', '副书记审核', '一审', '二审', '三审终审', '升华网发布', end],
+             '职能部门老师': ['开始', '副职领导审核', '学生一审', '学生二审', '三审终审', '升华网发布', end]}.get(
+        identity, ['开始', '副书记审核', '一审', '二审', '三审终审', '升华网发布', end])
     out = []
     for i, n in enumerate(names):
         if back_at is not None and i == back_at:

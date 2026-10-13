@@ -125,7 +125,7 @@ def build_for(role):
     page('batch.html', '批量审批', batch_body(wrows, node, 'review.html'), ['批量审批'])
 
     # ---------- 已办详情 ----------
-    body = detail_body(ADOPTED, '已终审采用', 'tag-solid-ok', node_chart('学生', 7), adopted_timeline(), 'my-ledger.html',
+    body = detail_body(ADOPTED, '已终审采用', 'tag-solid-ok', node_chart('学生', 6), adopted_timeline(), 'my-ledger.html',
                        ADOPTED['time'], ADOPTED['times']['deputy'] if node == '一审' else ADOPTED['times']['r1'], sub_content(ADOPTED))
     page('done-detail.html', '已办详情', body, ['已办', '新闻投稿审核'], active='my-ledger.html')
 
