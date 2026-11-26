@@ -117,7 +117,7 @@ def c_forms():
 <div class="m-form-title">永久云盘链接</div>
 <div class="notice notice-warn" style="margin-bottom:10px">{icon('alert', 14)}<div>请提供<b>永久有效</b>的云盘链接，不支持 7 天等临时分享链接；链接失效将被退回。</div></div>
 <div class="m-form">{field('云盘链接', '<input class="input" name="link" required placeholder="https://pan.baidu.com/s/……" data-pattern="^https?://" data-pattern-msg="请填写完整链接">', req=True)}{field('提取码', '<input class="input" name="code" placeholder="选填">')}</div>{m_attach()}</form>'''
-    cw('submit-video.html', '视频投稿', video, back='home.html', foot=submit_foot('#mTitle,#mIntro', '视频'), pc_link='../../pc/correspondent/submit-video.html', modals=standard_ack_modal())
+    cw('submit-video.html', '视频投稿', video, back='home.html', foot=submit_foot('#mTitle,#mIntro', '视频'), pc_link='../../pc/correspondent/submit-video.html')
 
     photo = type_switch('submit-photo.html') + f'''<form id="mForm" data-autosave novalidate>{secret}{identity_block()}
 <div class="m-form-title">照片信息</div><div class="m-form">
@@ -128,7 +128,7 @@ def c_forms():
 {field('涉及重要领导', '<input class="input" name="leader" required placeholder="无则填“无”">', req=True)}
 </div>
 <div class="m-form-title">上传原图（可为每张添加备注）</div><div class="m-form">{m_upload('照片原图', remark=True, hint='支持批量选择，单张不超过 30MB')}</div></form>'''
-    cw('submit-photo.html', '照片投稿', photo, back='home.html', foot=submit_foot('#mTitle,#mIntro', '照片'), pc_link='../../pc/correspondent/submit-photo.html', modals=standard_ack_modal())
+    cw('submit-photo.html', '照片投稿', photo, back='home.html', foot=submit_foot('#mTitle,#mIntro', '照片'), pc_link='../../pc/correspondent/submit-photo.html')
 
     src = options(['本人亲历', '他人提供', '媒体报道', '网络信息', '其他'], '请选择')
     clue = type_switch('submit-clue.html') + f'''<form id="mForm" data-autosave novalidate>{identity_block()}
@@ -142,7 +142,7 @@ def c_forms():
 <div class="field" data-show-when="interview=是"><label class="lbl req">可采访时间段</label><input class="input" name="interviewTime" required placeholder="如：工作日 14:00—17:00"></div>
 </div>
 <div class="m-form-title">联系方式</div><div class="m-form">{field('联系人', '<input class="input" name="contact" required>', req=True)}{field('联系方式', PHONE_INPUT, req=True)}</div></form>'''
-    cw('submit-clue.html', '新闻线索', clue, back='home.html', foot=submit_foot('#mTitle,#mIntro', '线索'), pc_link='../../pc/correspondent/submit-clue.html', modals=standard_ack_modal())
+    cw('submit-clue.html', '新闻线索', clue, back='home.html', foot=submit_foot('#mTitle,#mIntro', '线索'), pc_link='../../pc/correspondent/submit-clue.html')
 
 
 def c_success():

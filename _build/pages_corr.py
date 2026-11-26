@@ -129,7 +129,7 @@ def submit_video():
 </div>
 {attach_section('如拍摄脚本、字幕文稿、音乐授权说明等')}
 {form_foot('#videoTitle,#videoIntro', '视频')}</form>'''
-    page('submit-video.html', '视频投稿', body, ['我的投稿', '视频投稿'], modals=standard_ack_modal())
+    page('submit-video.html', '视频投稿', body, ['我的投稿', '视频投稿'])
 
 
 def submit_photo():
@@ -147,7 +147,7 @@ def submit_photo():
 {upload_field('照片原图', hint='支持 JPG / PNG，单张不超过 30MB，原图存储不压缩', remark=True, max_mb=30)}
 </div>
 {form_foot('#photoTitle,#photoDesc', '照片')}</form>'''
-    page('submit-photo.html', '照片投稿', body, ['我的投稿', '照片投稿'], modals=standard_ack_modal())
+    page('submit-photo.html', '照片投稿', body, ['我的投稿', '照片投稿'])
 
 
 def submit_clue():
@@ -171,7 +171,7 @@ def submit_clue():
 {field('联系方式', PHONE_INPUT, req=True)}
 </div></div>
 {form_foot('#clueTitle,#clueDesc', '线索')}</form>'''
-    page('submit-clue.html', '新闻线索', body, ['我的投稿', '新闻线索'], modals=standard_ack_modal())
+    page('submit-clue.html', '新闻线索', body, ['我的投稿', '新闻线索'])
 
 
 # ---------- 6 提交成功 ----------
