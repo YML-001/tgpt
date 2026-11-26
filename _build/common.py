@@ -235,9 +235,6 @@ def bars(data, colors=('#3087CC', '#9CBFDA'), height=200):
 
 # 投稿、修改重提每次打开都先确认。不写入本地存储，标题栏不提供关闭。
 def standard_ack_modal():
-    info = '欢迎使用新升华网投稿系统！存在技术问题请联系校团委网络信息部（升华工作室）。'
-    note1 = '此标准暂行，若有投递不符合内容要求或格式要求的稿件审核处将不再修改直接打回。有不同意见者请通过各二级学院网络信息部提出问题和反馈。经讨论后酌情进行调整。'
-    note2 = '请严格按照以下「升华网稿件审核标准」投稿，审核人员将在两个工作日内完成审核，审核结果将发送至预留邮箱，如有任何问题请联系团委宣传部（0731-88836525）。'
     intro = '为了帮助通讯员更好地把握稿件质量，提高稿件的通过率，切实提升中南大学升华网的整体稿件质量，现将审核标准（暂行）公布如下，请广大通讯员参照标准执行。'
     ending = '此标准暂行，若有投递不符合内容要求或格式要求的稿件审核处将不再修改直接打回。有不同意见者请通过各二级学院网络信息部提出问题和反馈。经讨论后酌情进行调整。如存在技术问题，请联系校团委宣传部。'
     content_items = [
@@ -262,10 +259,7 @@ def standard_ack_modal():
     def paras(items):
         return ''.join('<p>' + item + '</p>' for item in items)
     body = (
-        '<div class="notice notice-info"><span class="std-kicker">信息</span><div>' + info + '</div></div>'
-        + '<div class="notice notice-warn"><span class="std-kicker">注意</span><div>' + note1 + '</div></div>'
-        + '<div class="notice notice-warn"><span class="std-kicker">注意</span><div>' + note2 + '</div></div>'
-        + '<article class="std-doc"><h2>升华网稿件审核标准</h2><p>' + intro + '</p>'
+        '<article class="std-doc"><h2>升华网稿件审核标准</h2><p>' + intro + '</p>'
         + '<h3>一、内容要求</h3>' + paras(content_items)
         + '<h3>二、格式要求</h3>' + paras(format_items)
         + '<p>' + ending + '</p></article>'
