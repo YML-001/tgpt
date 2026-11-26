@@ -4,7 +4,7 @@
  *   data-href            点击跳转（可配合 data-confirm 二次确认）
  *   data-open / data-close  打开 / 关闭弹窗
  *   data-toast           点击后显示提示
- *   data-action          业务动作：submit / pass / reject / save / save-draft / copy /
+ *   data-action          业务动作：ack-standard / submit / pass / reject / save / save-draft / copy /
  *                        export-csv / export-zip / delete-row / crud-edit / crud-save /
  *                        set-status / read-all / sensitive-test / apply-filter / reset-filter /
  *                        add-chip / batch / staff-manual
@@ -62,6 +62,33 @@
     if (m) { m.classList.add('open'); const f = $('input,textarea,select', m); if (f && !isMobile()) setTimeout(() => f.focus(), 50); }
   }
   function closeModal(m) { if (m) m.classList.remove('open'); }
+  function standardPending() {
+    const gate = document.getElementById('stdAck');
+    return !!(gate && gate.classList.contains('open'));
+  }
+  function lockStandard(modal) {
+    Array.from(modal.parentElement.children).forEach((el) => {
+      if (el === modal || el.tagName === 'SCRIPT') return;
+      el.inert = true;
+      el.setAttribute('data-std-locked', '1');
+    });
+    document.documentElement.style.overflow = 'hidden';
+  }
+  function unlockStandard() {
+    document.querySelectorAll('[data-std-locked]').forEach((el) => {
+      el.inert = false;
+      el.removeAttribute('data-std-locked');
+    });
+    document.documentElement.style.overflow = '';
+  }
+  function armStandard() {
+    const gate = document.getElementById('stdAck');
+    if (!gate || !gate.classList.contains('open') || gate.dataset.armed) return;
+    gate.dataset.armed = '1';
+    lockStandard(gate);
+    const ack = document.getElementById('stdAckBtn');
+    if (ack) ack.focus({ preventScroll: true });
+  }
 
   // 动态生成的弹窗（确认框、意见框）
   function buildDialog({ title, bodyHtml, okText = '确定', cancelText = '取消', danger = false, sheet }) {
@@ -556,8 +583,17 @@
 
   /* ========== 业务动作 ========== */
   const actions = {
+    'ack-standard'(btn) {
+      const modal = btn.closest('.modal');
+      if (modal) closeModal(modal);
+      unlockStandard();
+      const field = $('#newsTitle, #videoTitle, #photoTitle, #clueTitle, #mTitle');
+      if (field) field.focus({ preventScroll: true });
+    },
+
     // 提交表单：校验 → 敏感词检测 → 二次确认 → 跳转
     async submit(btn) {
+      if (standardPending()) { toast('请先点击「我已知晓」后再填写和提交', 'warn'); return; }
       const form = btn.dataset.form ? $(btn.dataset.form) : btn.closest('form');
       if (form && !validate(form)) return;
       if (btn.dataset.sensitive) {
@@ -606,6 +642,7 @@
     },
 
     'save-draft'(btn) {
+      if (standardPending()) { toast('请先点击「我已知晓」后再填写和提交', 'warn'); return; }
       $$('[data-draft-status]').forEach((el) => { el.innerHTML = `<i class="dot-ok"></i>草稿已保存于 ${now()}`; });
       toast('草稿已保存，可在“我的投稿 · 草稿”中继续编辑');
       if (btn.dataset.next) go(btn.dataset.next, 800);
@@ -1040,7 +1077,11 @@
     // 弹窗关闭
     const closer = t.closest('[data-close]');
     if (closer) { e.preventDefault(); closeModal(closer.closest('.modal')); return; }
-    if (t.classList.contains('modal') && !t.dataset.static && t.id) { closeModal(t); return; }
+    if (t.classList.contains('modal')) {
+      e.preventDefault();
+      if (!t.dataset.static && t.id) closeModal(t);
+      return;
+    }
 
     const opener = t.closest('[data-open]');
     if (opener) { e.preventDefault(); openModal(opener.dataset.open); return; }
@@ -1275,7 +1316,7 @@
       $$('.staff-picker .picker-list', e.target.closest('.modal')).forEach((l) => l.classList.remove('open'));
       return;
     }
-    if (e.key === 'Escape') $$('.modal.open').forEach((m) => { if (m.id) closeModal(m); });
+    if (e.key === 'Escape') $$('.modal.open').forEach((m) => { if (m.id && !m.dataset.static) closeModal(m); });
     if (e.key === 'Enter' && e.target.matches('.chip-input input')) { e.preventDefault(); actions['add-chip']($('button', e.target.closest('.chip-input'))); }
     if (e.key === 'Enter' && e.target.matches('[data-top-search]')) {
       e.preventDefault();
@@ -1407,6 +1448,7 @@
     }));
 
     applyParams();
+    armStandard();
     evalShowWhen();
     $$('table[data-table]').forEach(initTable);
     updateCounts();
@@ -1424,4 +1466,5 @@
 
   // 对外暴露，便于页面内少量自定义脚本调用
   window.TG = { toast, confirmBox, opinionBox, openModal, closeModal, validate, detectSensitive };
+  armStandard();
 })();

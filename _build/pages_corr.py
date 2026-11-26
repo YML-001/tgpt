@@ -5,7 +5,7 @@ from lib import (icon, tag, type_tag, stat, card, page_head, btn, a_btn, options
 from data import MY_SUBS, RANKING, IMG, ARCHIVE, TYPE_NAME, VIDEO, PHOTO, CLUE, typed, VICE_DEPTS
 from detail import sub_content, full_detail
 from common import (RETURNED, RETURN_OPINIONS, info_kv, returned_timeline, op_log_table,
-                    messages_page_body, rank_rows, donut, bars, college_detail_modal)
+                    messages_page_body, rank_rows, donut, bars, college_detail_modal, standard_ack_modal)
 
 R = 'correspondent'
 P = 'pc/correspondent/'
@@ -102,7 +102,7 @@ def news_form(prefill=None, sensitive='#newsTitle,#newsIntro,#newsEditor'):
 def submit_news():
     body = page_head('新闻投稿', '适用于学院活动新闻、团学动态新闻稿件；提交后自动生成稿件档案') + type_switch('submit-news.html') + SECRET + DEMO_TIP + \
         f'<form class="form-card" data-autosave novalidate>{identity_section()}{news_form()}{form_foot("#newsTitle,#newsIntro,#newsEditor", "新闻")}</form>'
-    page('submit-news.html', '新闻投稿', body, ['我的投稿', '新闻投稿'])
+    page('submit-news.html', '新闻投稿', body, ['我的投稿', '新闻投稿'], modals=standard_ack_modal())
 
 
 def submit_video():
@@ -129,7 +129,7 @@ def submit_video():
 </div>
 {attach_section('如拍摄脚本、字幕文稿、音乐授权说明等')}
 {form_foot('#videoTitle,#videoIntro', '视频')}</form>'''
-    page('submit-video.html', '视频投稿', body, ['我的投稿', '视频投稿'])
+    page('submit-video.html', '视频投稿', body, ['我的投稿', '视频投稿'], modals=standard_ack_modal())
 
 
 def submit_photo():
@@ -147,7 +147,7 @@ def submit_photo():
 {upload_field('照片原图', hint='支持 JPG / PNG，单张不超过 30MB，原图存储不压缩', remark=True, max_mb=30)}
 </div>
 {form_foot('#photoTitle,#photoDesc', '照片')}</form>'''
-    page('submit-photo.html', '照片投稿', body, ['我的投稿', '照片投稿'])
+    page('submit-photo.html', '照片投稿', body, ['我的投稿', '照片投稿'], modals=standard_ack_modal())
 
 
 def submit_clue():
@@ -171,7 +171,7 @@ def submit_clue():
 {field('联系方式', PHONE_INPUT, req=True)}
 </div></div>
 {form_foot('#clueTitle,#clueDesc', '线索')}</form>'''
-    page('submit-clue.html', '新闻线索', body, ['我的投稿', '新闻线索'])
+    page('submit-clue.html', '新闻线索', body, ['我的投稿', '新闻线索'], modals=standard_ack_modal())
 
 
 # ---------- 6 提交成功 ----------
@@ -337,7 +337,7 @@ def resubmit():
     <div class="card"><div class="card-head"><div class="card-title">{icon('message', 18)}历次退回意见</div><span class="tag tag-danger">2 次</span></div><div class="card-body"><div class="timeline">{ops}</div></div></div>
   </div>
 </div>'''
-    page('resubmit.html', '修改退回稿件', body, ['我的投稿', '修改重提'])
+    page('resubmit.html', '修改退回稿件', body, ['我的投稿', '修改重提'], modals=standard_ack_modal())
 
 
 # ---------- 11 本院统计 ----------

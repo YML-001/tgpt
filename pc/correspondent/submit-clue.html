@@ -128,6 +128,20 @@ input[type=checkbox]{accent-color:var(--primary)}
 @keyframes pop{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 @keyframes flash{0%{background:#DDEFFC}100%{background:transparent}}
 
+/* 升华网稿件审核标准：打开投稿页时的阻断确认，底部按钮不随正文滚动 */
+.modal.std-ack.open,.modal.std-ack .modal-box{animation:none}
+.modal.std-ack .modal-box{width:920px;max-width:calc(100vw - 48px);height:min(86vh,860px);max-height:min(86vh,860px);overflow:hidden;background:#fff}
+.modal.std-ack .modal-head,.modal.std-ack .modal-foot{flex-shrink:0}
+.modal.std-ack .modal-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px 18px 12px}
+.modal.std-ack .modal-foot{justify-content:center;background:#fff}
+.modal.std-ack .modal-foot .btn{min-width:168px}
+.std-ack .notice{margin-bottom:10px;border-radius:4px}
+.std-ack .std-kicker{flex:none;font-weight:700}
+.std-doc{margin-top:6px;padding:16px 6px 2px;border-top:1px solid var(--line);color:#000;font-family:"Songti SC","SimSun","STSong","Noto Serif CJK SC",serif}
+.std-doc h2{text-align:center;font-size:18px;font-weight:700;line-height:1.6;margin:0 0 12px;color:#000;letter-spacing:.08em}
+.std-doc h3{font-size:16px;font-weight:700;line-height:2;margin:8px 0 0;color:#000}
+.std-doc p{font-size:15px;line-height:2;text-align:justify;text-indent:2em;margin:0;color:#000}
+
 /* ===== 轻提示 ===== */
 .toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
 .toast{padding:10px 16px;border-radius:8px;border:1px solid;font-size:14px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-lg);animation:pop .25s;background:#fff;max-width:520px}
@@ -726,7 +740,7 @@ a.t-title:hover{color:var(--primary)}
   </main>
   <footer class="foot">2026 © 中南大学团学组织新闻投稿平台 · 校团委宣传部</footer>
 </div>
-
+<div class="modal std-ack open" id="stdAck" data-static="1" role="dialog" aria-modal="true" aria-labelledby="stdAckTitle"><div class="modal-box"><div class="modal-head"><span id="stdAckTitle">升华网稿件审核标准</span></div><div class="modal-body"><div class="notice notice-info"><span class="std-kicker">信息</span><div>欢迎使用新升华网投稿系统！存在技术问题请联系校团委网络信息部（升华工作室）。</div></div><div class="notice notice-warn"><span class="std-kicker">注意</span><div>此标准暂行，若有投递不符合内容要求或格式要求的稿件审核处将不再修改直接打回。有不同意见者请通过各二级学院网络信息部提出问题和反馈。经讨论后酌情进行调整。</div></div><div class="notice notice-warn"><span class="std-kicker">注意</span><div>请严格按照以下「升华网稿件审核标准」投稿，审核人员将在两个工作日内完成审核，审核结果将发送至预留邮箱，如有任何问题请联系团委宣传部（0731-88836525）。</div></div><article class="std-doc"><h2>升华网稿件审核标准</h2><p>为了帮助通讯员更好地把握稿件质量，提高稿件的通过率，切实提升中南大学升华网的整体稿件质量，现将审核标准（暂行）公布如下，请广大通讯员参照标准执行。</p><h3>一、内容要求</h3><p>1、通讯员应确保其所提供稿件的原创性及合法性，严禁抄袭，一经发现查实，立即取消通讯员资格并通报批评；对于侵犯他人之合法权益（包括但不限于著作权）的，由稿件提供者承担相应法律责任。</p><p>2、请根据稿件的性质，按照栏目设定投递到最适合的栏目中。各学院投稿以学院层面团学工作新闻（各学院团委和学生会所组织的学生活动、会议等）、班级团日活动为主要稿件来源，投送板块为团学资讯板块。</p><p>3、稿件篇幅为400-800字之间，综合性稿件篇幅为400-1000字之间。要提高新闻报道的专业性，新闻6要素（时间、地点、人物、事件的起因、经过、结果）要齐全，最好配发1-2幅图片，以提高稿件通过率。</p><p>4、稿件涉及学生生活、校园活动、团学活动等方面的，要写出活动的精彩之处，突出活动的主题、意义，并配发照片。</p><p>5、稿件流水账、套路化、语句不通、词不达意、情节晦涩难懂、错别字多，内容言之无物，缺乏可读性，版式凌乱，段落参差，乱用标点，大量空行的，一律做退稿处理。</p><h3>二、格式要求</h3><p>1、文章末尾请用括号注明作者的学院和姓名，需另起一行。作者栏请标注为撰稿，照片拍摄者栏请标注为摄影，审核老师栏请标注为审核。</p><p>2、正文字体为宋体、3号字（21px）、字体颜色为黑色（000000）、2倍行间距，正文首行缩进，文字部分为两端对齐，图片为居中对齐，图片宽度设置为500px。投稿时需按此标准设定。</p><p>3、「完整标题」长度不限，「标题」要短，否则后面部分的文字会不显示，影响阅读。</p><p>4、文章正文中不需要再次写入标题。</p><p>5、正文和标题均应体现投稿人所在单位（学院），正文第一段中所在单位（学院）请写全称。</p><p>6、文字稿要求配有图片。要将图片大小控制在150KB 以内，较长的边控制在500像素为宜。如果只有一张或两张图片，要优先插入正文中（正文中）。图片居中放置。图片需能够看清人物主体或想突出的内容。</p><p>7、切勿重复投稿，包括任何形式的重复。</p><p>8、若有需要上传图片附件或文件附件的情况，请事先检查所附链接是否能打开，否则审核处无法对其进行操作。</p><p>9、如遇图片不能插入的问题，可尝试从其他文件和网页将图片复制入投稿内容区域，或尝试调整浏览器，如360浏览器等。</p><p>10、若图片及文字排版存在问题，建议在Word文档中先行排版，完成之后统一复制。</p><p>此标准暂行，若有投递不符合内容要求或格式要求的稿件审核处将不再修改直接打回。有不同意见者请通过各二级学院网络信息部提出问题和反馈。经讨论后酌情进行调整。如存在技术问题，请联系校团委宣传部。</p></article></div><div class="modal-foot"><button type="button" class="btn btn-primary btn-lg" id="stdAckBtn" data-action="ack-standard">我已知晓</button></div></div></div>
 <script src="../../assets/mock-data.js"></script>
 <script src="../../assets/app.js"></script>
 </body>

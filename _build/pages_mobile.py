@@ -2,7 +2,7 @@
 from lib import icon, tag, type_tag, btn, a_btn, options, field, m_page, write, teacher_picker, m_editor
 from data import MY_SUBS, RANKING, FEATURED, ADOPTED, IMG, R1_TODO, R2_TODO, R3_TODO, TEACHER_TODO, DEPUTY_TODO, VICE_TODO, VICE_NEWS, VICE_DEPTS, TYPE_ICON, VIDEO, PHOTO, CLUE, typed
 from detail import m_content, m_base, flow_records, sample_for
-from common import RETURNED, RETURN_OPINIONS, returned_timeline, msg_item, m_college_detail_modal
+from common import RETURNED, RETURN_OPINIONS, returned_timeline, msg_item, m_college_detail_modal, standard_ack_modal
 from review import q
 from pages_corr import type_switch
 
@@ -103,7 +103,7 @@ def c_forms():
 <div class="field"><label class="lbl req">新闻正文</label>{m_editor('mEditor')}</div>
 </div>
 <div class="m-form-title">新闻配图（选填）</div><div class="m-form">{m_upload('新闻配图', req=False, hint='选填，支持 JPG / PNG，原图上传')}</div>{m_attach()}</form>'''
-    cw('submit-news.html', '新闻投稿', news, back='home.html', foot=submit_foot('#mTitle,#mIntro,#mEditor', '新闻'), pc_link='../../pc/correspondent/submit-news.html')
+    cw('submit-news.html', '新闻投稿', news, back='home.html', foot=submit_foot('#mTitle,#mIntro,#mEditor', '新闻'), pc_link='../../pc/correspondent/submit-news.html', modals=standard_ack_modal())
 
     usage = options(['新闻报道素材', '宣传片素材', '活动纪实存档', '短视频平台发布', '其他'], '请选择')
     video = type_switch('submit-video.html') + f'''<form id="mForm" data-autosave novalidate>{secret}{identity_block()}
@@ -117,7 +117,7 @@ def c_forms():
 <div class="m-form-title">永久云盘链接</div>
 <div class="notice notice-warn" style="margin-bottom:10px">{icon('alert', 14)}<div>请提供<b>永久有效</b>的云盘链接，不支持 7 天等临时分享链接；链接失效将被退回。</div></div>
 <div class="m-form">{field('云盘链接', '<input class="input" name="link" required placeholder="https://pan.baidu.com/s/……" data-pattern="^https?://" data-pattern-msg="请填写完整链接">', req=True)}{field('提取码', '<input class="input" name="code" placeholder="选填">')}</div>{m_attach()}</form>'''
-    cw('submit-video.html', '视频投稿', video, back='home.html', foot=submit_foot('#mTitle,#mIntro', '视频'), pc_link='../../pc/correspondent/submit-video.html')
+    cw('submit-video.html', '视频投稿', video, back='home.html', foot=submit_foot('#mTitle,#mIntro', '视频'), pc_link='../../pc/correspondent/submit-video.html', modals=standard_ack_modal())
 
     photo = type_switch('submit-photo.html') + f'''<form id="mForm" data-autosave novalidate>{secret}{identity_block()}
 <div class="m-form-title">照片信息</div><div class="m-form">
@@ -128,7 +128,7 @@ def c_forms():
 {field('涉及重要领导', '<input class="input" name="leader" required placeholder="无则填“无”">', req=True)}
 </div>
 <div class="m-form-title">上传原图（可为每张添加备注）</div><div class="m-form">{m_upload('照片原图', remark=True, hint='支持批量选择，单张不超过 30MB')}</div></form>'''
-    cw('submit-photo.html', '照片投稿', photo, back='home.html', foot=submit_foot('#mTitle,#mIntro', '照片'), pc_link='../../pc/correspondent/submit-photo.html')
+    cw('submit-photo.html', '照片投稿', photo, back='home.html', foot=submit_foot('#mTitle,#mIntro', '照片'), pc_link='../../pc/correspondent/submit-photo.html', modals=standard_ack_modal())
 
     src = options(['本人亲历', '他人提供', '媒体报道', '网络信息', '其他'], '请选择')
     clue = type_switch('submit-clue.html') + f'''<form id="mForm" data-autosave novalidate>{identity_block()}
@@ -142,7 +142,7 @@ def c_forms():
 <div class="field" data-show-when="interview=是"><label class="lbl req">可采访时间段</label><input class="input" name="interviewTime" required placeholder="如：工作日 14:00—17:00"></div>
 </div>
 <div class="m-form-title">联系方式</div><div class="m-form">{field('联系人', '<input class="input" name="contact" required>', req=True)}{field('联系方式', PHONE_INPUT, req=True)}</div></form>'''
-    cw('submit-clue.html', '新闻线索', clue, back='home.html', foot=submit_foot('#mTitle,#mIntro', '线索'), pc_link='../../pc/correspondent/submit-clue.html')
+    cw('submit-clue.html', '新闻线索', clue, back='home.html', foot=submit_foot('#mTitle,#mIntro', '线索'), pc_link='../../pc/correspondent/submit-clue.html', modals=standard_ack_modal())
 
 
 def c_success():
@@ -212,7 +212,7 @@ def c_resubmit():
 {field('修改说明', '<textarea class="textarea" name="note" required placeholder="说明针对退回意见做了哪些修改"></textarea>', req=True)}
 </div>{m_attach()}</form>'''
     foot = btn('存草稿', 'w-auto', 'save', 'data-action="save-draft"') + btn('重新提交', 'btn-primary', 'send', 'data-action="submit" data-form="#mForm" data-sensitive="#mTitle,#mIntro,#mEditor" data-confirm="重新提交后生成 v3 版本，并重新进入指导老师审核。确认提交吗？" data-msg="已重新提交" data-next="my-submissions.html?re=1&msg=已重新提交，生成 v3 版本并重新进入审核"')
-    cw('resubmit.html', '修改重提', body + '<span class="hidden" data-draft-status></span>', back='detail.html', foot=foot, pc_link='../../pc/correspondent/resubmit.html')
+    cw('resubmit.html', '修改重提', body + '<span class="hidden" data-draft-status></span>', back='detail.html', foot=foot, pc_link='../../pc/correspondent/resubmit.html', modals=standard_ack_modal())
 
 
 def c_ranking():

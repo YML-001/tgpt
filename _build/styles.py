@@ -124,6 +124,20 @@ input[type=checkbox]{accent-color:var(--primary)}
 @keyframes pop{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 @keyframes flash{0%{background:#DDEFFC}100%{background:transparent}}
 
+/* 升华网稿件审核标准：打开投稿页时的阻断确认，底部按钮不随正文滚动 */
+.modal.std-ack.open,.modal.std-ack .modal-box{animation:none}
+.modal.std-ack .modal-box{width:920px;max-width:calc(100vw - 48px);height:min(86vh,860px);max-height:min(86vh,860px);overflow:hidden;background:#fff}
+.modal.std-ack .modal-head,.modal.std-ack .modal-foot{flex-shrink:0}
+.modal.std-ack .modal-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px 18px 12px}
+.modal.std-ack .modal-foot{justify-content:center;background:#fff}
+.modal.std-ack .modal-foot .btn{min-width:168px}
+.std-ack .notice{margin-bottom:10px;border-radius:4px}
+.std-ack .std-kicker{flex:none;font-weight:700}
+.std-doc{margin-top:6px;padding:16px 6px 2px;border-top:1px solid var(--line);color:#000;font-family:"Songti SC","SimSun","STSong","Noto Serif CJK SC",serif}
+.std-doc h2{text-align:center;font-size:18px;font-weight:700;line-height:1.6;margin:0 0 12px;color:#000;letter-spacing:.08em}
+.std-doc h3{font-size:16px;font-weight:700;line-height:2;margin:8px 0 0;color:#000}
+.std-doc p{font-size:15px;line-height:2;text-align:justify;text-indent:2em;margin:0;color:#000}
+
 /* ===== 轻提示 ===== */
 .toast-wrap{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
 .toast{padding:10px 16px;border-radius:8px;border:1px solid;font-size:14px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-lg);animation:pop .25s;background:#fff;max-width:520px}
@@ -895,6 +909,9 @@ button.m-list-link{width:100%;background:none;border:0;border-bottom:1px solid #
 .modal.center .modal-box{border-radius:14px}
 .modal-foot{padding-bottom:30px}
 .modal-foot .btn{flex:1;height:44px;border-radius:22px}
+.modal.std-ack{align-items:stretch;justify-content:stretch;padding:0;background:rgba(20,30,45,.5)}
+.modal.std-ack .modal-box{position:absolute;inset:10px;width:auto;max-width:none;height:auto;max-height:none;border-radius:12px;animation:none;background:#fff}
+.modal.std-ack .modal-foot{padding-bottom:12px}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
 .result-bar{margin:0 0 12px;font-size:13px;padding:10px 12px}
 
